@@ -10,6 +10,9 @@ import InvoiceDetail from "./pages/InvoiceDetail";
 import Recipe from "./pages/Recipe";
 import Resource from "./pages/Resource";
 import NotFound from "./pages/NotFound";
+import RFQDetail from "./pages/RFQDetail";
+import QuoteDetail from "./pages/QuoteDetail";
+import OrderDetail from "./pages/OrderDetail";
 
 const queryClient = new QueryClient();
 
@@ -23,17 +26,11 @@ const App = () => (
           <Route path="/" element={<Dashboard />} />
           <Route path="/products" element={<Dashboard />} />
           <Route path="/rfqs" element={<Dashboard />} />
-          <Route path="/rfqs/:id" element={
-            React.createElement(require("./pages/RFQDetail").default)
-          } />
+          <Route path="/rfqs/:id" element={<RFQDetail />} />
           <Route path="/quotes" element={<Dashboard />} />
-          <Route path="/quotes/:id" element={
-            React.createElement(require("./pages/QuoteDetail").default)
-          } />
+          <Route path="/quotes/:id" element={<QuoteDetail />} />
           <Route path="/orders" element={<Dashboard />} />
-          <Route path="/orders/:id" element={
-            React.createElement(require("./pages/OrderDetail").default)
-          } />
+          <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/invoices" element={<Dashboard />} />
           <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/recipes" element={<Dashboard />} />
