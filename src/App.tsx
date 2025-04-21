@@ -22,8 +22,17 @@ const App = () => (
           <Route path="/" element={<Dashboard />} />
           <Route path="/products" element={<Dashboard />} />
           <Route path="/rfqs" element={<Dashboard />} />
+          <Route path="/rfqs/:id" element={
+            React.createElement(require("./pages/RFQDetail").default)
+          } />
           <Route path="/quotes" element={<Dashboard />} />
+          <Route path="/quotes/:id" element={
+            React.createElement(require("./pages/QuoteDetail").default)
+          } />
           <Route path="/orders" element={<Dashboard />} />
+          <Route path="/orders/:id" element={
+            React.createElement(require("./pages/OrderDetail").default)
+          } />
           <Route path="/invoices" element={<Dashboard />} />
           <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/recipes" element={<Dashboard />} />

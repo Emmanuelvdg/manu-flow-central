@@ -122,7 +122,7 @@ export const QuotesList = () => {
       accessorKey: 'actions',
       cell: (row: typeof mockQuotes[0]) => (
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => navigate(`/quotes/${row.id}`)}>
             <Eye className="mr-2 h-4 w-4" />
             View
           </Button>

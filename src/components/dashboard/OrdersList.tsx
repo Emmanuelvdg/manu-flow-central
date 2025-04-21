@@ -145,7 +145,7 @@ export const OrdersList = () => {
       accessorKey: 'actions',
       cell: (row: typeof mockOrders[0]) => (
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => navigate(`/orders/${row.id}`)}>
             <Eye className="mr-2 h-4 w-4" />
             View
           </Button>
