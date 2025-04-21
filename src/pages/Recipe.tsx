@@ -110,7 +110,7 @@ const Recipe = () => {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-bold text-indigo-800">Materials</span>
-                  <Button variant="outline" size="xs" onClick={handleAddMaterial}>
+                  <Button variant="outline" size="sm" onClick={handleAddMaterial} className="h-7 px-2 py-1 text-xs">
                     <Plus className="w-3 h-3 mr-1" /> Add
                   </Button>
                 </div>
@@ -130,7 +130,7 @@ const Recipe = () => {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-bold text-green-800">Personnel</span>
-                  <Button variant="outline" size="xs" onClick={handleAddPersonnel}>
+                  <Button variant="outline" size="sm" onClick={handleAddPersonnel} className="h-7 px-2 py-1 text-xs">
                     <Plus className="w-3 h-3 mr-1" /> Add
                   </Button>
                 </div>
@@ -150,7 +150,7 @@ const Recipe = () => {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-bold text-blue-800">Machines</span>
-                  <Button variant="outline" size="xs" onClick={handleAddMachine}>
+                  <Button variant="outline" size="sm" onClick={handleAddMachine} className="h-7 px-2 py-1 text-xs">
                     <Plus className="w-3 h-3 mr-1" /> Add
                   </Button>
                 </div>
