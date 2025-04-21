@@ -6,7 +6,7 @@ import {
   FileText, 
   ClipboardList, 
   ShoppingCart, 
-  FileInvoice,
+  Receipt,
   FlaskConical,
   Warehouse,
   Home
@@ -26,7 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
     { name: 'RFQs', href: '/rfqs', icon: FileText },
     { name: 'Quotes', href: '/quotes', icon: ClipboardList },
     { name: 'Orders', href: '/orders', icon: ShoppingCart },
-    { name: 'Invoices', href: '/invoices', icon: FileInvoice },
+    { name: 'Invoices', href: '/invoices', icon: Receipt },
     { name: 'Recipes', href: '/recipes', icon: FlaskConical },
     { name: 'Resources', href: '/resources', icon: Warehouse },
   ];

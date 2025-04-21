@@ -2,7 +2,7 @@
 import React from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { DashboardCard } from '@/components/ui/DashboardCard';
-import { Package, FileText, ClipboardList, ShoppingCart, FileInvoice } from 'lucide-react';
+import { Package, FileText, ClipboardList, ShoppingCart, Receipt } from 'lucide-react';
 import { ProductCatalog } from '@/components/dashboard/ProductCatalog';
 import { RFQList } from '@/components/dashboard/RFQList';
 import { QuotesList } from '@/components/dashboard/QuotesList';
@@ -60,7 +60,7 @@ const Dashboard = () => {
             title="Invoices"
             description="Generated invoices"
             count={stats.invoices}
-            icon={<FileInvoice className="h-5 w-5 text-primary" />}
+            icon={<Receipt className="h-5 w-5 text-primary" />}
             linkTo="/invoices"
             color="#D97706" // amber
           />
