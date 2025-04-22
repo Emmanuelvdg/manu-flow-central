@@ -31,10 +31,10 @@ export function DataTable<T>({
       <Table>
         <TableHeader>
           <TableRow>
-            {columns.map((column) => (
-              <TableHeader key={column.header} className="font-semibold">
+            {columns.map((column, index) => (
+              <TableHead key={column.header || index} className="font-semibold">
                 {column.header}
-              </TableHeader>
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -46,14 +46,14 @@ export function DataTable<T>({
               </TableCell>
             </TableRow>
           ) : (
-            data.map((row, index) => (
+            data.map((row, rowIndex) => (
               <TableRow 
-                key={index} 
+                key={rowIndex} 
                 className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
                 onClick={() => onRowClick && onRowClick(row)}
               >
-                {columns.map((column) => (
-                  <TableCell key={column.header}>
+                {columns.map((column, colIndex) => (
+                  <TableCell key={`${rowIndex}-${column.header || colIndex}`}>
                     {column.cell
                       ? column.cell(row)
                       : typeof column.accessorKey === 'string'

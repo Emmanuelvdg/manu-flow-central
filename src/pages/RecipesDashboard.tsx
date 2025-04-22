@@ -74,8 +74,12 @@ const RecipesDashboard = () => {
   const columns = [
     {
       header: "#",
-      accessorKey: "index",
-      cell: (row: any) => row.row.index + 1
+      accessorKey: "id",
+      cell: (_row: any) => {
+        // Instead of accessing row.row.index, we'll use a different approach
+        const index = mockRecipes.findIndex(recipe => recipe.id === _row.id);
+        return index > -1 ? index + 1 : '—';
+      }
     },
     {
       header: "Number",
@@ -84,9 +88,9 @@ const RecipesDashboard = () => {
     {
       header: "Name",
       accessorKey: "name",
-      cell: (row: any) => (
+      cell: (_row: any) => (
         <span className="text-blue-600 underline hover:text-blue-800">
-          {row.row.original.name}
+          {_row.name}
         </span>
       )
     },
@@ -113,9 +117,9 @@ const RecipesDashboard = () => {
     {
       header: "Actions",
       accessorKey: "actions",
-      cell: (row: any) => (
+      cell: (_row: any) => (
         <div className="flex gap-2">
-          <Link to={`/recipes/${row.row.original.id}`}>
+          <Link to={`/recipes/${_row.id}`}>
             <Button variant="ghost" size="sm">
               <Edit className="h-4 w-4" />
             </Button>
