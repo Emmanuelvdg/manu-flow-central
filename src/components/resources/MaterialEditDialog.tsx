@@ -2,25 +2,17 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { DataTable } from "@/components/ui/DataTable";
-import { Plus, Trash } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Material, MaterialBatch } from "@/types/material";
+import { MaterialForm } from './MaterialForm';
+import { BatchesTable } from './BatchesTable';
 
 interface MaterialEditDialogProps {
   material: Material;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedMaterial: Material) => void;
-}
-
-interface BatchColumnCellProps {
-  getValue: () => any;
-  row: {
-    original: MaterialBatch;
-  };
 }
 
 export function MaterialEditDialog({ material, isOpen, onClose, onSave }: MaterialEditDialogProps) {
@@ -66,7 +58,6 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Calculate average cost per unit based on remaining stock in batches
     const totalRemainingStock = batches.reduce((sum, batch) => sum + batch.remainingStock, 0);
     const totalCost = batches.reduce((sum, batch) => sum + (batch.remainingStock * batch.costPerUnit), 0);
     const avgCostPerUnit = totalRemainingStock > 0 ? totalCost / totalRemainingStock : 0;
@@ -86,72 +77,6 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     onClose();
   };
 
-  const batchColumns = [
-    { header: 'Batch #', accessorKey: 'batchNumber' },
-    { 
-      header: 'Purchase Date',
-      accessorKey: 'purchaseDate',
-      cell: ({ getValue, row }: BatchColumnCellProps) => (
-        <Input
-          type="date"
-          value={getValue()}
-          onChange={(e) => handleBatchChange(row.original.id, 'purchaseDate', e.target.value)}
-        />
-      )
-    },
-    {
-      header: 'Initial Stock',
-      accessorKey: 'initialStock',
-      cell: ({ getValue, row }: BatchColumnCellProps) => (
-        <Input
-          type="number"
-          value={getValue()}
-          onChange={(e) => handleBatchChange(row.original.id, 'initialStock', Number(e.target.value))}
-        />
-      )
-    },
-    {
-      header: 'Remaining',
-      accessorKey: 'remainingStock',
-      cell: ({ getValue }: BatchColumnCellProps) => (
-        <Input
-          type="number"
-          value={getValue()}
-          readOnly
-        />
-      )
-    },
-    {
-      header: 'Cost/Unit',
-      accessorKey: 'costPerUnit',
-      cell: ({ getValue, row }: BatchColumnCellProps) => (
-        <Input
-          type="number"
-          step="0.01"
-          value={getValue()}
-          onChange={(e) => handleBatchChange(row.original.id, 'costPerUnit', Number(e.target.value))}
-        />
-      )
-    },
-    {
-      header: 'Actions',
-      accessorKey: 'actions',
-      cell: ({ row }: { row: { original: MaterialBatch } }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleDeleteBatch(row.original.id)}
-        >
-          <Trash className="h-4 w-4" />
-        </Button>
-      )
-    }
-  ];
-
-  const filteredBatches = showEmptyBatches 
-    ? batches 
-    : batches.filter(batch => batch.remainingStock > 0);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">
@@ -159,44 +84,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
           <DialogTitle>Edit Material</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unit</Label>
-              <Input
-                id="unit"
-                name="unit"
-                value={formData.unit}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="vendor">Vendor</Label>
-              <Input
-                id="vendor"
-                name="vendor"
-                value={formData.vendor}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
+          <MaterialForm formData={formData} handleChange={handleChange} />
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -217,9 +105,11 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
               </div>
             </div>
 
-            <DataTable
-              columns={batchColumns}
-              data={filteredBatches}
+            <BatchesTable
+              batches={batches}
+              showEmptyBatches={showEmptyBatches}
+              onBatchChange={handleBatchChange}
+              onDeleteBatch={handleDeleteBatch}
             />
           </div>
 
