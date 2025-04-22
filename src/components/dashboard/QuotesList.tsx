@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,8 @@ const mockQuotes = [
     total: 8000,
     paymentTerms: 'Net 30',
     incoterms: 'EXW',
-    estimatedDelivery: '2025-06-15'
+    estimatedDelivery: '2025-06-15',
+    risk: 'Medium'
   },
   { 
     id: 'QT00124', 
@@ -115,6 +115,21 @@ export const QuotesList = () => {
       accessorKey: 'status',
       cell: (row: typeof mockQuotes[0]) => (
         <StatusBadge status={row.status as any} />
+      )
+    },
+    {
+      header: 'Risk Level',
+      accessorKey: 'risk',
+      cell: (row: typeof mockQuotes[0]) => (
+        <span className={`inline-block px-2 py-1 rounded ${
+          row.risk === 'High' || row.risk === 'Very High' 
+            ? 'bg-red-100 text-red-800' 
+            : row.risk === 'Medium'
+            ? 'bg-yellow-100 text-yellow-800'
+            : 'bg-green-100 text-green-800'
+        }`}>
+          {row.risk || 'Not calculated'}
+        </span>
       )
     },
     {
