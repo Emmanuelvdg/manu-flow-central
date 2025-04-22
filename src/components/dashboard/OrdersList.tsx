@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/DataTable";
 import { Plus, Edit, Download, Printer, Search as SearchIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Data structure for orders (matching the sample image)
 const mockOrders = [
@@ -115,6 +116,7 @@ const columnHeaders = [
 export const OrdersList = () => {
   const [orders, setOrders] = useState(mockOrders);
   const [selected, setSelected] = useState<number[]>([]);
+  const navigate = useNavigate();
 
   // Filter/search state
   const [search, setSearch] = useState("");
@@ -128,6 +130,10 @@ export const OrdersList = () => {
     setSelected((sels) =>
       sels.includes(idx) ? sels.filter((i) => i !== idx) : [...sels, idx]
     );
+  };
+
+  const handleOrderClick = (orderNumber: string) => {
+    navigate(`/orders/${orderNumber}`);
   };
 
   // Filtering logic (mock/demo only)
@@ -310,7 +316,11 @@ export const OrdersList = () => {
                 </tr>
               )}
               {filteredOrders.map((order, idx) => (
-                <tr className="group hover:bg-blue-50 text-base border-b" key={order.number}>
+                <tr 
+                  className="group hover:bg-blue-50 text-base border-b cursor-pointer" 
+                  key={order.number}
+                  onClick={() => handleOrderClick(order.number)}
+                >
                   <td className={`pl-4 font-medium ${order.status === "Scheduled" ? "text-orange-600" : "text-blue-900"}`}>{order.number}</td>
                   <td className="text-xs">{order.groupName}</td>
                   <td className="text-xs">{order.partNo}</td>
@@ -325,12 +335,20 @@ export const OrdersList = () => {
                       {order.partsStatus}
                     </span>
                   </td>
-                  <td className="text-center">
-                    <Button size="icon" variant="ghost" className="hover:bg-blue-100">
+                  <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="hover:bg-blue-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOrderClick(order.number);
+                      }}
+                    >
                       <Edit className="w-4 h-4" />
                     </Button>
                   </td>
-                  <td className="pr-4 text-center">
+                  <td className="pr-4 text-center" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={isChecked(idx)}
