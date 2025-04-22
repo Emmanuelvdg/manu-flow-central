@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import { Check, Database, Link2, File, Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import PartsTable from '@/components/recipe/PartsTable';
+import FileButtons from '@/components/recipe/FileButtons';
 
 const RecipeCreate = () => {
   const { toast } = useToast();
@@ -38,7 +40,6 @@ const RecipeCreate = () => {
   };
   
   const handleSave = () => {
-    // Here you would typically send data to your backend
     toast({
       title: "Recipe Saved",
       description: `Created BOM for ${recipeName || 'PFP_5L Packaged Food Product, 5L Canister'}`,
@@ -126,121 +127,20 @@ const RecipeCreate = () => {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Files</div>
-                <div className="flex space-x-4">
-                  <button className="text-blue-600">
-                    <Database className="h-5 w-5" />
-                  </button>
-                  <button className="text-blue-600">
-                    <File className="h-5 w-5" />
-                  </button>
-                  <button className="text-blue-600">
-                    <Link2 className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
+              <FileButtons />
               
               <div className="space-y-4">
                 <div className="text-sm font-medium">Parts</div>
                 
                 <div className="border rounded-md">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product group</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UoM</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {parts.map((part, index) => (
-                        <tr key={part.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Select
-                              value={part.productGroup}
-                              onValueChange={(value) => handlePartChange(part.id, 'productGroup', value)}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {productGroups.map(option => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Select
-                              value={part.part}
-                              onValueChange={(value) => handlePartChange(part.id, 'part', value)}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {partOptions.map(option => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Input 
-                              value={part.notes}
-                              onChange={(e) => handlePartChange(part.id, 'notes', e.target.value)}
-                              placeholder="Notes"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Select
-                              value={part.uom}
-                              onValueChange={(value) => handlePartChange(part.id, 'uom', value)}
-                            >
-                              <SelectTrigger className="w-[100px]">
-                                <SelectValue placeholder="UoM" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {uomOptions.map(option => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Input 
-                              type="number"
-                              value={part.quantity}
-                              onChange={(e) => handlePartChange(part.id, 'quantity', e.target.value)}
-                              placeholder="Qty"
-                              className="w-[100px]"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleRemovePart(part.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <PartsTable
+                    parts={parts}
+                    onPartChange={handlePartChange}
+                    onRemovePart={handleRemovePart}
+                    productGroups={productGroups}
+                    partOptions={partOptions}
+                    uomOptions={uomOptions}
+                  />
                 </div>
                 
                 <Button variant="outline" onClick={handleAddPart}>
