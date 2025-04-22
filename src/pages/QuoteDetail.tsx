@@ -16,6 +16,7 @@ const QuoteDetail = () => {
   const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
   const [currency, setCurrency] = useState<string>('');
   const [top, setTop] = useState<string>('');
+  const [shippingMethod, setShippingMethod] = useState<string>('');
 
   useEffect(() => {
     const calculatedRisk = calculateRisk(
@@ -83,6 +84,19 @@ const QuoteDetail = () => {
                     <SelectItem value="60">+60</SelectItem>
                     <SelectItem value="90">+90</SelectItem>
                     <SelectItem value="120">+120</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Shipping Method</label>
+                <Select value={shippingMethod} onValueChange={setShippingMethod}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select shipping method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="self_collect">Self Collect</SelectItem>
+                    <SelectItem value="sea">Sea</SelectItem>
+                    <SelectItem value="air">Air</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
