@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -12,6 +12,8 @@ interface DashboardCardProps {
   icon: React.ReactNode;
   linkTo: string;
   color: string;
+  onClick?: () => void;
+  onAdd?: () => void;
   children?: React.ReactNode;
 }
 
@@ -22,6 +24,8 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   icon,
   linkTo,
   color,
+  onClick,
+  onAdd,
   children,
 }) => {
   return (
@@ -36,13 +40,27 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
         <div className="text-3xl font-bold">{count}</div>
         <p className="text-xs text-muted-foreground">{description}</p>
         {children}
+        {onAdd && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="mt-2 w-full"
+            onClick={onAdd}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add {title.slice(0, -1)}
+          </Button>
+        )}
       </CardContent>
       <CardFooter>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to={linkTo} className="flex items-center text-sm text-muted-foreground hover:text-foreground">
-            View all
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Link>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+          onClick={onClick}
+        >
+          View all
+          <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
       </CardFooter>
     </Card>
