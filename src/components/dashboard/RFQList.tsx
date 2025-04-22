@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable, Column, ColumnCellProps } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, Plus } from 'lucide-react';
+import { Eye, Plus, FileCheck } from 'lucide-react';
 
 // Define the RFQ type
 interface RFQ {
@@ -60,7 +60,7 @@ const mockRFQs: RFQ[] = [
 
 export const RFQList = () => {
   const navigate = useNavigate();
-  const [rfqs] = useState<RFQ[]>(mockRFQs);
+  const [rfqs, setRFQs] = useState<RFQ[]>(mockRFQs);
 
   // Safe date formatting function
   const formatDate = (dateString: string | null | undefined): string => {
@@ -71,6 +71,28 @@ export const RFQList = () => {
       console.error("Error formatting date:", error);
       return String(dateString);
     }
+  };
+
+  // Handler to accept and create quote from an RFQ
+  const handleAcceptAndCreateQuote = (rfq: RFQ) => {
+    // Update local status to 'quoted'
+    setRFQs((prevRFQs) =>
+      prevRFQs.map((item) =>
+        item.id === rfq.id ? { ...item, status: 'quoted' } : item
+      )
+    );
+    // Route to "/quotes/create" and pass the RFQ info via state
+    navigate('/quotes/create', {
+      state: {
+        fromRFQ: {
+          rfqId: rfq.id,
+          customerName: rfq.customerName,
+          products: rfq.products,
+          contact: rfq.contact,
+          location: rfq.location,
+        },
+      },
+    });
   };
 
   const columns: Column<RFQ>[] = [
@@ -104,13 +126,28 @@ export const RFQList = () => {
       cell: (props: ColumnCellProps<RFQ>) => {
         const row = props.row.original;
         return (
-          <Button variant="outline" size="sm" onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/rfqs/${row.id}`);
-          }}>
-            <Eye className="mr-2 h-4 w-4" />
-            View
-          </Button>
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/rfqs/${row.id}`);
+            }}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </Button>
+            {(row.status === 'new' || row.status === 'reviewing') && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAcceptAndCreateQuote(row);
+                }}
+              >
+                <FileCheck className="mr-2 h-4 w-4" />
+                Accept &amp; Create Quote
+              </Button>
+            )}
+          </div>
         );
       }
     }
