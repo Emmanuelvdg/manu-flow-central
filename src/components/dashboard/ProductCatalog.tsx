@@ -1,11 +1,17 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, ShoppingCart } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { Search, ShoppingCart, Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AddProductForm } from './AddProductForm';
 
 // Mock products data
 const mockProducts = [
@@ -23,6 +29,7 @@ export const ProductCatalog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [cartItems, setCartItems] = useState<typeof mockProducts>([]);
   const [filterCategory, setFilterCategory] = useState<string>('');
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const { toast } = useToast();
 
   const filteredProducts = mockProducts.filter(product => {
@@ -72,6 +79,14 @@ export const ProductCatalog = () => {
           />
         </div>
         
+        <Button
+          onClick={() => setIsAddProductOpen(true)}
+          className="whitespace-nowrap"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Product
+        </Button>
+
         <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
           <Button 
             variant={filterCategory === '' ? "default" : "outline"}
@@ -92,6 +107,15 @@ export const ProductCatalog = () => {
           ))}
         </div>
       </div>
+
+      <Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Product</DialogTitle>
+          </DialogHeader>
+          <AddProductForm onClose={() => setIsAddProductOpen(false)} />
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product) => (

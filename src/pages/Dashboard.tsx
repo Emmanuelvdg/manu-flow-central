@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { DashboardCard } from '@/components/ui/DashboardCard';
@@ -9,18 +8,42 @@ import { QuotesList } from '@/components/dashboard/QuotesList';
 import { OrdersList } from '@/components/dashboard/OrdersList';
 import { InvoiceList } from '@/components/dashboard/InvoiceList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
   // Statistics data
   const stats = {
-    products: 24,
-    rfqs: 8,
-    quotes: 12,
-    orders: 15,
-    invoices: 10
+    products: {
+      count: 24,
+      onClick: () => navigate('/products'),
+      onAdd: () => navigate('/products')
+    },
+    rfqs: {
+      count: 8,
+      onClick: () => navigate('/rfqs'),
+      onAdd: () => handleAddItem('RFQ')
+    },
+    quotes: {
+      count: 12,
+      onClick: () => navigate('/quotes'),
+      onAdd: () => handleAddItem('Quote')
+    },
+    orders: {
+      count: 15,
+      onClick: () => navigate('/orders'),
+      onAdd: () => handleAddItem('Order')
+    },
+    invoices: {
+      count: 10,
+      onClick: () => navigate('/invoices'),
+      onAdd: () => handleAddItem('Invoice')
+    }
   };
-  
+
   // Get current path to determine which tab should be active
   const location = useLocation();
   const path = location.pathname.split('/')[1] || 'products';
@@ -41,6 +64,15 @@ const Dashboard = () => {
     }
   };
 
+  const handleAddItem = (type: string) => {
+    toast({
+      title: `Add ${type}`,
+      description: `Creating a new ${type.toLowerCase()}...`,
+    });
+    // In a real app, this would navigate to a create form
+    // navigate(`/${type.toLowerCase()}/create`);
+  };
+
   // This is the active tab value based on the current route
   const activeTab = getActiveTab();
 
@@ -51,42 +83,52 @@ const Dashboard = () => {
           <DashboardCard
             title="Products"
             description="Total available products"
-            count={stats.products}
+            count={stats.products.count}
             icon={<Package className="h-5 w-5 text-primary" />}
             linkTo="/products"
-            color="#1E40AF" // primary
+            color="#1E40AF"
+            onClick={stats.products.onClick}
+            onAdd={stats.products.onAdd}
           />
           <DashboardCard
             title="RFQs"
             description="Pending quote requests"
-            count={stats.rfqs}
+            count={stats.rfqs.count}
             icon={<FileText className="h-5 w-5 text-primary" />}
             linkTo="/rfqs"
-            color="#6366F1" // indigo
+            color="#6366F1"
+            onClick={stats.rfqs.onClick}
+            onAdd={stats.rfqs.onAdd}
           />
           <DashboardCard
             title="Quotes"
             description="Active quotes"
-            count={stats.quotes}
+            count={stats.quotes.count}
             icon={<ClipboardList className="h-5 w-5 text-primary" />}
             linkTo="/quotes"
-            color="#8B5CF6" // violet
+            color="#8B5CF6"
+            onClick={stats.quotes.onClick}
+            onAdd={stats.quotes.onAdd}
           />
           <DashboardCard
             title="Orders"
             description="Current orders"
-            count={stats.orders}
+            count={stats.orders.count}
             icon={<ShoppingCart className="h-5 w-5 text-primary" />}
             linkTo="/orders"
-            color="#059669" // emerald
+            color="#059669"
+            onClick={stats.orders.onClick}
+            onAdd={stats.orders.onAdd}
           />
           <DashboardCard
             title="Invoices"
             description="Generated invoices"
-            count={stats.invoices}
+            count={stats.invoices.count}
             icon={<Receipt className="h-5 w-5 text-primary" />}
             linkTo="/invoices"
-            color="#D97706" // amber
+            color="#D97706"
+            onClick={stats.invoices.onClick}
+            onAdd={stats.invoices.onAdd}
           />
         </div>
         
