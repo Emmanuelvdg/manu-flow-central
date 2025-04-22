@@ -106,7 +106,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
                   />
                   Show empty batches
                 </label>
-                <Button type="button" onClick={handleAddBatch}>
+                <Button type="button" onClick={handleAddBatch} variant="outline" size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Batch
                 </Button>
