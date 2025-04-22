@@ -4,11 +4,12 @@ import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 
 const QuoteDetail = () => {
   const { id } = useParams<{ id: string }>();
-  // Placeholder data
+
   return (
     <MainLayout title={`Quote Detail - ${id}`}>
       <div className="max-w-2xl mx-auto mt-8">
@@ -38,11 +39,30 @@ const QuoteDetail = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Payment Terms</label>
-                <input type="text" className="w-full rounded border p-2" placeholder="Payment Terms" />
+                <Select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select payment terms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="advance">Advance Payment</SelectItem>
+                    <SelectItem value="lc">Letter of Credit</SelectItem>
+                    <SelectItem value="open">Open Account</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Incoterms</label>
-                <input type="text" className="w-full rounded border p-2" placeholder="Incoterms" />
+                <Select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select incoterms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cif">CIF</SelectItem>
+                    <SelectItem value="ddp">DDP</SelectItem>
+                    <SelectItem value="fob">FOB</SelectItem>
+                    <SelectItem value="exw">EXW</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Status</label>
