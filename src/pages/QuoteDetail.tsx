@@ -13,6 +13,7 @@ const QuoteDetail = () => {
   const [paymentTerm, setPaymentTerm] = useState<string>('');
   const [risk, setRisk] = useState<string>('');
   const [recommendedDeposit, setRecommendedDeposit] = useState<number>(0);
+  const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const calculatedRisk = calculateRisk(
@@ -20,7 +21,8 @@ const QuoteDetail = () => {
       paymentTerm as 'advance' | 'lc' | 'open' | ''
     );
     setRisk(calculatedRisk);
-    setRecommendedDeposit(getRecommendedDeposit(calculatedRisk));
+    const recommendedDepositValue = getRecommendedDeposit(calculatedRisk);
+    setRecommendedDeposit(recommendedDepositValue);
   }, [incoterm, paymentTerm]);
 
   return (
@@ -49,16 +51,6 @@ const QuoteDetail = () => {
               <div>
                 <label className="block text-sm font-medium mb-1">Total Amount</label>
                 <input type="number" className="w-full rounded border p-2" placeholder="Total" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Deposit Required (%)</label>
-                <input 
-                  type="number" 
-                  className="w-full rounded border p-2" 
-                  placeholder="Enter deposit percentage"
-                  min="0"
-                  max="100"
-                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Payment Terms</label>
@@ -112,6 +104,8 @@ const QuoteDetail = () => {
                   placeholder="Enter deposit percentage"
                   min="0"
                   max="100"
+                  value={depositPercentage ?? ''}
+                  onChange={(e) => setDepositPercentage(e.target.value ? Number(e.target.value) : undefined)}
                 />
               </div>
               <div>
