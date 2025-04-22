@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
 import { Material, MaterialBatch } from "@/types/material";
 import { MaterialForm } from './MaterialForm';
@@ -27,15 +27,20 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
   };
 
   const handleAddBatch = () => {
+    // Generate a unique batch number
+    const batchCount = batches.length + 1;
+    const batchNumber = `B${batchCount.toString().padStart(3, '0')}`;
+    
     const newBatch: MaterialBatch = {
       id: `batch-${Date.now()}`,
       materialId: material.id,
-      batchNumber: `B${(batches.length + 1).toString().padStart(3, '0')}`,
+      batchNumber: batchNumber,
       initialStock: 0,
       remainingStock: 0,
       costPerUnit: 0,
       purchaseDate: new Date().toISOString().split('T')[0]
     };
+    
     setBatches([...batches, newBatch]);
   };
 
@@ -43,6 +48,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     setBatches(batches.map(batch => {
       if (batch.id === id) {
         const updatedBatch = { ...batch, [field]: value };
+        // Update remaining stock when initial stock changes
         if (field === 'initialStock') {
           updatedBatch.remainingStock = Number(value);
         }
@@ -58,6 +64,8 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Calculate total remaining stock and average cost per unit
     const totalRemainingStock = batches.reduce((sum, batch) => sum + batch.remainingStock, 0);
     const totalCost = batches.reduce((sum, batch) => sum + (batch.remainingStock * batch.costPerUnit), 0);
     const avgCostPerUnit = totalRemainingStock > 0 ? totalCost / totalRemainingStock : 0;
