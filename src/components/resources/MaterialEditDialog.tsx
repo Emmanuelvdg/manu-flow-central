@@ -20,35 +20,76 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
   const [formData, setFormData] = useState<Material>({ ...material });
   const [batches, setBatches] = useState<MaterialBatch[]>(material.batches || []);
   const [showEmptyBatches, setShowEmptyBatches] = useState(false);
+  const [pendingBatch, setPendingBatch] = useState<MaterialBatch>({
+    id: '',
+    materialId: material.id,
+    batchNumber: '',
+    initialStock: 0,
+    remainingStock: 0,
+    costPerUnit: 0,
+    purchaseDate: new Date().toISOString().split('T')[0]
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  const handlePendingBatchChange = (field: keyof MaterialBatch, value: any) => {
+    setPendingBatch(prev => ({
+      ...prev,
+      [field]: value,
+      // Update remaining stock when initial stock changes
+      ...(field === 'initialStock' ? { remainingStock: Number(value) } : {})
+    }));
+  };
+
   const handleAddBatch = () => {
-    // Generate a unique batch number
+    // Validate the pending batch
+    if (!pendingBatch.purchaseDate || pendingBatch.initialStock <= 0 || pendingBatch.costPerUnit <= 0) {
+      toast({
+        title: "Invalid Batch Data",
+        description: "Please fill in all required fields with valid values.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate batch number
     const batchCount = batches.length + 1;
     const batchNumber = `B${batchCount.toString().padStart(3, '0')}`;
     
+    // Create new batch with generated ID and batch number
     const newBatch: MaterialBatch = {
+      ...pendingBatch,
       id: `batch-${Date.now()}`,
+      batchNumber
+    };
+    
+    // Add the new batch to the list
+    setBatches([...batches, newBatch]);
+    
+    // Reset pending batch
+    setPendingBatch({
+      id: '',
       materialId: material.id,
-      batchNumber: batchNumber,
+      batchNumber: '',
       initialStock: 0,
       remainingStock: 0,
       costPerUnit: 0,
       purchaseDate: new Date().toISOString().split('T')[0]
-    };
-    
-    setBatches([...batches, newBatch]);
+    });
+
+    toast({
+      title: "Batch Added",
+      description: `New batch ${batchNumber} has been added successfully.`
+    });
   };
 
   const handleBatchChange = (id: string, field: keyof MaterialBatch, value: any) => {
     setBatches(batches.map(batch => {
       if (batch.id === id) {
         const updatedBatch = { ...batch, [field]: value };
-        // Update remaining stock when initial stock changes
         if (field === 'initialStock') {
           updatedBatch.remainingStock = Number(value);
         }
@@ -85,6 +126,11 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     onClose();
   };
 
+  // Combine existing batches with pending batch for display
+  const displayBatches = showEmptyBatches 
+    ? [...batches, pendingBatch]
+    : [...batches.filter(b => b.remainingStock > 0), pendingBatch];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">
@@ -106,7 +152,12 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
                   />
                   Show empty batches
                 </label>
-                <Button type="button" onClick={handleAddBatch} variant="outline" size="sm">
+                <Button 
+                  type="button" 
+                  onClick={handleAddBatch} 
+                  variant="outline" 
+                  size="sm"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Batch
                 </Button>
@@ -114,9 +165,16 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
             </div>
 
             <BatchesTable
-              batches={batches}
-              showEmptyBatches={showEmptyBatches}
-              onBatchChange={handleBatchChange}
+              batches={displayBatches}
+              showEmptyBatches={true}
+              onBatchChange={(id, field, value) => {
+                // If it's the pending batch (empty id), update pending state
+                if (!id) {
+                  handlePendingBatchChange(field, value);
+                } else {
+                  handleBatchChange(id, field, value);
+                }
+              }}
               onDeleteBatch={handleDeleteBatch}
             />
           </div>
