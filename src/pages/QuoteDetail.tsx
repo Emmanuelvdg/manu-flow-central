@@ -15,6 +15,7 @@ const QuoteDetail = () => {
   const [recommendedDeposit, setRecommendedDeposit] = useState<number>(0);
   const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
   const [currency, setCurrency] = useState<string>('');
+  const [top, setTop] = useState<string>('');
 
   useEffect(() => {
     const calculatedRisk = calculateRisk(
@@ -67,6 +68,23 @@ const QuoteDetail = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Terms of Payment (Days)</label>
+                <Select value={top} onValueChange={setTop}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select payment terms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0</SelectItem>
+                    <SelectItem value="7">+7</SelectItem>
+                    <SelectItem value="14">+14</SelectItem>
+                    <SelectItem value="30">+30</SelectItem>
+                    <SelectItem value="60">+60</SelectItem>
+                    <SelectItem value="90">+90</SelectItem>
+                    <SelectItem value="120">+120</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Payment Terms</label>
