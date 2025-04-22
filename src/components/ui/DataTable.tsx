@@ -62,6 +62,11 @@ export function DataTable<T>({
                 {columns.map((column, colIndex) => {
                   const accessorKey = column.accessorKey.toString();
                   
+                  // Check if the row object is defined before accessing its properties
+                  if (!row) {
+                    return <TableCell key={`${rowIndex}-${column.header || colIndex}`}>-</TableCell>;
+                  }
+                  
                   return (
                     <TableCell key={`${rowIndex}-${column.header || colIndex}`}>
                       {column.cell
@@ -75,8 +80,8 @@ export function DataTable<T>({
                             row: { original: row }
                           })
                         : typeof column.accessorKey === 'string'
-                          ? (row as any)[column.accessorKey]
-                          : (row as any)[column.accessorKey.toString()]}
+                          ? (row as any)[column.accessorKey] ?? '-'
+                          : (row as any)[column.accessorKey.toString()] ?? '-'}
                     </TableCell>
                   );
                 })}
