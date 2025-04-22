@@ -13,6 +13,8 @@ import NotFound from "./pages/NotFound";
 import RFQDetail from "./pages/RFQDetail";
 import QuoteDetail from "./pages/QuoteDetail";
 import OrderDetail from "./pages/OrderDetail";
+import RecipesDashboard from "./pages/RecipesDashboard";
+import RecipeCreate from "./pages/RecipeCreate";
 
 const queryClient = new QueryClient();
 
@@ -33,7 +35,8 @@ const App = () => (
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/invoices" element={<Dashboard />} />
           <Route path="/invoices/:id" element={<InvoiceDetail />} />
-          <Route path="/recipes" element={<Dashboard />} />
+          <Route path="/recipes" element={<RecipesDashboard />} />
+          <Route path="/recipes/create" element={<RecipeCreate />} />
           <Route path="/recipes/:id" element={<Recipe />} />
           <Route path="/resources" element={<Resource />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

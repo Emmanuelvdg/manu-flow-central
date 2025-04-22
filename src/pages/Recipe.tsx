@@ -47,6 +47,24 @@ const mockRecipes = {
       { id: "MACH-012", machine: "Drill Press", hours: 0.5 }
     ]
   },
+  "BO00001": {
+    id: "BO00001",
+    productName: "Mechanical Subassembly BOM",
+    group: "Mechanical: Subassemblies",
+    materials: [
+      { id: "MAT-020", name: "Metal Frame", quantity: 1, unit: "pcs" },
+      { id: "MAT-021", name: "Screws", quantity: 12, unit: "pcs" },
+      { id: "MAT-022", name: "Washers", quantity: 12, unit: "pcs" }
+    ],
+    personnel: [
+      { id: "5", role: "Assembly Technician", hours: 2 },
+      { id: "6", role: "Quality Control", hours: 0.5 }
+    ],
+    machines: [
+      { id: "MACH-009", machine: "Assembly Station", hours: 1.5 },
+      { id: "MACH-010", machine: "Testing Equipment", hours: 0.5 }
+    ]
+  }
 };
 
 const Recipe = () => {
