@@ -8,6 +8,9 @@ import { PurchaseOrderDialog } from "@/components/resources/PurchaseOrderDialog"
 import { Material, MaterialBatch, PurchaseOrder } from "@/types/material";
 import { MaterialsTable } from "@/components/resources/MaterialsTable";
 import { PurchaseOrdersTable } from "@/components/resources/PurchaseOrdersTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PersonnelTable } from "@/components/resources/PersonnelTable";
+import { MachinesTable } from "@/components/resources/MachinesTable";
 
 // Mock data
 const mockMaterials: Material[] = [
@@ -82,52 +85,68 @@ const Resource = () => {
 
   return (
     <MainLayout title="Resources & Inventory">
-      <div className="grid grid-cols-1 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Materials</CardTitle>
-            <Button
-              size="sm"
-              onClick={() => {
-                setSelectedMaterial({
-                  id: `mat-${Date.now()}`,
-                  name: "",
-                  category: "",
-                  unit: "",
-                  status: "Active",
-                  vendor: "",
-                  batches: [],
-                });
-                setIsEditDialogOpen(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              New Material
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <MaterialsTable
-              materials={materials}
-              onEditMaterial={handleEditMaterial}
-              onCreateOrder={handleCreateOrder}
-              formatCurrency={formatCurrency}
-            />
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="materials" className="w-full">
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="materials">Materials</TabsTrigger>
+          <TabsTrigger value="personnel">Personnel</TabsTrigger>
+          <TabsTrigger value="machines">Machines</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Purchase Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PurchaseOrdersTable
-              purchaseOrders={purchaseOrders}
-              materials={materials}
-              formatDate={formatDate}
-            />
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="materials" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Materials</CardTitle>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setSelectedMaterial({
+                    id: `mat-${Date.now()}`,
+                    name: "",
+                    category: "",
+                    unit: "",
+                    status: "Active",
+                    vendor: "",
+                    batches: [],
+                  });
+                  setIsEditDialogOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Material
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <MaterialsTable
+                materials={materials}
+                onEditMaterial={handleEditMaterial}
+                onCreateOrder={handleCreateOrder}
+                formatCurrency={formatCurrency}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Purchase Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PurchaseOrdersTable
+                purchaseOrders={purchaseOrders}
+                materials={materials}
+                formatDate={formatDate}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="personnel">
+          <PersonnelTable />
+        </TabsContent>
+
+        <TabsContent value="machines">
+          <MachinesTable />
+        </TabsContent>
+      </Tabs>
 
       {selectedMaterial && (
         <>
