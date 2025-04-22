@@ -6,20 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/DataTable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Edit, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, Plus, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { MaterialEditDialog } from '@/components/resources/MaterialEditDialog';
+import { PurchaseOrderDialog } from '@/components/resources/PurchaseOrderDialog';
+import { Material, PurchaseOrder } from '@/types/material';
 
 // Mock resources data
-const mockMaterials = [
-  { id: 'MAT-001', name: 'LCD Display 10"', category: 'Electronics', stock: 24, unit: 'pcs', status: 'In Stock', vendor: 'Tech Displays Inc' },
-  { id: 'MAT-002', name: 'Circuit Board A-300', category: 'Electronics', stock: 48, unit: 'pcs', status: 'In Stock', vendor: 'CircuitPro Systems' },
-  { id: 'MAT-003', name: 'Control Switches', category: 'Electronics', stock: 120, unit: 'pcs', status: 'In Stock', vendor: 'SwitchTech' },
-  { id: 'MAT-004', name: 'Aluminum Casing', category: 'Structural', stock: 15, unit: 'pcs', status: 'Low Stock', vendor: 'MetalWorks Corp' },
-  { id: 'MAT-005', name: 'Wiring Harness', category: 'Electrical', stock: 35, unit: 'set', status: 'In Stock', vendor: 'WireWorks Ltd' },
-  { id: 'MAT-006', name: 'Mounting Brackets', category: 'Structural', stock: 62, unit: 'pcs', status: 'In Stock', vendor: 'MetalWorks Corp' },
-  { id: 'MAT-010', name: 'Pump Housing', category: 'Mechanical', stock: 8, unit: 'pcs', status: 'Low Stock', vendor: 'FluidTech Industries' },
-  { id: 'MAT-011', name: 'Electric Motor', category: 'Electrical', stock: 12, unit: 'pcs', status: 'In Stock', vendor: 'MotorWorks Inc' },
-  { id: 'MAT-012', name: 'Impeller Assembly', category: 'Mechanical', stock: 10, unit: 'set', status: 'In Stock', vendor: 'FluidTech Industries' },
+const mockMaterials: Material[] = [
+  { id: 'MAT-001', name: 'LCD Display 10"', category: 'Electronics', stock: 24, unit: 'pcs', status: 'In Stock', vendor: 'Tech Displays Inc', costPerUnit: 45.99 },
+  { id: 'MAT-002', name: 'Circuit Board A-300', category: 'Electronics', stock: 48, unit: 'pcs', status: 'In Stock', vendor: 'CircuitPro Systems', costPerUnit: 22.50 },
+  { id: 'MAT-003', name: 'Control Switches', category: 'Electronics', stock: 120, unit: 'pcs', status: 'In Stock', vendor: 'SwitchTech', costPerUnit: 3.75 },
+  { id: 'MAT-004', name: 'Aluminum Casing', category: 'Structural', stock: 15, unit: 'pcs', status: 'Low Stock', vendor: 'MetalWorks Corp', costPerUnit: 18.25 },
+  { id: 'MAT-005', name: 'Wiring Harness', category: 'Electrical', stock: 35, unit: 'set', status: 'In Stock', vendor: 'WireWorks Ltd', costPerUnit: 12.99 },
+  { id: 'MAT-006', name: 'Mounting Brackets', category: 'Structural', stock: 62, unit: 'pcs', status: 'In Stock', vendor: 'MetalWorks Corp', costPerUnit: 5.50 },
+  { id: 'MAT-010', name: 'Pump Housing', category: 'Mechanical', stock: 8, unit: 'pcs', status: 'Low Stock', vendor: 'FluidTech Industries', costPerUnit: 65.00 },
+  { id: 'MAT-011', name: 'Electric Motor', category: 'Electrical', stock: 12, unit: 'pcs', status: 'In Stock', vendor: 'MotorWorks Inc', costPerUnit: 85.99 },
+  { id: 'MAT-012', name: 'Impeller Assembly', category: 'Mechanical', stock: 10, unit: 'set', status: 'In Stock', vendor: 'FluidTech Industries', costPerUnit: 42.75 },
+];
+
+// Mock purchase orders data
+const mockPurchaseOrders: PurchaseOrder[] = [
+  { id: 'PO-001', materialId: 'MAT-004', quantity: 30, status: 'Ordered', orderDate: '2025-04-10', expectedDelivery: '2025-04-25', vendor: 'MetalWorks Corp', totalCost: 547.50 },
+  { id: 'PO-002', materialId: 'MAT-010', quantity: 15, status: 'Pending', orderDate: '2025-04-15', expectedDelivery: '2025-05-01', vendor: 'FluidTech Industries', totalCost: 975.00 },
 ];
 
 const mockPersonnel = [
@@ -42,6 +51,12 @@ const mockMachines = [
 const Resource = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('materials');
+  const [materials, setMaterials] = useState(mockMaterials);
+  const [purchaseOrders, setPurchaseOrders] = useState(mockPurchaseOrders);
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPurchaseOrderDialogOpen, setIsPurchaseOrderDialogOpen] = useState(false);
+  const [selectedMaterialForPO, setSelectedMaterialForPO] = useState<Material | null>(null);
   
   const handleAdd = (type: string) => {
     toast({
@@ -50,23 +65,83 @@ const Resource = () => {
     });
   };
   
+  const handleEdit = (material: Material) => {
+    setEditingMaterial(material);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleCreatePO = (material: Material) => {
+    setSelectedMaterialForPO(material);
+    setIsPurchaseOrderDialogOpen(true);
+  };
+  
+  const handleSaveMaterial = (updatedMaterial: Material) => {
+    setMaterials(materials.map(material => 
+      material.id === updatedMaterial.id ? updatedMaterial : material
+    ));
+  };
+  
+  const handleCreateOrder = (newOrder: PurchaseOrder) => {
+    setPurchaseOrders([...purchaseOrders, newOrder]);
+  };
+  
   const materialColumns = [
     { header: 'ID', accessorKey: 'id' },
     { header: 'Material', accessorKey: 'name' },
     { header: 'Category', accessorKey: 'category' },
     { header: 'In Stock', accessorKey: 'stock' },
     { header: 'Unit', accessorKey: 'unit' },
+    { header: 'Cost/Unit', accessorKey: 'costPerUnit', cell: (row: Material) => 
+      row.costPerUnit ? `$${row.costPerUnit.toFixed(2)}` : 'N/A'
+    },
     { header: 'Status', accessorKey: 'status' },
     { header: 'Vendor', accessorKey: 'vendor' },
     {
       header: 'Actions',
       accessorKey: 'actions',
-      cell: () => (
-        <Button variant="outline" size="sm">
-          <Edit className="h-4 w-4" />
-        </Button>
+      cell: (row: Material) => (
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(row);
+            }}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCreatePO(row);
+            }}
+          >
+            <FileText className="h-4 w-4" />
+            <span className="sr-only md:not-sr-only md:ml-2 md:text-xs">Order</span>
+          </Button>
+        </div>
       )
     }
+  ];
+  
+  const purchaseOrderColumns = [
+    { header: 'PO ID', accessorKey: 'id' },
+    { header: 'Material ID', accessorKey: 'materialId' },
+    { header: 'Material', accessorKey: 'materialName', cell: (row: PurchaseOrder) => {
+      const material = materials.find(m => m.id === row.materialId);
+      return material ? material.name : 'Unknown';
+    }},
+    { header: 'Quantity', accessorKey: 'quantity' },
+    { header: 'Total Cost', accessorKey: 'totalCost', cell: (row: PurchaseOrder) => 
+      `$${row.totalCost.toFixed(2)}`
+    },
+    { header: 'Order Date', accessorKey: 'orderDate' },
+    { header: 'Expected Delivery', accessorKey: 'expectedDelivery' },
+    { header: 'Status', accessorKey: 'status' },
+    { header: 'Vendor', accessorKey: 'vendor' },
   ];
   
   const personnelColumns = [
@@ -112,6 +187,7 @@ const Resource = () => {
           <div className="flex justify-between items-center">
             <TabsList>
               <TabsTrigger value="materials">Materials</TabsTrigger>
+              <TabsTrigger value="purchaseOrders">Purchase Orders</TabsTrigger>
               <TabsTrigger value="personnel">Personnel</TabsTrigger>
               <TabsTrigger value="machines">Machines</TabsTrigger>
             </TabsList>
@@ -120,11 +196,14 @@ const Resource = () => {
               size="sm" 
               onClick={() => handleAdd(
                 activeTab === 'materials' ? 'Material' : 
-                activeTab === 'personnel' ? 'Personnel' : 'Machine'
+                activeTab === 'personnel' ? 'Personnel' : 
+                activeTab === 'purchaseOrders' ? 'Purchase Order' : 'Machine'
               )}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Add {activeTab === 'materials' ? 'Material' : activeTab === 'personnel' ? 'Personnel' : 'Machine'}
+              Add {activeTab === 'materials' ? 'Material' : 
+                   activeTab === 'personnel' ? 'Personnel' : 
+                   activeTab === 'purchaseOrders' ? 'Purchase Order' : 'Machine'}
             </Button>
           </div>
           
@@ -136,7 +215,21 @@ const Resource = () => {
               <CardContent>
                 <DataTable 
                   columns={materialColumns} 
-                  data={mockMaterials}
+                  data={materials}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="purchaseOrders" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Purchase Orders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable 
+                  columns={purchaseOrderColumns} 
+                  data={purchaseOrders}
                 />
               </CardContent>
             </Card>
@@ -171,6 +264,26 @@ const Resource = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Material Edit Dialog */}
+      {editingMaterial && (
+        <MaterialEditDialog 
+          material={editingMaterial}
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          onSave={handleSaveMaterial}
+        />
+      )}
+      
+      {/* Purchase Order Dialog */}
+      {selectedMaterialForPO && (
+        <PurchaseOrderDialog
+          material={selectedMaterialForPO}
+          isOpen={isPurchaseOrderDialogOpen}
+          onClose={() => setIsPurchaseOrderDialogOpen(false)}
+          onCreateOrder={handleCreateOrder}
+        />
+      )}
     </MainLayout>
   );
 };
