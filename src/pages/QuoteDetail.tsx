@@ -14,6 +14,7 @@ const QuoteDetail = () => {
   const [risk, setRisk] = useState<string>('');
   const [recommendedDeposit, setRecommendedDeposit] = useState<number>(0);
   const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
+  const [currency, setCurrency] = useState<string>('');
 
   useEffect(() => {
     const calculatedRisk = calculateRisk(
@@ -48,9 +49,24 @@ const QuoteDetail = () => {
                 <label className="block text-sm font-medium mb-1">Products</label>
                 <input type="text" className="w-full rounded border p-2" placeholder="Products" />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Total Amount</label>
-                <input type="number" className="w-full rounded border p-2" placeholder="Total" />
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-1">Total Amount</label>
+                  <input type="number" className="w-full rounded border p-2" placeholder="Total" />
+                </div>
+                <div className="w-32">
+                  <label className="block text-sm font-medium mb-1">Currency</label>
+                  <Select value={currency} onValueChange={setCurrency}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="IDR">IDR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Payment Terms</label>
