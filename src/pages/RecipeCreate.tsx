@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import { Check, Dropbox, Link2, OneDrive, Plus, X } from 'lucide-react';
+import { Check, Database, Link2, File, Plus, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const RecipeCreate = () => {
@@ -130,10 +130,10 @@ const RecipeCreate = () => {
                 <div className="text-sm font-medium">Files</div>
                 <div className="flex space-x-4">
                   <button className="text-blue-600">
-                    <OneDrive className="h-5 w-5" />
+                    <Database className="h-5 w-5" />
                   </button>
                   <button className="text-blue-600">
-                    <Dropbox className="h-5 w-5" />
+                    <File className="h-5 w-5" />
                   </button>
                   <button className="text-blue-600">
                     <Link2 className="h-5 w-5" />
