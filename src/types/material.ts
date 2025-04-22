@@ -1,13 +1,22 @@
 
+export interface MaterialBatch {
+  id: string;
+  materialId: string;
+  batchNumber: string;
+  initialStock: number;
+  remainingStock: number;
+  costPerUnit: number;
+  purchaseDate: string;
+}
+
 export interface Material {
   id: string;
   name: string;
   category: string;
-  stock: number;
   unit: string;
   status: string;
   vendor: string;
-  costPerUnit?: number;
+  batches?: MaterialBatch[];
 }
 
 export interface PurchaseOrder {
