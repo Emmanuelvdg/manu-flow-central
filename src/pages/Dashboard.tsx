@@ -9,6 +9,7 @@ import { QuotesList } from '@/components/dashboard/QuotesList';
 import { OrdersList } from '@/components/dashboard/OrdersList';
 import { InvoiceList } from '@/components/dashboard/InvoiceList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLocation } from 'react-router-dom';
 
 const Dashboard = () => {
   // Statistics data
@@ -20,8 +21,28 @@ const Dashboard = () => {
     invoices: 10
   };
   
+  // Get current path to determine which tab should be active
+  const location = useLocation();
+  const path = location.pathname.split('/')[1] || 'products';
+  
+  // Map routes to tab values
+  const getActiveTab = () => {
+    switch (path) {
+      case 'rfqs':
+        return 'rfqs';
+      case 'quotes':
+        return 'quotes';
+      case 'orders':
+        return 'orders';
+      case 'invoices':
+        return 'invoices';
+      default:
+        return 'products';
+    }
+  };
+
   return (
-    <MainLayout title="Dashboard">
+    <MainLayout title={`${getActiveTab().charAt(0).toUpperCase() + getActiveTab().slice(1)} Dashboard`}>
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <DashboardCard
@@ -66,7 +87,7 @@ const Dashboard = () => {
           />
         </div>
         
-        <Tabs defaultValue="products">
+        <Tabs defaultValue={getActiveTab()}>
           <TabsList className="w-full justify-start border-b pb-px">
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="rfqs">RFQs</TabsTrigger>
