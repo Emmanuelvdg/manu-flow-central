@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DataTable, Column, ColumnCellProps } from "@/components/ui/DataTable";
-import { Plus, ArrowUpDown } from "lucide-react";
+import { Plus } from "lucide-react";
 import { MaterialEditDialog } from "@/components/resources/MaterialEditDialog";
 import { PurchaseOrderDialog } from "@/components/resources/PurchaseOrderDialog";
 import { Material, MaterialBatch, PurchaseOrder } from "@/types/material";
+import { MaterialsTable } from "@/components/resources/MaterialsTable";
+import { PurchaseOrdersTable } from "@/components/resources/PurchaseOrdersTable";
 
 // Mock data
 const mockMaterials: Material[] = [
@@ -35,26 +36,6 @@ const Resource = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
 
-  // Helper function to calculate total stock from batches
-  const calculateTotalStock = (material: Material): number => {
-    return material.batches?.reduce((sum, batch) => sum + (batch.remainingStock || 0), 0) || 0;
-  };
-
-  // Helper function to calculate average cost per unit from batches
-  const calculateAverageCost = (material: Material): number => {
-    if (!material.batches || material.batches.length === 0) return 0;
-    
-    const totalCost = material.batches.reduce((sum, batch) => {
-      return sum + (batch.costPerUnit || 0) * (batch.initialStock || 0);
-    }, 0);
-    
-    const totalQuantity = material.batches.reduce((sum, batch) => {
-      return sum + (batch.initialStock || 0);
-    }, 0);
-    
-    return totalQuantity > 0 ? totalCost / totalQuantity : 0;
-  };
-
   // Safe date formatting function
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return 'N/A';
@@ -77,6 +58,16 @@ const Resource = () => {
     }
   };
 
+  const handleEditMaterial = (material: Material) => {
+    setSelectedMaterial(material);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCreateOrder = (material: Material) => {
+    setSelectedMaterial(material);
+    setIsPurchaseDialogOpen(true);
+  };
+
   const handleSaveMaterial = (updatedMaterial: Material) => {
     setMaterials(
       materials.map((mat) =>
@@ -89,124 +80,6 @@ const Resource = () => {
     setPurchaseOrders([...purchaseOrders, { ...newPO, id: `po-${Date.now()}` }]);
   };
 
-  const materialColumns: Column<Material>[] = [
-    {
-      header: "Name",
-      accessorKey: "name",
-    },
-    {
-      header: "Category",
-      accessorKey: "category",
-    },
-    {
-      header: "Stock",
-      accessorKey: "stock",
-      cell: (props: ColumnCellProps<Material>) => {
-        const material = props.row.original;
-        const stock = calculateTotalStock(material);
-        return `${stock} ${material.unit}`;
-      },
-    },
-    {
-      header: "Average Cost",
-      accessorKey: "averageCost",
-      cell: (props: ColumnCellProps<Material>) => {
-        const material = props.row.original;
-        const avgCost = calculateAverageCost(material);
-        return formatCurrency(avgCost);
-      },
-    },
-    {
-      header: "Vendor",
-      accessorKey: "vendor",
-    },
-    {
-      header: "Actions",
-      accessorKey: "actions",
-      cell: (props: ColumnCellProps<Material>) => {
-        const material = props.row.original;
-        return (
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSelectedMaterial(material);
-                setIsEditDialogOpen(true);
-              }}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSelectedMaterial(material);
-                setIsPurchaseDialogOpen(true);
-              }}
-            >
-              Order
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
-
-  const purchaseOrderColumns: Column<PurchaseOrder>[] = [
-    {
-      header: "PO #",
-      accessorKey: "id",
-    },
-    {
-      header: "Material",
-      accessorKey: "materialId",
-      cell: (props: ColumnCellProps<PurchaseOrder>) => {
-        const materialId = props.getValue();
-        const material = materials.find((m) => m.id === materialId);
-        return material ? material.name : "Unknown";
-      },
-    },
-    {
-      header: "Quantity",
-      accessorKey: "quantity",
-    },
-    {
-      header: "Vendor",
-      accessorKey: "vendor",
-    },
-    {
-      header: "Order Date",
-      accessorKey: "orderDate",
-      cell: (props: ColumnCellProps<PurchaseOrder>) => formatDate(props.getValue()),
-    },
-    {
-      header: "Expected Delivery",
-      accessorKey: "expectedDelivery",
-      cell: (props: ColumnCellProps<PurchaseOrder>) => formatDate(props.getValue()),
-    },
-    {
-      header: "Status",
-      accessorKey: "status",
-      cell: (props: ColumnCellProps<PurchaseOrder>) => {
-        const status = props.getValue() as string;
-        return (
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
-              status === "delivered"
-                ? "bg-green-100 text-green-800"
-                : status === "ordered"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-yellow-100 text-yellow-800"
-            }`}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-        );
-      },
-    },
-  ];
-
   return (
     <MainLayout title="Resources & Inventory">
       <div className="grid grid-cols-1 gap-6">
@@ -216,7 +89,6 @@ const Resource = () => {
             <Button
               size="sm"
               onClick={() => {
-                // Create a new empty material template
                 setSelectedMaterial({
                   id: `mat-${Date.now()}`,
                   name: "",
@@ -234,9 +106,11 @@ const Resource = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            <DataTable
-              columns={materialColumns}
-              data={materials}
+            <MaterialsTable
+              materials={materials}
+              onEditMaterial={handleEditMaterial}
+              onCreateOrder={handleCreateOrder}
+              formatCurrency={formatCurrency}
             />
           </CardContent>
         </Card>
@@ -246,9 +120,10 @@ const Resource = () => {
             <CardTitle>Purchase Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <DataTable
-              columns={purchaseOrderColumns}
-              data={purchaseOrders}
+            <PurchaseOrdersTable
+              purchaseOrders={purchaseOrders}
+              materials={materials}
+              formatDate={formatDate}
             />
           </CardContent>
         </Card>
