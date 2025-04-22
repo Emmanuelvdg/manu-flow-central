@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { DashboardCard } from '@/components/ui/DashboardCard';
 import { Package, FileText, ClipboardList, ShoppingCart, Receipt } from 'lucide-react';
@@ -41,8 +41,11 @@ const Dashboard = () => {
     }
   };
 
+  // This is the active tab value based on the current route
+  const activeTab = getActiveTab();
+
   return (
-    <MainLayout title={`${getActiveTab().charAt(0).toUpperCase() + getActiveTab().slice(1)} Dashboard`}>
+    <MainLayout title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Dashboard`}>
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <DashboardCard
@@ -87,7 +90,7 @@ const Dashboard = () => {
           />
         </div>
         
-        <Tabs defaultValue={getActiveTab()}>
+        <Tabs value={activeTab} defaultValue={activeTab}>
           <TabsList className="w-full justify-start border-b pb-px">
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="rfqs">RFQs</TabsTrigger>
