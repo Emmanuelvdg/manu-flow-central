@@ -115,7 +115,7 @@ export const InvoiceList = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Invoices</CardTitle>
-        <Button size="sm">
+        <Button size="sm" onClick={() => navigate('/invoices/create')}>
           <Plus className="mr-2 h-4 w-4" />
           New Invoice
         </Button>

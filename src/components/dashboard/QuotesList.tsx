@@ -147,7 +147,7 @@ export const QuotesList = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Quotes</CardTitle>
-        <Button size="sm">
+        <Button size="sm" onClick={() => navigate('/quotes/create')}>
           <Plus className="mr-2 h-4 w-4" />
           New Quote
         </Button>

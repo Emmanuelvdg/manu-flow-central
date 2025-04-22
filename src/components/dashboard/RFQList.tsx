@@ -121,7 +121,7 @@ export const RFQList = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Request for Quotations</CardTitle>
-        <Button size="sm">
+        <Button size="sm" onClick={() => navigate('/rfqs/create')}>
           <Plus className="mr-2 h-4 w-4" />
           New RFQ
         </Button>

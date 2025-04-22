@@ -25,22 +25,22 @@ const Dashboard = () => {
     rfqs: {
       count: 8,
       onClick: () => navigate('/rfqs'),
-      onAdd: () => handleAddItem('RFQ')
+      onAdd: () => navigate('/rfqs/create')
     },
     quotes: {
       count: 12,
       onClick: () => navigate('/quotes'),
-      onAdd: () => handleAddItem('Quote')
+      onAdd: () => navigate('/quotes/create')
     },
     orders: {
       count: 15,
       onClick: () => navigate('/orders'),
-      onAdd: () => handleAddItem('Order')
+      onAdd: () => navigate('/orders/create')
     },
     invoices: {
       count: 10,
       onClick: () => navigate('/invoices'),
-      onAdd: () => handleAddItem('Invoice')
+      onAdd: () => navigate('/invoices/create')
     }
   };
 
