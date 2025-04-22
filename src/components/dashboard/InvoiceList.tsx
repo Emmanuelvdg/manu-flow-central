@@ -2,14 +2,27 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/DataTable';
+import { DataTable, Column, ColumnCellProps } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Eye, Plus, Download } from 'lucide-react';
 
+// Define the Invoice type
+interface Invoice {
+  id: string;
+  orderId: string;
+  customerName: string;
+  issueDate: string;
+  dueDate: string;
+  status: string;
+  total: number;
+  paymentMethod: string;
+  paymentDate: string | null;
+}
+
 // Mock Invoices data
-const mockInvoices = [
+const mockInvoices: Invoice[] = [
   { 
     id: 'INV00123', 
     orderId: 'ORD00126',
@@ -48,7 +61,7 @@ const mockInvoices = [
 export const InvoiceList = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [invoices, setInvoices] = useState(mockInvoices);
+  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
 
   const downloadInvoice = (invoiceId: string) => {
     toast({
@@ -57,7 +70,17 @@ export const InvoiceList = () => {
     });
   };
 
-  const columns = [
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
+  const columns: Column<Invoice>[] = [
     {
       header: 'Invoice ID',
       accessorKey: 'id',
@@ -69,45 +92,58 @@ export const InvoiceList = () => {
     {
       header: 'Issue Date',
       accessorKey: 'issueDate',
-      cell: (row: typeof mockInvoices[0]) => new Date(row.issueDate).toLocaleDateString()
+      cell: (props: ColumnCellProps<Invoice>) => formatDate(props.getValue())
     },
     {
       header: 'Due Date',
       accessorKey: 'dueDate',
-      cell: (row: typeof mockInvoices[0]) => new Date(row.dueDate).toLocaleDateString()
+      cell: (props: ColumnCellProps<Invoice>) => formatDate(props.getValue())
     },
     {
       header: 'Total',
       accessorKey: 'total',
-      cell: (row: typeof mockInvoices[0]) => `$${row.total.toLocaleString()}`
+      cell: (props: ColumnCellProps<Invoice>) => {
+        const value = props.getValue();
+        return typeof value === 'number' ? `$${value.toLocaleString()}` : '$0';
+      }
     },
     {
       header: 'Status',
       accessorKey: 'status',
-      cell: (row: typeof mockInvoices[0]) => {
+      cell: (props: ColumnCellProps<Invoice>) => {
         const statusMap: Record<string, any> = {
           'paid': 'completed',
           'pending': 'submitted',
           'overdue': 'rejected'
         };
-        return <StatusBadge status={statusMap[row.status]} />;
+        const status = props.getValue();
+        return <StatusBadge status={statusMap[status] || status} />;
       }
     },
     {
       header: 'Actions',
       accessorKey: 'actions',
-      cell: (row: typeof mockInvoices[0]) => (
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => navigate(`/invoices/${row.id}`)}>
-            <Eye className="mr-2 h-4 w-4" />
-            View
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => downloadInvoice(row.id)}>
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
-        </div>
-      )
+      cell: (props: ColumnCellProps<Invoice>) => {
+        const row = props.row.original;
+        return (
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/invoices/${row.id}`);
+            }}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </Button>
+            <Button variant="outline" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              downloadInvoice(row.id);
+            }}>
+              <Download className="mr-2 h-4 w-4" />
+              Download
+            </Button>
+          </div>
+        );
+      }
     }
   ];
 

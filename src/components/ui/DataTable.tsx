@@ -9,14 +9,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface ColumnCellProps<T> {
+export interface ColumnCellProps<T> {
   getValue: () => any;
   row: {
     original: T;
   };
 }
 
-interface Column<T> {
+export interface Column<T> {
   header: string;
   accessorKey: keyof T | string;
   cell?: (props: ColumnCellProps<T>) => React.ReactNode;
@@ -63,9 +63,12 @@ export function DataTable<T>({
                   <TableCell key={`${rowIndex}-${column.header || colIndex}`}>
                     {column.cell
                       ? column.cell({
-                          getValue: () => typeof column.accessorKey === 'string' 
-                            ? (row as any)[column.accessorKey] 
-                            : (row[column.accessorKey] as any),
+                          getValue: () => {
+                            const key = typeof column.accessorKey === 'string' 
+                              ? column.accessorKey 
+                              : column.accessorKey.toString();
+                            return (row as any)[key];
+                          },
                           row: { original: row }
                         })
                       : typeof column.accessorKey === 'string'
