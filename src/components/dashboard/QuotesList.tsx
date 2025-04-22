@@ -1,14 +1,30 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/DataTable';
+import { DataTable, Column, ColumnCellProps } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Eye, FileCheck, FileX, Plus } from 'lucide-react';
 
+// Define the Quote type
+interface Quote {
+  id: string;
+  rfqId: string;
+  customerName: string;
+  date: string;
+  products: string[];
+  status: string;
+  total: number;
+  paymentTerms: string;
+  incoterms: string;
+  estimatedDelivery: string;
+  risk?: string;
+}
+
 // Mock Quotes data
-const mockQuotes = [
+const mockQuotes: Quote[] = [
   { 
     id: 'QT00123', 
     rfqId: 'RFQ00123',
@@ -63,7 +79,7 @@ const mockQuotes = [
 export const QuotesList = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [quotes, setQuotes] = useState(mockQuotes);
+  const [quotes, setQuotes] = useState<Quote[]>(mockQuotes);
 
   const acceptQuote = (quoteId: string) => {
     toast({
@@ -71,7 +87,7 @@ export const QuotesList = () => {
       description: `Quote ${quoteId} has been accepted and converted to an order.`,
     });
     setQuotes(quotes.map(quote => 
-      quote.id === quoteId ? { ...quote, status: 'accepted' as 'seen' } : quote
+      quote.id === quoteId ? { ...quote, status: 'accepted' } : quote
     ));
   };
 
@@ -82,11 +98,33 @@ export const QuotesList = () => {
       variant: "destructive",
     });
     setQuotes(quotes.map(quote => 
-      quote.id === quoteId ? { ...quote, status: 'rejected' as 'seen' } : quote
+      quote.id === quoteId ? { ...quote, status: 'rejected' } : quote
     ));
   };
 
-  const columns = [
+  // Safe date formatting function
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return String(dateString);
+    }
+  };
+
+  // Safe currency formatting function
+  const formatCurrency = (value: number | null | undefined): string => {
+    if (value === null || value === undefined) return '$0';
+    try {
+      return `$${value.toLocaleString()}`;
+    } catch (error) {
+      console.error("Error formatting currency:", error);
+      return `$${String(value)}`;
+    }
+  };
+
+  const columns: Column<Quote>[] = [
     {
       header: 'Quote ID',
       accessorKey: 'id',
@@ -98,63 +136,78 @@ export const QuotesList = () => {
     {
       header: 'Date',
       accessorKey: 'date',
-      cell: (row: typeof mockQuotes[0]) => new Date(row.date).toLocaleDateString()
+      cell: (props: ColumnCellProps<Quote>) => formatDate(props.getValue())
     },
     {
       header: 'Total',
       accessorKey: 'total',
-      cell: (row: typeof mockQuotes[0]) => `$${row.total.toLocaleString()}`
+      cell: (props: ColumnCellProps<Quote>) => formatCurrency(props.getValue())
     },
     {
       header: 'Est. Delivery',
       accessorKey: 'estimatedDelivery',
-      cell: (row: typeof mockQuotes[0]) => new Date(row.estimatedDelivery).toLocaleDateString()
+      cell: (props: ColumnCellProps<Quote>) => formatDate(props.getValue())
     },
     {
       header: 'Status',
       accessorKey: 'status',
-      cell: (row: typeof mockQuotes[0]) => (
-        <StatusBadge status={row.status as any} />
+      cell: (props: ColumnCellProps<Quote>) => (
+        <StatusBadge status={props.getValue() as any} />
       )
     },
     {
       header: 'Risk Level',
       accessorKey: 'risk',
-      cell: (row: typeof mockQuotes[0]) => (
-        <span className={`inline-block px-2 py-1 rounded ${
-          row.risk === 'High' || row.risk === 'Very High' 
-            ? 'bg-red-100 text-red-800' 
-            : row.risk === 'Medium'
-            ? 'bg-yellow-100 text-yellow-800'
-            : 'bg-green-100 text-green-800'
-        }`}>
-          {row.risk || 'Not calculated'}
-        </span>
-      )
+      cell: (props: ColumnCellProps<Quote>) => {
+        const risk = props.getValue();
+        return (
+          <span className={`inline-block px-2 py-1 rounded ${
+            risk === 'High' || risk === 'Very High' 
+              ? 'bg-red-100 text-red-800' 
+              : risk === 'Medium'
+              ? 'bg-yellow-100 text-yellow-800'
+              : 'bg-green-100 text-green-800'
+          }`}>
+            {risk || 'Not calculated'}
+          </span>
+        );
+      }
     },
     {
       header: 'Actions',
       accessorKey: 'actions',
-      cell: (row: typeof mockQuotes[0]) => (
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => navigate(`/quotes/${row.id}`)}>
-            <Eye className="mr-2 h-4 w-4" />
-            View
-          </Button>
-          {row.status === 'seen' && (
-            <>
-              <Button variant="default" size="sm" onClick={() => acceptQuote(row.id)}>
-                <FileCheck className="mr-2 h-4 w-4" />
-                Accept
-              </Button>
-              <Button variant="destructive" size="sm" onClick={() => rejectQuote(row.id)}>
-                <FileX className="mr-2 h-4 w-4" />
-                Reject
-              </Button>
-            </>
-          )}
-        </div>
-      )
+      cell: (props: ColumnCellProps<Quote>) => {
+        const row = props.row.original;
+        return (
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/quotes/${row.id}`);
+            }}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </Button>
+            {row.status === 'seen' && (
+              <>
+                <Button variant="default" size="sm" onClick={(e) => {
+                  e.stopPropagation();
+                  acceptQuote(row.id);
+                }}>
+                  <FileCheck className="mr-2 h-4 w-4" />
+                  Accept
+                </Button>
+                <Button variant="destructive" size="sm" onClick={(e) => {
+                  e.stopPropagation();
+                  rejectQuote(row.id);
+                }}>
+                  <FileX className="mr-2 h-4 w-4" />
+                  Reject
+                </Button>
+              </>
+            )}
+          </div>
+        );
+      }
     }
   ];
 

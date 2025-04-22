@@ -1,288 +1,274 @@
 
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DataTable } from '@/components/ui/DataTable';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Edit, Plus, FileText } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { MaterialEditDialog } from '@/components/resources/MaterialEditDialog';
-import { PurchaseOrderDialog } from '@/components/resources/PurchaseOrderDialog';
-import { Material, PurchaseOrder } from '@/types/material';
+import React, { useState } from "react";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DataTable, Column, ColumnCellProps } from "@/components/ui/DataTable";
+import { Plus, ArrowUpDown } from "lucide-react";
+import { MaterialEditDialog } from "@/components/resources/MaterialEditDialog";
+import { PurchaseOrderDialog } from "@/components/resources/PurchaseOrderDialog";
+import { Material, MaterialBatch, PurchaseOrder } from "@/types/material";
 
-// Mock resources data
+// Mock data
 const mockMaterials: Material[] = [
-  { id: 'MAT-001', name: 'LCD Display 10"', category: 'Electronics', stock: 24, unit: 'pcs', status: 'In Stock', vendor: 'Tech Displays Inc', costPerUnit: 45.99 },
-  { id: 'MAT-002', name: 'Circuit Board A-300', category: 'Electronics', stock: 48, unit: 'pcs', status: 'In Stock', vendor: 'CircuitPro Systems', costPerUnit: 22.50 },
-  { id: 'MAT-003', name: 'Control Switches', category: 'Electronics', stock: 120, unit: 'pcs', status: 'In Stock', vendor: 'SwitchTech', costPerUnit: 3.75 },
-  { id: 'MAT-004', name: 'Aluminum Casing', category: 'Structural', stock: 15, unit: 'pcs', status: 'Low Stock', vendor: 'MetalWorks Corp', costPerUnit: 18.25 },
-  { id: 'MAT-005', name: 'Wiring Harness', category: 'Electrical', stock: 35, unit: 'set', status: 'In Stock', vendor: 'WireWorks Ltd', costPerUnit: 12.99 },
-  { id: 'MAT-006', name: 'Mounting Brackets', category: 'Structural', stock: 62, unit: 'pcs', status: 'In Stock', vendor: 'MetalWorks Corp', costPerUnit: 5.50 },
-  { id: 'MAT-010', name: 'Pump Housing', category: 'Mechanical', stock: 8, unit: 'pcs', status: 'Low Stock', vendor: 'FluidTech Industries', costPerUnit: 65.00 },
-  { id: 'MAT-011', name: 'Electric Motor', category: 'Electrical', stock: 12, unit: 'pcs', status: 'In Stock', vendor: 'MotorWorks Inc', costPerUnit: 85.99 },
-  { id: 'MAT-012', name: 'Impeller Assembly', category: 'Mechanical', stock: 10, unit: 'set', status: 'In Stock', vendor: 'FluidTech Industries', costPerUnit: 42.75 },
+  { id: "mat-001", name: "Aluminum Sheet 1mm", category: "Metals", unit: "sqm", vendor: "MetalWorks Ltd", batches: [{ id: "batch-001", materialId: "mat-001", batchNumber: "B001", initialStock: 50, remainingStock: 45, costPerUnit: 12.5, purchaseDate: "2025-01-15" }] },
+  { id: "mat-002", name: "Copper Wire 2mm", category: "Metals", unit: "m", vendor: "ElectroSupplies Inc", batches: [{ id: "batch-002", materialId: "mat-002", batchNumber: "B001", initialStock: 200, remainingStock: 175, costPerUnit: 8.75, purchaseDate: "2025-02-03" }] },
+  { id: "mat-003", name: "Stainless Steel Bolt M8", category: "Fasteners", unit: "pcs", vendor: "FastFix Co", batches: [{ id: "batch-003", materialId: "mat-003", batchNumber: "B001", initialStock: 1000, remainingStock: 850, costPerUnit: 0.45, purchaseDate: "2025-01-21" }] },
+  { id: "mat-004", name: "Rubber O-Ring 20mm", category: "Seals", unit: "pcs", vendor: "SealMaster", batches: [{ id: "batch-004", materialId: "mat-004", batchNumber: "B001", initialStock: 500, remainingStock: 320, costPerUnit: 0.25, purchaseDate: "2025-02-12" }] },
+  { id: "mat-005", name: "Plastic Casing Type A", category: "Housings", unit: "pcs", vendor: "PlastiCorp", batches: [{ id: "batch-005", materialId: "mat-005", batchNumber: "B001", initialStock: 100, remainingStock: 78, costPerUnit: 4.50, purchaseDate: "2025-01-18" }] },
+  { id: "mat-006", name: "PCB Board 50x50mm", category: "Electronics", unit: "pcs", vendor: "CircuitPro", batches: [{ id: "batch-006", materialId: "mat-006", batchNumber: "B001", initialStock: 150, remainingStock: 125, costPerUnit: 6.80, purchaseDate: "2025-02-05" }] },
+  { id: "mat-007", name: "LED Light 5mm", category: "Electronics", unit: "pcs", vendor: "LightTech", batches: [{ id: "batch-007", materialId: "mat-007", batchNumber: "B001", initialStock: 1000, remainingStock: 750, costPerUnit: 0.15, purchaseDate: "2025-01-25" }] },
+  { id: "mat-008", name: "Glass Panel 10x10cm", category: "Glass", unit: "pcs", vendor: "GlassMasters", batches: [{ id: "batch-008", materialId: "mat-008", batchNumber: "B001", initialStock: 75, remainingStock: 62, costPerUnit: 7.25, purchaseDate: "2025-02-08" }] },
+  { id: "mat-009", name: "Hydraulic Fluid Type B", category: "Fluids", unit: "L", vendor: "FluidDynamics", batches: [{ id: "batch-009", materialId: "mat-009", batchNumber: "B001", initialStock: 200, remainingStock: 155, costPerUnit: 11.50, purchaseDate: "2025-01-15" }] },
 ];
 
-// Mock purchase orders data
+// Mock purchase orders
 const mockPurchaseOrders: PurchaseOrder[] = [
-  { id: 'PO-001', materialId: 'MAT-004', quantity: 30, status: 'Ordered', orderDate: '2025-04-10', expectedDelivery: '2025-04-25', vendor: 'MetalWorks Corp', totalCost: 547.50 },
-  { id: 'PO-002', materialId: 'MAT-010', quantity: 15, status: 'Pending', orderDate: '2025-04-15', expectedDelivery: '2025-05-01', vendor: 'FluidTech Industries', totalCost: 975.00 },
-];
-
-const mockPersonnel = [
-  { id: 'PERS-001', name: 'Jane Smith', role: 'Electronics Engineer', department: 'Engineering', specialty: 'Circuit Design', availability: 'Available' },
-  { id: 'PERS-002', name: 'Mike Johnson', role: 'Assembly Technician', department: 'Manufacturing', specialty: 'PCB Assembly', availability: 'Assigned' },
-  { id: 'PERS-003', name: 'Sarah Williams', role: 'Quality Control Specialist', department: 'Quality', specialty: 'Electronic Testing', availability: 'Available' },
-  { id: 'PERS-004', name: 'Robert Chen', role: 'Mechanical Engineer', department: 'Engineering', specialty: 'Fluid Dynamics', availability: 'Available' },
-  { id: 'PERS-005', name: 'David Patel', role: 'Assembly Technician', department: 'Manufacturing', specialty: 'Mechanical Assembly', availability: 'Available' },
-  { id: 'PERS-006', name: 'Maria Garcia', role: 'Electrician', department: 'Manufacturing', specialty: 'Power Systems', availability: 'Assigned' },
-];
-
-const mockMachines = [
-  { id: 'MACH-001', name: 'PCB Soldering Station', department: 'Electronics', status: 'Operational', maintenance: '2025-05-15', utilization: '75%' },
-  { id: 'MACH-002', name: 'Testing Equipment', department: 'Quality', status: 'Operational', maintenance: '2025-06-20', utilization: '60%' },
-  { id: 'MACH-003', name: 'CNC Machine', department: 'Machining', status: 'Operational', maintenance: '2025-05-10', utilization: '90%' },
-  { id: 'MACH-004', name: 'Hydraulic Press', department: 'Manufacturing', status: 'Maintenance', maintenance: '2025-04-25', utilization: '0%' },
-  { id: 'MACH-005', name: 'Pump Testing Station', department: 'Quality', status: 'Operational', maintenance: '2025-07-05', utilization: '55%' },
+  { id: "po-001", materialId: "mat-001", quantity: 20, status: "ordered", orderDate: "2025-03-01", expectedDelivery: "2025-03-15", supplier: "MetalWorks Ltd" },
+  { id: "po-002", materialId: "mat-004", quantity: 500, status: "delivered", orderDate: "2025-02-15", expectedDelivery: "2025-02-28", supplier: "SealMaster", deliveryDate: "2025-02-26" },
+  { id: "po-003", materialId: "mat-006", quantity: 50, status: "ordered", orderDate: "2025-03-05", expectedDelivery: "2025-03-20", supplier: "CircuitPro" },
 ];
 
 const Resource = () => {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('materials');
-  const [materials, setMaterials] = useState(mockMaterials);
-  const [purchaseOrders, setPurchaseOrders] = useState(mockPurchaseOrders);
-  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [materials, setMaterials] = useState<Material[]>(mockMaterials);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(mockPurchaseOrders);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isPurchaseOrderDialogOpen, setIsPurchaseOrderDialogOpen] = useState(false);
-  const [selectedMaterialForPO, setSelectedMaterialForPO] = useState<Material | null>(null);
-  
-  const handleAdd = (type: string) => {
-    toast({
-      title: `Add ${type}`,
-      description: `${type} addition feature coming soon.`,
-    });
+  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+
+  // Helper function to calculate total stock from batches
+  const calculateTotalStock = (material: Material): number => {
+    return material.batches?.reduce((sum, batch) => sum + (batch.remainingStock || 0), 0) || 0;
   };
-  
-  const handleEdit = (material: Material) => {
-    setEditingMaterial(material);
-    setIsEditDialogOpen(true);
+
+  // Helper function to calculate average cost per unit from batches
+  const calculateAverageCost = (material: Material): number => {
+    if (!material.batches || material.batches.length === 0) return 0;
+    
+    const totalCost = material.batches.reduce((sum, batch) => {
+      return sum + (batch.costPerUnit || 0) * (batch.initialStock || 0);
+    }, 0);
+    
+    const totalQuantity = material.batches.reduce((sum, batch) => {
+      return sum + (batch.initialStock || 0);
+    }, 0);
+    
+    return totalQuantity > 0 ? totalCost / totalQuantity : 0;
   };
-  
-  const handleCreatePO = (material: Material) => {
-    setSelectedMaterialForPO(material);
-    setIsPurchaseOrderDialogOpen(true);
+
+  // Safe date formatting function
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return String(dateString);
+    }
   };
-  
+
+  // Safe currency formatting function
+  const formatCurrency = (value: number | null | undefined): string => {
+    if (value === null || value === undefined) return '$0.00';
+    try {
+      return `$${value.toFixed(2)}`;
+    } catch (error) {
+      console.error("Error formatting currency:", error);
+      return `$${String(value)}`;
+    }
+  };
+
   const handleSaveMaterial = (updatedMaterial: Material) => {
-    setMaterials(materials.map(material => 
-      material.id === updatedMaterial.id ? updatedMaterial : material
-    ));
+    setMaterials(
+      materials.map((mat) =>
+        mat.id === updatedMaterial.id ? updatedMaterial : mat
+      )
+    );
   };
-  
-  const handleCreateOrder = (newOrder: PurchaseOrder) => {
-    setPurchaseOrders([...purchaseOrders, newOrder]);
+
+  const handleCreatePurchaseOrder = (newPO: PurchaseOrder) => {
+    setPurchaseOrders([...purchaseOrders, { ...newPO, id: `po-${Date.now()}` }]);
   };
-  
-  const materialColumns = [
-    { header: 'ID', accessorKey: 'id' },
-    { header: 'Material', accessorKey: 'name' },
-    { header: 'Category', accessorKey: 'category' },
-    { header: 'In Stock', accessorKey: 'stock' },
-    { header: 'Unit', accessorKey: 'unit' },
-    { header: 'Cost/Unit', accessorKey: 'costPerUnit', cell: (row: Material) => 
-      row.costPerUnit ? `$${row.costPerUnit.toFixed(2)}` : 'N/A'
+
+  const materialColumns: Column<Material>[] = [
+    {
+      header: "Name",
+      accessorKey: "name",
     },
-    { header: 'Status', accessorKey: 'status' },
-    { header: 'Vendor', accessorKey: 'vendor' },
     {
-      header: 'Actions',
-      accessorKey: 'actions',
-      cell: (row: Material) => (
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(row);
-            }}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCreatePO(row);
-            }}
-          >
-            <FileText className="h-4 w-4" />
-            <span className="sr-only md:not-sr-only md:ml-2 md:text-xs">Order</span>
-          </Button>
-        </div>
-      )
-    }
-  ];
-  
-  const purchaseOrderColumns = [
-    { header: 'PO ID', accessorKey: 'id' },
-    { header: 'Material ID', accessorKey: 'materialId' },
-    { header: 'Material', accessorKey: 'materialName', cell: (row: PurchaseOrder) => {
-      const material = materials.find(m => m.id === row.materialId);
-      return material ? material.name : 'Unknown';
-    }},
-    { header: 'Quantity', accessorKey: 'quantity' },
-    { header: 'Total Cost', accessorKey: 'totalCost', cell: (row: PurchaseOrder) => 
-      `$${row.totalCost.toFixed(2)}`
+      header: "Category",
+      accessorKey: "category",
     },
-    { header: 'Order Date', accessorKey: 'orderDate' },
-    { header: 'Expected Delivery', accessorKey: 'expectedDelivery' },
-    { header: 'Status', accessorKey: 'status' },
-    { header: 'Vendor', accessorKey: 'vendor' },
-  ];
-  
-  const personnelColumns = [
-    { header: 'ID', accessorKey: 'id' },
-    { header: 'Name', accessorKey: 'name' },
-    { header: 'Role', accessorKey: 'role' },
-    { header: 'Department', accessorKey: 'department' },
-    { header: 'Specialty', accessorKey: 'specialty' },
-    { header: 'Availability', accessorKey: 'availability' },
     {
-      header: 'Actions',
-      accessorKey: 'actions',
-      cell: () => (
-        <Button variant="outline" size="sm">
-          <Edit className="h-4 w-4" />
-        </Button>
-      )
-    }
-  ];
-  
-  const machineColumns = [
-    { header: 'ID', accessorKey: 'id' },
-    { header: 'Machine', accessorKey: 'name' },
-    { header: 'Department', accessorKey: 'department' },
-    { header: 'Status', accessorKey: 'status' },
-    { header: 'Next Maintenance', accessorKey: 'maintenance' },
-    { header: 'Utilization', accessorKey: 'utilization' },
+      header: "Stock",
+      accessorKey: "stock",
+      cell: (props: ColumnCellProps<Material>) => {
+        const material = props.row.original;
+        const stock = calculateTotalStock(material);
+        return `${stock} ${material.unit}`;
+      },
+    },
     {
-      header: 'Actions',
-      accessorKey: 'actions',
-      cell: () => (
-        <Button variant="outline" size="sm">
-          <Edit className="h-4 w-4" />
-        </Button>
-      )
-    }
+      header: "Average Cost",
+      accessorKey: "averageCost",
+      cell: (props: ColumnCellProps<Material>) => {
+        const material = props.row.original;
+        const avgCost = calculateAverageCost(material);
+        return formatCurrency(avgCost);
+      },
+    },
+    {
+      header: "Vendor",
+      accessorKey: "vendor",
+    },
+    {
+      header: "Actions",
+      accessorKey: "actions",
+      cell: (props: ColumnCellProps<Material>) => {
+        const material = props.row.original;
+        return (
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedMaterial(material);
+                setIsEditDialogOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedMaterial(material);
+                setIsPurchaseDialogOpen(true);
+              }}
+            >
+              Order
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const purchaseOrderColumns: Column<PurchaseOrder>[] = [
+    {
+      header: "PO #",
+      accessorKey: "id",
+    },
+    {
+      header: "Material",
+      accessorKey: "materialId",
+      cell: (props: ColumnCellProps<PurchaseOrder>) => {
+        const materialId = props.getValue();
+        const material = materials.find((m) => m.id === materialId);
+        return material ? material.name : "Unknown";
+      },
+    },
+    {
+      header: "Quantity",
+      accessorKey: "quantity",
+    },
+    {
+      header: "Supplier",
+      accessorKey: "supplier",
+    },
+    {
+      header: "Order Date",
+      accessorKey: "orderDate",
+      cell: (props: ColumnCellProps<PurchaseOrder>) => formatDate(props.getValue()),
+    },
+    {
+      header: "Expected Delivery",
+      accessorKey: "expectedDelivery",
+      cell: (props: ColumnCellProps<PurchaseOrder>) => formatDate(props.getValue()),
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: (props: ColumnCellProps<PurchaseOrder>) => {
+        const status = props.getValue() as string;
+        return (
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              status === "delivered"
+                ? "bg-green-100 text-green-800"
+                : status === "ordered"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-yellow-100 text-yellow-800"
+            }`}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </span>
+        );
+      },
+    },
   ];
 
   return (
-    <MainLayout title="Resources">
-      <div className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex justify-between items-center">
-            <TabsList>
-              <TabsTrigger value="materials">Materials</TabsTrigger>
-              <TabsTrigger value="purchaseOrders">Purchase Orders</TabsTrigger>
-              <TabsTrigger value="personnel">Personnel</TabsTrigger>
-              <TabsTrigger value="machines">Machines</TabsTrigger>
-            </TabsList>
-            
-            <Button 
-              size="sm" 
-              onClick={() => handleAdd(
-                activeTab === 'materials' ? 'Material' : 
-                activeTab === 'personnel' ? 'Personnel' : 
-                activeTab === 'purchaseOrders' ? 'Purchase Order' : 'Machine'
-              )}
+    <MainLayout title="Resources & Inventory">
+      <div className="grid grid-cols-1 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Materials</CardTitle>
+            <Button
+              size="sm"
+              onClick={() => {
+                // Create a new empty material template
+                setSelectedMaterial({
+                  id: `mat-${Date.now()}`,
+                  name: "",
+                  category: "",
+                  unit: "",
+                  vendor: "",
+                  batches: [],
+                });
+                setIsEditDialogOpen(true);
+              }}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Add {activeTab === 'materials' ? 'Material' : 
-                   activeTab === 'personnel' ? 'Personnel' : 
-                   activeTab === 'purchaseOrders' ? 'Purchase Order' : 'Machine'}
+              New Material
             </Button>
-          </div>
-          
-          <TabsContent value="materials" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Materials Inventory</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable 
-                  columns={materialColumns} 
-                  data={materials}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="purchaseOrders" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Purchase Orders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable 
-                  columns={purchaseOrderColumns} 
-                  data={purchaseOrders}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="personnel" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Personnel Directory</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable 
-                  columns={personnelColumns} 
-                  data={mockPersonnel}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="machines" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Machines & Equipment</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataTable 
-                  columns={machineColumns} 
-                  data={mockMachines}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={materialColumns}
+              data={materials}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Purchase Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              columns={purchaseOrderColumns}
+              data={purchaseOrders}
+            />
+          </CardContent>
+        </Card>
       </div>
-      
-      {/* Material Edit Dialog */}
-      {editingMaterial && (
-        <MaterialEditDialog 
-          material={editingMaterial}
-          isOpen={isEditDialogOpen}
-          onClose={() => setIsEditDialogOpen(false)}
-          onSave={handleSaveMaterial}
-        />
-      )}
-      
-      {/* Purchase Order Dialog */}
-      {selectedMaterialForPO && (
-        <PurchaseOrderDialog
-          material={selectedMaterialForPO}
-          isOpen={isPurchaseOrderDialogOpen}
-          onClose={() => setIsPurchaseOrderDialogOpen(false)}
-          onCreateOrder={handleCreateOrder}
-        />
+
+      {selectedMaterial && (
+        <>
+          <MaterialEditDialog
+            material={selectedMaterial}
+            isOpen={isEditDialogOpen}
+            onClose={() => setIsEditDialogOpen(false)}
+            onSave={handleSaveMaterial}
+          />
+          <PurchaseOrderDialog
+            material={selectedMaterial}
+            isOpen={isPurchaseDialogOpen}
+            onClose={() => setIsPurchaseDialogOpen(false)}
+            onSave={handleCreatePurchaseOrder}
+          />
+        </>
       )}
     </MainLayout>
   );

@@ -59,23 +59,27 @@ export function DataTable<T>({
                 className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
                 onClick={() => onRowClick && onRowClick(row)}
               >
-                {columns.map((column, colIndex) => (
-                  <TableCell key={`${rowIndex}-${column.header || colIndex}`}>
-                    {column.cell
-                      ? column.cell({
-                          getValue: () => {
-                            const key = typeof column.accessorKey === 'string' 
-                              ? column.accessorKey 
-                              : column.accessorKey.toString();
-                            return (row as any)[key];
-                          },
-                          row: { original: row }
-                        })
-                      : typeof column.accessorKey === 'string'
-                        ? (row as any)[column.accessorKey]
-                        : (row[column.accessorKey] as React.ReactNode)}
-                  </TableCell>
-                ))}
+                {columns.map((column, colIndex) => {
+                  const accessorKey = column.accessorKey.toString();
+                  
+                  return (
+                    <TableCell key={`${rowIndex}-${column.header || colIndex}`}>
+                      {column.cell
+                        ? column.cell({
+                            getValue: () => {
+                              const key = typeof column.accessorKey === 'string' 
+                                ? column.accessorKey 
+                                : column.accessorKey.toString();
+                              return (row as any)[key];
+                            },
+                            row: { original: row }
+                          })
+                        : typeof column.accessorKey === 'string'
+                          ? (row as any)[column.accessorKey]
+                          : (row as any)[column.accessorKey.toString()]}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))
           )}
