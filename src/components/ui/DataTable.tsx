@@ -9,10 +9,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+interface ColumnCellProps<T> {
+  getValue: () => any;
+  row: {
+    original: T;
+  };
+}
+
 interface Column<T> {
   header: string;
   accessorKey: keyof T | string;
-  cell?: (row: T) => React.ReactNode;
+  cell?: (props: ColumnCellProps<T>) => React.ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -55,10 +62,15 @@ export function DataTable<T>({
                 {columns.map((column, colIndex) => (
                   <TableCell key={`${rowIndex}-${column.header || colIndex}`}>
                     {column.cell
-                      ? column.cell(row)
+                      ? column.cell({
+                          getValue: () => typeof column.accessorKey === 'string' 
+                            ? (row as any)[column.accessorKey] 
+                            : (row[column.accessorKey] as any),
+                          row: { original: row }
+                        })
                       : typeof column.accessorKey === 'string'
-                      ? (row as any)[column.accessorKey]
-                      : (row[column.accessorKey] as React.ReactNode)}
+                        ? (row as any)[column.accessorKey]
+                        : (row[column.accessorKey] as React.ReactNode)}
                   </TableCell>
                 ))}
               </TableRow>

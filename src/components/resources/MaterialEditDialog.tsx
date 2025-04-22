@@ -16,6 +16,13 @@ interface MaterialEditDialogProps {
   onSave: (updatedMaterial: Material) => void;
 }
 
+interface BatchColumnCellProps {
+  getValue: () => any;
+  row: {
+    original: MaterialBatch;
+  };
+}
+
 export function MaterialEditDialog({ material, isOpen, onClose, onSave }: MaterialEditDialogProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Material>({ ...material });
@@ -59,7 +66,18 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedMaterial = { ...formData, batches };
+    // Calculate average cost per unit based on remaining stock in batches
+    const totalRemainingStock = batches.reduce((sum, batch) => sum + batch.remainingStock, 0);
+    const totalCost = batches.reduce((sum, batch) => sum + (batch.remainingStock * batch.costPerUnit), 0);
+    const avgCostPerUnit = totalRemainingStock > 0 ? totalCost / totalRemainingStock : 0;
+    
+    const updatedMaterial = { 
+      ...formData, 
+      batches,
+      costPerUnit: avgCostPerUnit,
+      stock: totalRemainingStock
+    };
+    
     onSave(updatedMaterial);
     toast({
       title: "Material Updated",
@@ -73,35 +91,32 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     { 
       header: 'Purchase Date',
       accessorKey: 'purchaseDate',
-      cell: (row: { getValue: () => string; row: { original: { id: string } } }) => {
-        const value = row.getValue();
-        return (
-          <Input
-            type="date"
-            value={value}
-            onChange={(e) => handleBatchChange(row.row.original.id, 'purchaseDate', e.target.value)}
-          />
-        );
-      }
+      cell: ({ getValue, row }: BatchColumnCellProps) => (
+        <Input
+          type="date"
+          value={getValue()}
+          onChange={(e) => handleBatchChange(row.original.id, 'purchaseDate', e.target.value)}
+        />
+      )
     },
     {
       header: 'Initial Stock',
       accessorKey: 'initialStock',
-      cell: (row: { getValue: () => number; row: { original: { id: string } } }) => (
+      cell: ({ getValue, row }: BatchColumnCellProps) => (
         <Input
           type="number"
-          value={row.getValue()}
-          onChange={(e) => handleBatchChange(row.row.original.id, 'initialStock', Number(e.target.value))}
+          value={getValue()}
+          onChange={(e) => handleBatchChange(row.original.id, 'initialStock', Number(e.target.value))}
         />
       )
     },
     {
       header: 'Remaining',
       accessorKey: 'remainingStock',
-      cell: (row: { getValue: () => number }) => (
+      cell: ({ getValue }: BatchColumnCellProps) => (
         <Input
           type="number"
-          value={row.getValue()}
+          value={getValue()}
           readOnly
         />
       )
@@ -109,23 +124,23 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     {
       header: 'Cost/Unit',
       accessorKey: 'costPerUnit',
-      cell: (row: { getValue: () => number; row: { original: { id: string } } }) => (
+      cell: ({ getValue, row }: BatchColumnCellProps) => (
         <Input
           type="number"
           step="0.01"
-          value={row.getValue()}
-          onChange={(e) => handleBatchChange(row.row.original.id, 'costPerUnit', Number(e.target.value))}
+          value={getValue()}
+          onChange={(e) => handleBatchChange(row.original.id, 'costPerUnit', Number(e.target.value))}
         />
       )
     },
     {
       header: 'Actions',
       accessorKey: 'actions',
-      cell: (row: { row: { original: { id: string } } }) => (
+      cell: ({ row }: { row: { original: MaterialBatch } }) => (
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => handleDeleteBatch(row.row.original.id)}
+          onClick={() => handleDeleteBatch(row.original.id)}
         >
           <Trash className="h-4 w-4" />
         </Button>

@@ -16,6 +16,8 @@ export interface Material {
   unit: string;
   status: string;
   vendor: string;
+  costPerUnit?: number; // Added this property
+  stock?: number;       // Added this property for backward compatibility
   batches?: MaterialBatch[];
 }
 

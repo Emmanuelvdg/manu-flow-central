@@ -18,9 +18,10 @@ export function PurchaseOrderDialog({ material, isOpen, onClose, onCreateOrder }
   const { toast } = useToast();
   const [quantity, setQuantity] = useState<number>(1);
   const [expectedDelivery, setExpectedDelivery] = useState<string>("");
+  const [costPerUnit, setCostPerUnit] = useState<number>(material.costPerUnit || 0);
   
   const calculateTotalCost = (): number => {
-    return quantity * (material.costPerUnit || 0);
+    return quantity * costPerUnit;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -78,9 +79,11 @@ export function PurchaseOrderDialog({ material, isOpen, onClose, onCreateOrder }
               <Label htmlFor="cost" className="text-right">Cost Per Unit</Label>
               <Input
                 id="cost"
-                value={material.costPerUnit || 0}
-                readOnly
-                className="col-span-3 bg-gray-50"
+                type="number"
+                step="0.01"
+                value={costPerUnit}
+                onChange={(e) => setCostPerUnit(parseFloat(e.target.value) || 0)}
+                className="col-span-3"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
