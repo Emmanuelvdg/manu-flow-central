@@ -73,7 +73,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     { 
       header: 'Purchase Date',
       accessorKey: 'purchaseDate',
-      cell: (row: { getValue: () => string }) => {
+      cell: (row: { getValue: () => string; row: { original: { id: string } } }) => {
         const value = row.getValue();
         return (
           <Input
@@ -87,7 +87,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     {
       header: 'Initial Stock',
       accessorKey: 'initialStock',
-      cell: (row: { getValue: () => number }) => (
+      cell: (row: { getValue: () => number; row: { original: { id: string } } }) => (
         <Input
           type="number"
           value={row.getValue()}
@@ -109,7 +109,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     {
       header: 'Cost/Unit',
       accessorKey: 'costPerUnit',
-      cell: (row: { getValue: () => number }) => (
+      cell: (row: { getValue: () => number; row: { original: { id: string } } }) => (
         <Input
           type="number"
           step="0.01"
@@ -121,7 +121,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     {
       header: 'Actions',
       accessorKey: 'actions',
-      cell: (row: any) => (
+      cell: (row: { row: { original: { id: string } } }) => (
         <Button
           variant="ghost"
           size="icon"
@@ -215,4 +215,5 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
         </form>
       </DialogContent>
     </Dialog>
-  
+  );
+}
