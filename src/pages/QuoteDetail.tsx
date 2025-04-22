@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -36,6 +35,16 @@ const QuoteDetail = () => {
               <div>
                 <label className="block text-sm font-medium mb-1">Total Amount</label>
                 <input type="number" className="w-full rounded border p-2" placeholder="Total" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Deposit Required (%)</label>
+                <input 
+                  type="number" 
+                  className="w-full rounded border p-2" 
+                  placeholder="Enter deposit percentage"
+                  min="0"
+                  max="100"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Payment Terms</label>
