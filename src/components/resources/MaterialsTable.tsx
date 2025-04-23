@@ -17,24 +17,6 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
   onCreateOrder,
   formatCurrency,
 }) => {
-  const calculateTotalStock = (material: Material): number => {
-    return material.batches?.reduce((sum, batch) => sum + (batch.remainingStock || 0), 0) || 0;
-  };
-
-  const calculateAverageCost = (material: Material): number => {
-    if (!material.batches || material.batches.length === 0) return 0;
-    
-    const totalCost = material.batches.reduce((sum, batch) => {
-      return sum + (batch.costPerUnit || 0) * (batch.initialStock || 0);
-    }, 0);
-    
-    const totalQuantity = material.batches.reduce((sum, batch) => {
-      return sum + (batch.initialStock || 0);
-    }, 0);
-    
-    return totalQuantity > 0 ? totalCost / totalQuantity : 0;
-  };
-
   const materialColumns: Column<Material>[] = [
     {
       header: "Name",
@@ -49,17 +31,16 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       accessorKey: "stock",
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
-        const stock = calculateTotalStock(material);
+        const stock = material.stock || 0;
         return `${stock} ${material.unit}`;
       },
     },
     {
       header: "Average Cost",
-      accessorKey: "averageCost",
+      accessorKey: "costPerUnit",
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
-        const avgCost = calculateAverageCost(material);
-        return formatCurrency(avgCost);
+        return formatCurrency(material.costPerUnit);
       },
     },
     {

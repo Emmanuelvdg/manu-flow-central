@@ -13,7 +13,7 @@ import { usePurchaseOrders } from "./hooks/usePurchaseOrders";
 
 export const MaterialsSection = () => {
   const { toast } = useToast();
-  const { materials, setMaterials, isLoading, error, queryClient } = useMaterials();
+  const { materials, setMaterials, isLoading, error, queryClient, saveMaterialBatches } = useMaterials();
   const { purchaseOrders, handleCreatePurchaseOrder } = usePurchaseOrders();
   
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
@@ -53,6 +53,9 @@ export const MaterialsSection = () => {
           .eq("id", updatedMaterial.id);
         if (updateError) throw updateError;
       }
+      
+      // Save material batches
+      await saveMaterialBatches(updatedMaterial);
       
       await queryClient.invalidateQueries({ queryKey: ["materials"] });
       
