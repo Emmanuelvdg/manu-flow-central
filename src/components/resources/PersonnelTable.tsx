@@ -1,35 +1,49 @@
 
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const mockPersonnel = [
-  { id: 1, name: 'John Doe', role: 'Production Manager', department: 'Manufacturing', status: 'Active' },
-  { id: 2, name: 'Jane Smith', role: 'Quality Control', department: 'QA', status: 'Active' },
-  { id: 3, name: 'Mike Johnson', role: 'Machine Operator', department: 'Production', status: 'Active' },
-  { id: 4, name: 'Sarah Wilson', role: 'Maintenance Technician', department: 'Maintenance', status: 'Active' },
-];
+import { useQuery } from "@tanstack/react-query";
+import { fetchPersonnelRoles } from "../recipe/recipeDataUtils";
 
 export const PersonnelTable = () => {
+  const { data: personnelRoles = [], isLoading, error } = useQuery({
+    queryKey: ["personnel_roles"],
+    queryFn: fetchPersonnelRoles,
+  });
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
             <TableHead>Role</TableHead>
-            <TableHead>Department</TableHead>
-            <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockPersonnel.map((person) => (
-            <TableRow key={person.id}>
-              <TableCell>{person.name}</TableCell>
-              <TableCell>{person.role}</TableCell>
-              <TableCell>{person.department}</TableCell>
-              <TableCell>{person.status}</TableCell>
+          {isLoading ? (
+            <TableRow>
+              <TableCell className="h-24 text-center" colSpan={1}>
+                Loading personnel roles...
+              </TableCell>
             </TableRow>
-          ))}
+          ) : error ? (
+            <TableRow>
+              <TableCell className="h-24 text-center text-destructive" colSpan={1}>
+                Could not load personnel roles. {String(error)}
+              </TableCell>
+            </TableRow>
+          ) : personnelRoles.length === 0 ? (
+            <TableRow>
+              <TableCell className="h-24 text-center" colSpan={1}>
+                No personnel roles found.
+              </TableCell>
+            </TableRow>
+          ) : (
+            personnelRoles.map((role) => (
+              <TableRow key={role.id}>
+                <TableCell>{role.role}</TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>

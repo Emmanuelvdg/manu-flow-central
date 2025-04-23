@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -7,21 +9,9 @@ import { PurchaseOrderDialog } from "./PurchaseOrderDialog";
 import { Material, PurchaseOrder } from "@/types/material";
 import { MaterialsTable } from "./MaterialsTable";
 import { PurchaseOrdersTable } from "./PurchaseOrdersTable";
+import { fetchMaterials } from "@/components/recipe/recipeDataUtils";
 
-// Mock data
-const mockMaterials: Material[] = [
-  { id: "mat-001", name: "Aluminum Sheet 1mm", category: "Metals", unit: "sqm", status: "Active", vendor: "MetalWorks Ltd", batches: [{ id: "batch-001", materialId: "mat-001", batchNumber: "B001", initialStock: 50, remainingStock: 45, costPerUnit: 12.5, purchaseDate: "2025-01-15" }] },
-  { id: "mat-002", name: "Copper Wire 2mm", category: "Metals", unit: "m", status: "Active", vendor: "ElectroSupplies Inc", batches: [{ id: "batch-002", materialId: "mat-002", batchNumber: "B001", initialStock: 200, remainingStock: 175, costPerUnit: 8.75, purchaseDate: "2025-02-03" }] },
-  { id: "mat-003", name: "Stainless Steel Bolt M8", category: "Fasteners", unit: "pcs", status: "Active", vendor: "FastFix Co", batches: [{ id: "batch-003", materialId: "mat-003", batchNumber: "B001", initialStock: 1000, remainingStock: 850, costPerUnit: 0.45, purchaseDate: "2025-01-21" }] },
-  { id: "mat-004", name: "Rubber O-Ring 20mm", category: "Seals", unit: "pcs", status: "Active", vendor: "SealMaster", batches: [{ id: "batch-004", materialId: "mat-004", batchNumber: "B001", initialStock: 500, remainingStock: 320, costPerUnit: 0.25, purchaseDate: "2025-02-12" }] },
-  { id: "mat-005", name: "Plastic Casing Type A", category: "Housings", unit: "pcs", status: "Active", vendor: "PlastiCorp", batches: [{ id: "batch-005", materialId: "mat-005", batchNumber: "B001", initialStock: 100, remainingStock: 78, costPerUnit: 4.50, purchaseDate: "2025-01-18" }] },
-  { id: "mat-006", name: "PCB Board 50x50mm", category: "Electronics", unit: "pcs", status: "Active", vendor: "CircuitPro", batches: [{ id: "batch-006", materialId: "mat-006", batchNumber: "B001", initialStock: 150, remainingStock: 125, costPerUnit: 6.80, purchaseDate: "2025-02-05" }] },
-  { id: "mat-007", name: "LED Light 5mm", category: "Electronics", unit: "pcs", status: "Active", vendor: "LightTech", batches: [{ id: "batch-007", materialId: "mat-007", batchNumber: "B001", initialStock: 1000, remainingStock: 750, costPerUnit: 0.15, purchaseDate: "2025-01-25" }] },
-  { id: "mat-008", name: "Glass Panel 10x10cm", category: "Glass", unit: "pcs", status: "Active", vendor: "GlassMasters", batches: [{ id: "batch-008", materialId: "mat-008", batchNumber: "B001", initialStock: 75, remainingStock: 62, costPerUnit: 7.25, purchaseDate: "2025-02-08" }] },
-  { id: "mat-009", name: "Hydraulic Fluid Type B", category: "Fluids", unit: "L", status: "Active", vendor: "FluidDynamics", batches: [{ id: "batch-009", materialId: "mat-009", batchNumber: "B001", initialStock: 200, remainingStock: 155, costPerUnit: 11.50, purchaseDate: "2025-01-15" }] },
-];
-
-// Mock purchase orders
+// We'll provide fallback mock POs only for demo—real data integration can be added later if relevant.
 const mockPurchaseOrders: PurchaseOrder[] = [
   { id: "po-001", materialId: "mat-001", quantity: 20, status: "ordered", orderDate: "2025-03-01", expectedDelivery: "2025-03-15", vendor: "MetalWorks Ltd", totalCost: 250 },
   { id: "po-002", materialId: "mat-004", quantity: 500, status: "delivered", orderDate: "2025-02-15", expectedDelivery: "2025-02-28", vendor: "SealMaster", totalCost: 125 },
@@ -29,12 +19,32 @@ const mockPurchaseOrders: PurchaseOrder[] = [
 ];
 
 export const MaterialsSection = () => {
-  const [materials, setMaterials] = useState<Material[]>(mockMaterials);
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(mockPurchaseOrders);
-  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  // Fetch materials from Supabase
+  const { data: dbMaterials = [], isLoading, error } = useQuery({
+    queryKey: ["materials"],
+    queryFn: fetchMaterials,
+  });
 
+  // These manage dialog state as before, but use DB data as source.
+  const [materials, setMaterials] = React.useState<Material[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = React.useState<PurchaseOrder[]>(mockPurchaseOrders);
+  const [selectedMaterial, setSelectedMaterial] = React.useState<Material | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = React.useState(false);
+
+  // Sync 'materials' state when DB loads
+  React.useEffect(() => {
+    setMaterials(
+      dbMaterials.map((m) => ({
+        ...m,
+        batches: m.batches ?? [], // make sure we at least have empty array for batches
+        stock: m.stock ?? 0,
+        costPerUnit: m.costPerUnit ?? 0,
+      }))
+    );
+  }, [dbMaterials]);
+
+  // The rest: handlers for dialogs, formatters (kept nearly the same)
   const handleEditMaterial = (material: Material) => {
     setSelectedMaterial(material);
     setIsEditDialogOpen(true);
@@ -47,9 +57,7 @@ export const MaterialsSection = () => {
 
   const handleSaveMaterial = (updatedMaterial: Material) => {
     setMaterials(
-      materials.map((mat) =>
-        mat.id === updatedMaterial.id ? updatedMaterial : mat
-      )
+      materials.map((mat) => (mat.id === updatedMaterial.id ? updatedMaterial : mat))
     );
   };
 
@@ -57,7 +65,6 @@ export const MaterialsSection = () => {
     setPurchaseOrders([...purchaseOrders, { ...newPO, id: `po-${Date.now()}` }]);
   };
 
-  // Safe date and currency formatting functions
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return 'N/A';
     try {
@@ -103,12 +110,18 @@ export const MaterialsSection = () => {
           </Button>
         </CardHeader>
         <CardContent>
-          <MaterialsTable
-            materials={materials}
-            onEditMaterial={handleEditMaterial}
-            onCreateOrder={handleCreateOrder}
-            formatCurrency={formatCurrency}
-          />
+          {isLoading ? (
+            <div className="text-muted-foreground py-8 text-center">Loading materials...</div>
+          ) : error ? (
+            <div className="text-destructive py-8 text-center">Could not load materials. {String(error)}</div>
+          ) : (
+            <MaterialsTable
+              materials={materials}
+              onEditMaterial={handleEditMaterial}
+              onCreateOrder={handleCreateOrder}
+              formatCurrency={formatCurrency}
+            />
+          )}
         </CardContent>
       </Card>
 
