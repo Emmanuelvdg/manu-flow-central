@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
 import { Quote, fetchQuotes } from './quotes/quoteUtils';
 import { createQuotesColumns } from './quotes/quotesColumns';
+import { toast } from '@/components/ui/use-toast';
 
 export const QuotesList = () => {
   const navigate = useNavigate();
@@ -21,11 +22,20 @@ export const QuotesList = () => {
   // Create columns with refetch callback
   const columns = createQuotesColumns(refetch);
 
+  const handleCreateQuote = () => {
+    navigate('/quotes/create');
+  };
+
+  // Handle when a row is clicked
+  const handleRowClick = (row: Quote) => {
+    navigate(`/quotes/${row.id}`);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Quotes</CardTitle>
-        <Button size="sm" onClick={() => navigate('/quotes/create')}>
+        <Button size="sm" onClick={handleCreateQuote}>
           <Plus className="mr-2 h-4 w-4" />
           New Quote
         </Button>
@@ -40,7 +50,7 @@ export const QuotesList = () => {
         <DataTable 
           columns={columns} 
           data={quotes} 
-          onRowClick={(row) => navigate(`/quotes/${row.id}`)}
+          onRowClick={handleRowClick}
         />
       </CardContent>
     </Card>

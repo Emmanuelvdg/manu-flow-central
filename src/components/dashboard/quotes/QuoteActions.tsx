@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Eye, FileCheck, FileX } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
+import { Quote, fetchQuote } from './quoteUtils';
 
 interface QuoteActionsProps {
   quoteId: string;
@@ -20,8 +21,37 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const createOrderFromQuote = async (quote: Quote) => {
+    const orderNumber = `ORD-${Date.now()}`;
+    
+    const orderData = {
+      quote_id: quote.id,
+      order_number: orderNumber,
+      customer_name: quote.customer_name,
+      products: quote.products,
+      total: quote.total,
+      status: 'created',
+      parts_status: 'Not booked'
+    };
+
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert(orderData)
+      .select('id')
+      .single();
+
+    if (orderError) throw orderError;
+    
+    return orderData.id;
+  };
+
   const acceptQuote = async () => {
     try {
+      // Fetch the complete quote data
+      const quote = await fetchQuote(quoteId);
+      if (!quote) throw new Error("Quote not found");
+      
+      // Update quote status to accepted
       const { error } = await supabase
         .from('quotes')
         .update({ status: 'accepted' })
@@ -29,13 +59,17 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
       
       if (error) throw error;
       
+      // Create manufacturing order based on the quote
+      const orderId = await createOrderFromQuote(quote);
+      
       toast({
         title: "Quote Accepted",
-        description: `Quote has been accepted and converted to an order.`,
+        description: `Quote has been accepted and manufacturing order created.`,
       });
       
       onStatusChange();
     } catch (error: any) {
+      console.error("Error accepting quote:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to accept quote",
