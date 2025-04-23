@@ -340,6 +340,45 @@ export type Database = {
           },
         ]
       }
+      recipes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          machines: Json | null
+          materials: Json | null
+          name: string
+          personnel: Json | null
+          product_id: string
+          product_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          machines?: Json | null
+          materials?: Json | null
+          name: string
+          personnel?: Json | null
+          product_id: string
+          product_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          machines?: Json | null
+          materials?: Json | null
+          name?: string
+          personnel?: Json | null
+          product_id?: string
+          product_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       resource_allocations: {
         Row: {
           created_at: string
