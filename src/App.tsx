@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -16,6 +15,7 @@ import OrderDetail from "./pages/OrderDetail";
 import RecipesDashboard from "./pages/RecipesDashboard";
 import RecipeCreate from "./pages/RecipeCreate";
 import RFQCreate from "./pages/RFQCreate";
+import ShipmentsDashboard from "./pages/ShipmentsDashboard";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +41,7 @@ const App = () => (
           <Route path="/recipes/create" element={<RecipeCreate />} />
           <Route path="/recipes/:id" element={<Recipe />} />
           <Route path="/resources" element={<Resource />} />
+          <Route path="/shipments" element={<ShipmentsDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
