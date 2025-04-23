@@ -5,6 +5,8 @@ import { OrderMetaForm } from "./OrderMetaForm";
 import { OrderProductsProgress } from "./OrderProductsProgress";
 import { OrderDetailState } from "./components/OrderDetailState";
 import { useOrderForm } from "./hooks/useOrderForm";
+import { Button } from "@/components/ui/button";
+import { CircleAlert } from "lucide-react";
 
 interface OrderDetailContentProps {
   order: any;
@@ -14,6 +16,7 @@ interface OrderDetailContentProps {
   productsLoading: boolean;
   orderProducts: any[];
   refetch: () => void;
+  syncOrderProducts?: () => Promise<void>;
 }
 
 export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
@@ -23,7 +26,8 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
   error,
   productsLoading,
   orderProducts,
-  refetch
+  refetch,
+  syncOrderProducts
 }) => {
   const { formData, handleChange, handleSaveOrder } = useOrderForm(order, orderId, refetch);
 
@@ -33,6 +37,8 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
   if (isLoading || error || !order || showMappings) {
     return <OrderDetailState isLoading={isLoading} error={error} showMappings={showMappings} />;
   }
+
+  const hasNoProducts = !productsLoading && orderProducts.length === 0;
 
   return (
     <Card>
@@ -46,6 +52,19 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
           onChange={handleChange}
           onSave={handleSaveOrder}
         />
+        
+        {hasNoProducts && syncOrderProducts && (
+          <div className="mt-4 mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CircleAlert className="h-5 w-5 text-amber-500" />
+              <span>No product entries found for this order. Sync to create them from order data.</span>
+            </div>
+            <Button onClick={syncOrderProducts} variant="outline" className="bg-amber-100 hover:bg-amber-200">
+              Sync Products
+            </Button>
+          </div>
+        )}
+        
         <OrderProductsProgress 
           productsLoading={productsLoading}
           orderProducts={orderProducts}

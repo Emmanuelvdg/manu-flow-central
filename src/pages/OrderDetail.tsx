@@ -19,7 +19,8 @@ const OrderDetail = () => {
     isLoading,
     productsLoading,
     error,
-    refetch
+    refetch,
+    syncOrderProducts
   } = useOrderDetail(isQuoteOrderMapping ? undefined : orderId);
 
   return (
@@ -35,6 +36,7 @@ const OrderDetail = () => {
             productsLoading={productsLoading}
             orderProducts={orderProducts}
             refetch={refetch}
+            syncOrderProducts={syncOrderProducts}
           />
         </div>
       </div>

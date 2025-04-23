@@ -76,7 +76,8 @@ export const useOrderDetail = (orderId: string | undefined) => {
 
   const { 
     data: orderProducts = [], 
-    isLoading: productsLoading 
+    isLoading: productsLoading,
+    refetch: refetchProducts 
   } = useQuery({
     queryKey: ['orderProducts', order?.id],
     queryFn: async () => {
@@ -107,6 +108,17 @@ export const useOrderDetail = (orderId: string | undefined) => {
         }
         
         console.log("Order products data:", data);
+        
+        // If no products exist in the order_products table but there are products in the order JSON,
+        // create them automatically
+        if ((!data || data.length === 0) && order.products && Array.isArray(order.products) && order.products.length > 0) {
+          console.log("No order products found in database. Creating from order.products:", order.products);
+          
+          const createdProducts = await createOrderProductsFromJSON(order.id, order.products);
+          console.log("Created order products:", createdProducts);
+          return createdProducts;
+        }
+        
         return (data || []).map((row: any) => ({
           ...row,
           product_name: row.products?.name ?? row.product_id,
@@ -123,12 +135,110 @@ export const useOrderDetail = (orderId: string | undefined) => {
     enabled: !!order?.id,
   });
 
+  // Helper function to create order_products entries from the order.products JSON
+  const createOrderProductsFromJSON = async (orderId: string, products: any[]) => {
+    const createdProducts = [];
+    
+    for (const product of products) {
+      if (!product.name && !product.id) continue;
+      
+      // Try to find a matching recipe for this product
+      let recipeId = null;
+      const productId = product.id || product.name;
+      
+      if (productId) {
+        const { data: recipes } = await supabase
+          .from('recipes')
+          .select('id')
+          .eq('product_id', productId)
+          .maybeSingle();
+          
+        if (recipes) {
+          recipeId = recipes.id;
+          console.log(`Found recipe ${recipes.id} for product ${productId}`);
+        }
+      }
+      
+      // Create a new order_product entry
+      const productEntry = {
+        order_id: orderId,
+        product_id: productId,
+        quantity: parseInt(String(product.quantity)) || 1,
+        unit: product.unit || 'pcs',
+        status: 'pending',
+        materials_status: 'Not booked',
+        recipe_id: recipeId
+      };
+      
+      console.log("Creating order product entry:", productEntry);
+      
+      const { data, error } = await supabase
+        .from('order_products')
+        .insert(productEntry)
+        .select(`
+          *,
+          products:product_id (
+            name,
+            description,
+            category
+          ),
+          recipes:recipe_id (
+            id,
+            name,
+            product_name
+          )
+        `);
+        
+      if (error) {
+        console.error("Error creating order product:", error);
+      } else if (data && data.length > 0) {
+        const processedProduct = {
+          ...data[0],
+          product_name: data[0].products?.name ?? data[0].product_id,
+          product_description: data[0].products?.description ?? null,
+          group: data[0].products?.category ?? null,
+          recipe_name: data[0].recipes?.name ?? null,
+          recipe_product_name: data[0].recipes?.product_name ?? null
+        };
+        createdProducts.push(processedProduct);
+      }
+    }
+    
+    return createdProducts;
+  };
+
+  // Add a function to sync order products
+  const syncOrderProducts = async () => {
+    if (!order?.id || !order.products || !Array.isArray(order.products)) {
+      console.error("Cannot sync products: Invalid order data");
+      return;
+    }
+    
+    try {
+      const result = await createOrderProductsFromJSON(order.id, order.products);
+      console.log("Synced order products:", result);
+      refetchProducts();
+      toast({
+        title: "Products synchronized",
+        description: `Successfully created ${result.length} product entries for this order.`,
+      });
+    } catch (err) {
+      console.error("Error syncing order products:", err);
+      toast({
+        title: "Sync failed",
+        description: "Failed to synchronize products. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     order,
     orderProducts,
     isLoading,
     productsLoading,
     error,
-    refetch
+    refetch,
+    syncOrderProducts
   };
 };
