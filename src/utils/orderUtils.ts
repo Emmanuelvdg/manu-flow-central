@@ -34,18 +34,32 @@ export const parseOrderRow = (row: any): Order => {
         return currentScore > bestScore ? current : best;
       }, products[0])
     : null;
+    
+  // Also check if we have quote data with products
+  let quoteProducts = [];
+  if (row.quotes && row.quotes.products && Array.isArray(row.quotes.products)) {
+    quoteProducts = row.quotes.products;
+    console.log("Found products in quote data:", quoteProducts);
+  }
+  
+  // Use quote products as fallback if order products are empty
+  const effectiveProducts = products.length > 0 ? products : quoteProducts;
+  
+  // Find the best product info from any available source
+  const effectiveProductInfo = productInfo || 
+    (effectiveProducts.length > 0 ? effectiveProducts[0] : null);
   
   // Calculate total quantity across all products
-  const totalQuantity = products.reduce((sum: number, prod: any) => {
+  const totalQuantity = effectiveProducts.reduce((sum: number, prod: any) => {
     const quantity = prod?.quantity ? parseInt(String(prod.quantity)) : 0;
     return sum + quantity;
   }, 0);
     
   return {
     number: row.order_number || "-",
-    groupName: productInfo?.category || "-",
-    partNo: productInfo?.id || "-",
-    partDescription: productInfo?.name || "-",
+    groupName: effectiveProductInfo?.category || "-",
+    partNo: effectiveProductInfo?.id || "-",
+    partDescription: effectiveProductInfo?.name || "-",
     quantity: String(totalQuantity) || "0",
     status: row.status || "-",
     partsStatus: row.parts_status || "-",
@@ -53,8 +67,8 @@ export const parseOrderRow = (row: any): Order => {
     statusColor: getStatusColor(row.status),      
     editable: true,
     checked: false,
-    customerName: row.customer_name,
+    customerName: row.customer_name || (row.quotes ? row.quotes.customer_name : null),
     total: row.total,
-    products: products
+    products: effectiveProducts
   };
 };
