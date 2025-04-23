@@ -19,6 +19,7 @@ export const useOrderForm = (order: any, orderId: string, refetch: () => void) =
 
   React.useEffect(() => {
     if (order) {
+      console.log("Setting form data from order:", order);
       setFormData({
         customerName: order.customer_name || "",
         status: order.status || "Processing",

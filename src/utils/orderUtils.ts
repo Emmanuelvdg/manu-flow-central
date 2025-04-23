@@ -20,6 +20,8 @@ export const parseOrderRow = (row: any): Order => {
   // Ensure we have valid data to work with
   if (!row) return {} as Order;
   
+  console.log("Parsing order row:", row);
+  
   // Fix for missing or empty products array
   const products = Array.isArray(row.products) ? row.products : [];
   const productInfo = products.length > 0 ? products[0] : null;
