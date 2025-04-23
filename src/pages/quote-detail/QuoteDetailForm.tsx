@@ -1,257 +1,138 @@
 
 import React, { useState, useEffect } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { calculateRisk, getRecommendedDeposit } from "@/utils/riskCalculator";
+import { CardFooter } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchQuote } from "@/components/dashboard/quotes/quoteUtils";
 import { QuoteDetailCustomerFields } from "./QuoteDetailCustomerFields";
 import { QuoteDetailProductsSection } from "./QuoteDetailProductsSection";
-import { migrateProducts, productsToString, stringToProducts, RFQProductItem } from "./quoteDetailUtils";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { migrateProducts, RFQProductItem } from "./quoteDetailUtils";
 
-export const QuoteDetailForm: React.FC = () => {
+// Import status options for quotes
+const STATUS_OPTIONS = [
+  { label: "Draft", value: "draft" },
+  { label: "Submitted", value: "submitted" },
+  { label: "Accepted", value: "accepted" },
+  { label: "Rejected", value: "rejected" },
+];
+
+export interface QuoteDetailFormProps {
+  initialData?: any;
+}
+
+export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData }) => {
   const { id } = useParams<{ id: string }>();
-  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isNew = !id || id === "create";
 
-  // Incoming RFQ state management
-  const fromRFQ = location.state?.fromRFQ as any | undefined;
-  const rfqIdForShipment: string | undefined = location.state?.rfqIdForShipment;
-  // States
-  const [customerName, setCustomerName] = useState(fromRFQ?.customerName ?? "");
-  const [customerEmail, setCustomerEmail] = useState(fromRFQ?.customerEmail ?? "");
-  const [customerPhone, setCustomerPhone] = useState(fromRFQ?.customerPhone ?? "");
-  const [companyName, setCompanyName] = useState(fromRFQ?.companyName ?? "");
-  const [notes, setNotes] = useState(fromRFQ?.notes ?? "");
-  const [rfqProducts, setRFQProducts] = useState<RFQProductItem[] | undefined>(
-    fromRFQ?.products ? migrateProducts(fromRFQ.products) : undefined
-  );
-  const [products, setProducts] = useState<string>(
-    !fromRFQ?.products ? "" : productsToString(fromRFQ.products)
-  );
+  // Form state
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [rfqId, setRfqId] = useState<string | undefined>(undefined);
+  const [products, setProducts] = useState<RFQProductItem[]>([]);
+  const [status, setStatus] = useState("draft");
+  const [total, setTotal] = useState(0);
+  const [paymentTerms, setPaymentTerms] = useState("open");
+  const [incoterms, setIncoterms] = useState("exw");
   const [currency, setCurrency] = useState("USD");
-  const [totalAmount, setTotalAmount] = useState<number>(0);
-  const [top, setTop] = useState<string>("");
-  const [shippingMethod, setShippingMethod] = useState<string>("");
-  const [paymentTerm, setPaymentTerm] = useState<string>("");
-  const [incoterm, setIncoterm] = useState<string>("");
-  const [risk, setRisk] = useState<string>("");
-  const [recommendedDeposit, setRecommendedDeposit] = useState<number>(0);
-  const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
-  const [locationField, setLocationField] = useState<string>(fromRFQ?.location ?? "");
-  const [status, setStatus] = useState<string>("submitted");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [quoteNumber, setQuoteNumber] = useState<string>("");
+  const [shippingMethod, setShippingMethod] = useState("sea");
+  const [estimatedDelivery, setEstimatedDelivery] = useState("");
+  const [riskLevel, setRiskLevel] = useState("Low");
+  const [depositPercentage, setDepositPercentage] = useState(30);
+  const [quoteNumber, setQuoteNumber] = useState("");
 
+  // Loading state 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize form with data if editing
   useEffect(() => {
-    if (id && id !== 'create') {
-      setIsLoading(true);
-      fetchQuote(id)
-        .then((quoteData) => {
-          if (quoteData) {
-            setCustomerName(quoteData.customer_name || "");
-            setCustomerEmail(quoteData.customer_email || "");
-            setCompanyName(quoteData.company_name || "");
-            setCurrency(quoteData.currency || "USD");
-            setTotalAmount(quoteData.total || 0);
-            setPaymentTerm(quoteData.payment_terms || "");
-            setShippingMethod(quoteData.shipping_method || "");
-            setIncoterm(quoteData.incoterms || "");
-            setRisk(quoteData.risk_level || "");
-            setDepositPercentage(quoteData.deposit_percentage);
-            setStatus(quoteData.status || "submitted");
-            setQuoteNumber(quoteData.quote_number || "");
+    if (initialData) {
+      setCustomerName(initialData.customer_name || "");
+      setCustomerEmail(initialData.customer_email || "");
+      setCompanyName(initialData.company_name || "");
+      setRfqId(initialData.rfq_id);
+      setProducts(migrateProducts(initialData.products) || []);
+      setStatus(initialData.status || "draft");
+      setTotal(initialData.total || 0);
+      setPaymentTerms(initialData.payment_terms || "open");
+      setIncoterms(initialData.incoterms || "exw");
+      setCurrency(initialData.currency || "USD");
+      setShippingMethod(initialData.shipping_method || "sea");
+      setEstimatedDelivery(initialData.estimated_delivery || "");
+      setRiskLevel(initialData.risk_level || "Low");
+      setDepositPercentage(initialData.deposit_percentage || 30);
+      setQuoteNumber(initialData.quote_number || "");
+    }
+  }, [initialData]);
 
-            if (quoteData.products) {
-              if (Array.isArray(quoteData.products)) {
-                setRFQProducts(migrateProducts(quoteData.products));
-              } else {
-                setProducts(String(quoteData.products));
-              }
-            }
-          }
-        })
-        .catch((error) => {
-          console.error("Error loading quote:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load quote data",
-            variant: "destructive"
-          });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
+  // Generate quote number for new quotes
+  useEffect(() => {
+    if (isNew && !quoteNumber) {
       setQuoteNumber(`Q-${Date.now()}`);
     }
-    // eslint-disable-next-line
-  }, [id]);
+  }, [isNew, quoteNumber]);
 
-  useEffect(() => {
-    if (fromRFQ) {
-      setCustomerName(fromRFQ.customerName ?? "");
-      setCustomerEmail(fromRFQ.customerEmail ?? "");
-      setCustomerPhone(fromRFQ.customerPhone ?? "");
-      setCompanyName(fromRFQ.companyName ?? "");
-      setNotes(fromRFQ.notes ?? "");
-      setRFQProducts(migrateProducts(fromRFQ.products));
-      setProducts(productsToString(fromRFQ.products));
-      setLocationField(fromRFQ.location ?? "");
-    }
-  }, [fromRFQ]);
-
-  useEffect(() => {
-    const calculatedRisk = calculateRisk(
-      incoterm as 'cif' | 'ddp' | 'fob' | 'exw' | '', 
-      paymentTerm as 'advance' | 'lc' | 'open' | ''
-    );
-    setRisk(calculatedRisk);
-    const recommendedDepositValue = getRecommendedDeposit(calculatedRisk);
-    setRecommendedDeposit(recommendedDepositValue);
-  }, [incoterm, paymentTerm]);
-
-  const createShipmentFromRFQ = async (rfqId: string, quoteId: string) => {
+  const handleSave = async () => {
     try {
-      const { error } = await supabase.from('shipments').insert({
-        rfq_id: rfqId,
-        quote_id: quoteId,
-        status: 'pending',
-      });
-
-      if (error) {
-        console.error("Error creating shipment:", error);
-        throw error;
-      }
-    } catch (error: any) {
-      console.error("Error in createShipmentFromRFQ:", error);
-      toast({
-        title: "Error",
-        description: `Failed to create shipment: ${error.message}`,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!customerName) {
-      toast({
-        title: "Error",
-        description: "Customer name is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (totalAmount <= 0) {
-      toast({
-        title: "Error",
-        description: "Total amount must be greater than 0",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!quoteNumber) {
-      setQuoteNumber(`Q-${Date.now()}`);
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      let productsData;
-      if (rfqProducts && Array.isArray(rfqProducts)) {
-        productsData = rfqProducts.map(p => ({
-          name: p.name,
-          quantity: p.quantity || 1
-        }));
-      } else if (products) {
-        productsData = stringToProducts(products);
-      } else {
-        productsData = [];
-      }
-
+      setIsSubmitting(true);
+      
+      // Prepare quote data
       const quoteData = {
-        quote_number: quoteNumber,
-        rfq_id: fromRFQ?.rfqId,
         customer_name: customerName,
         customer_email: customerEmail,
         company_name: companyName,
-        products: productsData,
-        total: totalAmount,
+        rfq_id: rfqId,
+        products,
+        status,
+        total,
+        payment_terms: paymentTerms,
+        incoterms,
         currency,
-        payment_terms: paymentTerm,
         shipping_method: shippingMethod,
-        incoterms: incoterm,
-        risk_level: risk,
+        estimated_delivery: estimatedDelivery,
+        risk_level: riskLevel,
         deposit_percentage: depositPercentage,
-        status
+        quote_number: quoteNumber,
       };
+      
+      console.log("Saving quote:", quoteData);
 
+      // Insert or update the quote in Supabase
       let result;
-      if (id && id !== 'create') {
-        result = await supabase
-          .from('quotes')
-          .update(quoteData)
-          .eq('id', id);
-
-        if (result.error) {
-          throw result.error;
-        }
-
-        toast({
-          title: "Success",
-          description: "Quote updated successfully",
-        });
+      
+      if (isNew) {
+        // Create new quote
+        result = await supabase.from("quotes").insert(quoteData);
       } else {
+        // Update existing quote
         result = await supabase
-          .from('quotes')
-          .insert(quoteData)
-          .select('id')
-          .single();
-
-        if (result.error) {
-          throw result.error;
-        }
-
-        const newQuoteId = result.data.id as string;
-
-        if (rfqIdForShipment && newQuoteId) {
-          await createShipmentFromRFQ(rfqIdForShipment, newQuoteId);
-        }
-        else if (fromRFQ?.rfqId && newQuoteId) {
-          await createShipmentFromRFQ(fromRFQ.rfqId, newQuoteId);
-        }
-
-        if (fromRFQ?.rfqId) {
-          const { error: rfqError } = await supabase
-            .from('rfqs')
-            .update({ status: 'quoted' })
-            .eq('id', fromRFQ.rfqId);
-          if (rfqError) {
-            console.error("Error updating RFQ status:", rfqError);
-          }
-        }
-
-        toast({
-          title: "Success",
-          description: "Quote saved successfully",
-        });
-
-        navigate('/quotes');
+          .from("quotes")
+          .update(quoteData)
+          .eq("id", id);
       }
-    } catch (error: any) {
+
+      // Handle errors
+      if (result.error) {
+        throw result.error;
+      }
+
+      // Show success message
+      toast({
+        title: `Quote ${isNew ? "created" : "updated"} successfully`,
+        description: `Quote ${quoteNumber} has been ${isNew ? "created" : "updated"}.`,
+      });
+
+      // Redirect to quotes list
+      navigate("/quotes");
+    } catch (error) {
       console.error("Error saving quote:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to save quote",
-        variant: "destructive"
+        title: "Failed to save quote",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -259,173 +140,147 @@ export const QuoteDetailForm: React.FC = () => {
   };
 
   return (
-    <>
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-pulse">Loading quote data...</div>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <QuoteDetailCustomerFields
-            customerName={customerName}
-            setCustomerName={setCustomerName}
-            customerEmail={customerEmail}
-            setCustomerEmail={setCustomerEmail}
-            customerPhone={customerPhone}
-            setCustomerPhone={setCustomerPhone}
-            companyName={companyName}
-            setCompanyName={setCompanyName}
-            locationField={locationField}
-            setLocationField={setLocationField}
-            notes={notes}
-            setNotes={setNotes}
-          />
-          <QuoteDetailProductsSection
-            rfqProducts={rfqProducts}
-            setRFQProducts={setRFQProducts}
-            products={products}
-            setProducts={setProducts}
-          />
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium mb-1">Total Amount</label>
-              <input
-                type="number"
+    <div className="space-y-8">
+      <QuoteDetailCustomerFields 
+        customerName={customerName}
+        setCustomerName={setCustomerName}
+        customerEmail={customerEmail}
+        setCustomerEmail={setCustomerEmail}
+        companyName={companyName}
+        setCompanyName={setCompanyName}
+        rfqId={rfqId}
+      />
+
+      <QuoteDetailProductsSection 
+        products={products} 
+        setProducts={setProducts} 
+        total={total}
+        setTotal={setTotal}
+        currency={currency}
+        setCurrency={setCurrency}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          <h3 className="font-medium">Shipping & Delivery</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Shipping Method</label>
+              <select 
+                className="w-full rounded border p-2" 
+                value={shippingMethod}
+                onChange={(e) => setShippingMethod(e.target.value)}
+              >
+                <option value="sea">Sea</option>
+                <option value="air">Air</option>
+                <option value="land">Land</option>
+                <option value="express">Express</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Incoterms</label>
+              <select 
                 className="w-full rounded border p-2"
-                placeholder="Total"
-                value={totalAmount || ''}
-                onChange={(e) => setTotalAmount(Number(e.target.value))}
-                required
+                value={incoterms}
+                onChange={(e) => setIncoterms(e.target.value)}
+              >
+                <option value="exw">EXW (Ex Works)</option>
+                <option value="fob">FOB (Free on Board)</option>
+                <option value="cif">CIF (Cost, Insurance, Freight)</option>
+                <option value="ddp">DDP (Delivered Duty Paid)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Estimated Delivery</label>
+            <input 
+              type="text" 
+              className="w-full rounded border p-2"
+              placeholder="e.g., 4-6 weeks"
+              value={estimatedDelivery}
+              onChange={(e) => setEstimatedDelivery(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <h3 className="font-medium">Payment & Terms</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Payment Terms</label>
+              <select 
+                className="w-full rounded border p-2"
+                value={paymentTerms}
+                onChange={(e) => setPaymentTerms(e.target.value)}
+              >
+                <option value="open">Open Account (Net 30)</option>
+                <option value="cod">Cash on Delivery</option>
+                <option value="advance">Advance Payment</option>
+                <option value="lc">Letter of Credit</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Deposit (%)</label>
+              <input 
+                type="number" 
+                min="0" 
+                max="100"
+                className="w-full rounded border p-2"
+                value={depositPercentage}
+                onChange={(e) => setDepositPercentage(parseInt(e.target.value || "0"))}
               />
             </div>
-            <div className="w-32">
-              <label className="block text-sm font-medium mb-1">Currency</label>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="IDR">IDR</SelectItem>
-                </SelectContent>
-              </Select>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Risk Level</label>
+              <select 
+                className="w-full rounded border p-2"
+                value={riskLevel}
+                onChange={(e) => setRiskLevel(e.target.value)}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Very High">Very High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <select 
+                className="w-full rounded border p-2"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {STATUS_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Terms of Payment (Days)</label>
-            <Select value={top} onValueChange={setTop}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select payment terms" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">0</SelectItem>
-                <SelectItem value="7">+7</SelectItem>
-                <SelectItem value="14">+14</SelectItem>
-                <SelectItem value="30">+30</SelectItem>
-                <SelectItem value="60">+60</SelectItem>
-                <SelectItem value="90">+90</SelectItem>
-                <SelectItem value="120">+120</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Shipping Method</label>
-            <Select value={shippingMethod} onValueChange={setShippingMethod}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select shipping method" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="self_collect">Self Collect</SelectItem>
-                <SelectItem value="sea">Sea</SelectItem>
-                <SelectItem value="air">Air</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Payment Terms</label>
-            <Select value={paymentTerm} onValueChange={setPaymentTerm}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select payment terms" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="advance">Advance Payment</SelectItem>
-                <SelectItem value="lc">Letter of Credit</SelectItem>
-                <SelectItem value="open">Open Account</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Incoterms</label>
-            <Select value={incoterm} onValueChange={setIncoterm}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select incoterms" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cif">CIF</SelectItem>
-                <SelectItem value="ddp">DDP</SelectItem>
-                <SelectItem value="fob">FOB</SelectItem>
-                <SelectItem value="exw">EXW</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Risk Level</label>
-            <input
-              type="text"
-              className="w-full rounded border p-2 bg-gray-50"
-              value={risk}
-              readOnly
-              placeholder="Select Incoterms and Payment Terms to calculate risk"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Deposit Required (%)
-              {recommendedDeposit > 0 && (
-                <span className="text-sm text-gray-500 ml-2">
-                  Recommended: {recommendedDeposit}%
-                </span>
-              )}
-            </label>
-            <input
-              type="number"
-              className="w-full rounded border p-2"
-              placeholder="Enter deposit percentage"
-              min="0"
-              max="100"
-              value={depositPercentage ?? ''}
-              onChange={(e) =>
-                setDepositPercentage(e.target.value ? Number(e.target.value) : undefined)
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="submitted">Submitted</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        </div>
+      </div>
+
+      <CardFooter className="px-0 pb-0">
+        <div className="w-full flex justify-end gap-2">
           <Button
-            type="submit"
-            className="ml-auto"
-            disabled={isSubmitting || isLoading}
+            variant="outline"
+            onClick={() => navigate("/quotes")}
+            disabled={isSubmitting}
           >
-            {isSubmitting
-              ? "Saving..."
-              : id && id !== "create"
-              ? "Update Quote"
-              : "Save Quote"}
+            Cancel
           </Button>
-        </form>
-      )}
-    </>
+          <Button 
+            type="button" 
+            onClick={handleSave}
+            disabled={!customerName || products.length === 0 || isSubmitting}
+          >
+            {isSubmitting ? "Saving..." : (isNew ? "Create Quote" : "Save Changes")}
+          </Button>
+        </div>
+      </CardFooter>
+    </div>
   );
 };
