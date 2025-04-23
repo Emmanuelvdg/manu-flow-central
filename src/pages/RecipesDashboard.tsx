@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import RecipeMappingModal from '@/components/recipe/RecipeMappingModal';
 import { fetchRecipes, deleteRecipe, Recipe } from '@/components/recipe/recipeUtils';
+import { useToast } from '@/components/ui/use-toast';
 
 const RecipesDashboard = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -17,6 +18,7 @@ const RecipesDashboard = () => {
   const [minCost, setMinCost] = useState('');
   const [maxCost, setMaxCost] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     const load = async () => {
@@ -32,20 +34,40 @@ const RecipesDashboard = () => {
     load();
   }, [modalOpen]);
 
+  const handleDeleteRecipe = async (id: string) => {
+    try {
+      if (window.confirm('Delete this recipe mapping?')) {
+        await deleteRecipe(id);
+        setRecipes(recipes.filter(recipe => recipe.id !== id));
+        toast({
+          title: "Recipe deleted",
+          description: "Recipe mapping was deleted successfully"
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting recipe:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete recipe",
+        variant: "destructive"
+      });
+    }
+  };
+
   const columns = [
     {
       header: "#",
       accessorKey: "id",
-      cell: (_row: any) => {
-        const index = recipes.findIndex(recipe => recipe.id === _row.id);
+      cell: ({ row }: any) => {
+        const index = recipes.findIndex(recipe => recipe.id === row.original.id);
         return index > -1 ? index + 1 : '—';
       }
     },
     {
       header: "Product",
       accessorKey: "product_name",
-      cell: (_row: any) => (
-        <span>{_row.product_name} <span className="text-xs text-muted-foreground ml-2">({_row.product_id})</span></span>
+      cell: ({ row }: any) => (
+        <span>{row.original.product_name} <span className="text-xs text-muted-foreground ml-2">({row.original.product_id})</span></span>
       )
     },
     {
@@ -59,23 +81,28 @@ const RecipesDashboard = () => {
     {
       header: "Created",
       accessorKey: "created_at",
-      cell: (_row: any) => new Date(_row.created_at).toLocaleDateString()
+      cell: ({ row }: any) => new Date(row.original.created_at).toLocaleDateString()
     },
     {
       header: "Actions",
       accessorKey: "actions",
-      cell: (_row: any) => (
+      cell: ({ row }: any) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={e => { e.stopPropagation(); setEditRecipe(_row); setModalOpen(true); }}>
+          <Button variant="ghost" size="sm" onClick={e => { 
+            e.stopPropagation(); 
+            setEditRecipe(row.original); 
+            setModalOpen(true); 
+          }}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={async e => {
-            e.stopPropagation();
-            if (window.confirm('Delete this recipe mapping?')) {
-              await deleteRecipe(_row.id);
-              setRecipes(r => r.filter(rec => rec.id !== _row.id));
-            }
-          }}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={e => { 
+              e.stopPropagation(); 
+              handleDeleteRecipe(row.original.id);
+            }}
+          >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -84,7 +111,6 @@ const RecipesDashboard = () => {
   ];
 
   const filteredRecipes = recipes.filter(recipe => {
-    // Ignore cost filtering since recipes don't contain cost in this schema
     const matchesSearch = searchTerm === '' ||
       [recipe.product_id, recipe.product_name, recipe.name, recipe.description].some(value =>
         (value || "").toString().toLowerCase().includes(searchTerm.toLowerCase())
@@ -96,10 +122,6 @@ const RecipesDashboard = () => {
     setMinCost('');
     setMaxCost('');
     setSearchTerm('');
-  };
-
-  const handleSearch = () => {
-    // No-op, as filters are reactive
   };
 
   return (
@@ -137,7 +159,6 @@ const RecipesDashboard = () => {
               />
               <Button
                 variant="outline"
-                onClick={handleSearch}
               >
                 <Search className="h-4 w-4 mr-1" />
                 Search
@@ -153,7 +174,6 @@ const RecipesDashboard = () => {
           <DataTable
             columns={columns}
             data={filteredRecipes}
-            // Optionally: onRowClick goes to detail (out of scope for simple mapping)
           />
         </div>
       </div>

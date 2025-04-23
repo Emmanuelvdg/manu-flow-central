@@ -61,6 +61,24 @@ export default function RecipeMappingModal({
   const [personnelRoleList, setPersonnelRoleList] = useState<PersonnelRoleOption[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
+  // State for form fields
+  const [productId, setProductId] = useState("");
+  const [productName, setProductName] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [personnel, setPersonnel] = useState<Personnel[]>([]);
+  const [machines, setMachines] = useState<Machine[]>([]);
+  
+  // UI state
+  const [showMaterials, setShowMaterials] = useState(true);
+  const [showPersonnel, setShowPersonnel] = useState(false);
+  const [showMachines, setShowMachines] = useState(false);
+  const [editingMaterial, setEditingMaterial] = useState<Partial<Material> | null>(null);
+  const [editingPersonnel, setEditingPersonnel] = useState<Partial<Personnel> | null>(null);
+  const [editingMachine, setEditingMachine] = useState<Partial<Machine> | null>(null);
+
+  // Load reference data when modal opens
   useEffect(() => {
     const loadData = async () => {
       if (open) {
@@ -92,29 +110,29 @@ export default function RecipeMappingModal({
     loadData();
   }, [open, toast]);
 
-  const [productId, setProductId] = useState(initialRecipe?.product_id || "");
-  const [productName, setProductName] = useState(initialRecipe?.product_name || "");
-  const [name, setName] = useState(initialRecipe?.name || "");
-  const [description, setDescription] = useState(initialRecipe?.description || "");
-  const [materials, setMaterials] = useState<Material[]>(initialRecipe?.materials ?? []);
-  const [personnel, setPersonnel] = useState<Personnel[]>(initialRecipe?.personnel ?? []);
-  const [machines, setMachines] = useState<Machine[]>(initialRecipe?.machines ?? []);
-  const [showMaterials, setShowMaterials] = useState(true);
-  const [showPersonnel, setShowPersonnel] = useState(false);
-  const [showMachines, setShowMachines] = useState(false);
-
-  const [editingMaterial, setEditingMaterial] = useState<Partial<Material> | null>(null);
-  const [editingPersonnel, setEditingPersonnel] = useState<Partial<Personnel> | null>(null);
-  const [editingMachine, setEditingMachine] = useState<Partial<Machine> | null>(null);
-
+  // Set form data when initialRecipe changes or modal opens
   useEffect(() => {
-    setProductId(initialRecipe?.product_id || "");
-    setProductName(initialRecipe?.product_name || "");
-    setName(initialRecipe?.name || "");
-    setDescription(initialRecipe?.description || "");
-    setMaterials(initialRecipe?.materials ?? []);
-    setPersonnel(initialRecipe?.personnel ?? []);
-    setMachines(initialRecipe?.machines ?? []);
+    if (initialRecipe) {
+      // If we're editing, populate form with existing recipe data
+      setProductId(initialRecipe.product_id || "");
+      setProductName(initialRecipe.product_name || "");
+      setName(initialRecipe.name || "");
+      setDescription(initialRecipe.description || "");
+      setMaterials(initialRecipe.materials || []);
+      setPersonnel(initialRecipe.personnel || []);
+      setMachines(initialRecipe.machines || []);
+    } else {
+      // If creating new, reset form
+      setProductId("");
+      setProductName("");
+      setName("");
+      setDescription("");
+      setMaterials([]);
+      setPersonnel([]);
+      setMachines([]);
+    }
+    
+    // Reset UI state
     setShowMaterials(true);
     setShowPersonnel(false);
     setShowMachines(false);
