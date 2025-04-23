@@ -25,6 +25,7 @@ interface RecipePersonnelSectionProps {
   handleEditPersonnel: (p: Personnel) => void;
   handleSavePersonnel: () => void;
   handleDeletePersonnel: (id: string) => void;
+  disabled?: boolean;
 }
 export function RecipePersonnelSection({
   personnel,
@@ -36,7 +37,8 @@ export function RecipePersonnelSection({
   handleAddPersonnel,
   handleEditPersonnel,
   handleSavePersonnel,
-  handleDeletePersonnel
+  handleDeletePersonnel,
+  disabled = false
 }: RecipePersonnelSectionProps) {
   return (
     <div>
@@ -44,6 +46,7 @@ export function RecipePersonnelSection({
         type="button"
         className="flex items-center w-full mb-2"
         onClick={() => setShowPersonnel(!showPersonnel)}
+        disabled={disabled}
       >
         <span className="font-semibold text-green-700 pr-2">Personnel ({personnel.length})</span>
         <span>{showPersonnel ? <Minus size={16} /> : <Plus size={16} />}</span>
@@ -64,10 +67,10 @@ export function RecipePersonnelSection({
                   <td className="px-2 py-1">{pers.role}</td>
                   <td className="px-2 py-1">{pers.hours}</td>
                   <td className="px-2 py-1 flex gap-1">
-                    <Button variant="ghost" size="icon" type="button" onClick={() => handleEditPersonnel(pers)}>
+                    <Button variant="ghost" size="icon" type="button" onClick={() => handleEditPersonnel(pers)} disabled={disabled}>
                       <Pencil className="w-3 h-3" />
                     </Button>
-                    <Button variant="ghost" size="icon" type="button" onClick={() => handleDeletePersonnel(pers.id)}>
+                    <Button variant="ghost" size="icon" type="button" onClick={() => handleDeletePersonnel(pers.id)} disabled={disabled}>
                       <Trash className="w-3 h-3" />
                     </Button>
                   </td>
@@ -80,13 +83,14 @@ export function RecipePersonnelSection({
               <Select
                 value={editingPersonnel.role || ""}
                 onValueChange={v => setEditingPersonnel({ ...editingPersonnel, role: v })}
+                disabled={disabled}
               >
                 <SelectTrigger className="w-48 text-xs">
                   <SelectValue placeholder="Personnel role" />
                 </SelectTrigger>
                 <SelectContent>
-                  {personnelRoleList.map(pers => (
-                    <SelectItem key={pers.id} value={pers.role}>{pers.role}</SelectItem>
+                  {personnelRoleList.map(role => (
+                    <SelectItem key={role.id} value={role.role}>{role.role}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -97,11 +101,12 @@ export function RecipePersonnelSection({
                 className="w-16 text-xs"
                 value={editingPersonnel.hours ?? 1}
                 onChange={e => setEditingPersonnel({ ...editingPersonnel, hours: Number(e.target.value) })}
+                disabled={disabled}
               />
-              <Button variant="outline" size="sm" type="button" onClick={handleSavePersonnel}>
+              <Button variant="outline" size="sm" type="button" onClick={handleSavePersonnel} disabled={disabled}>
                 Save
               </Button>
-              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingPersonnel(null)}>
+              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingPersonnel(null)} disabled={disabled}>
                 Cancel
               </Button>
             </div>
@@ -113,6 +118,7 @@ export function RecipePersonnelSection({
               type="button"
               className="text-xs mt-1"
               onClick={handleAddPersonnel}
+              disabled={disabled}
             >
               <Plus className="w-3 h-3 mr-1" /> Add Personnel
             </Button>

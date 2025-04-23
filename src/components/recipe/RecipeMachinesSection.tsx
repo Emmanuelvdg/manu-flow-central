@@ -19,6 +19,7 @@ interface RecipeMachinesSectionProps {
   handleEditMachine: (m: Machine) => void;
   handleSaveMachine: () => void;
   handleDeleteMachine: (id: string) => void;
+  disabled?: boolean;
 }
 export function RecipeMachinesSection({
   machines,
@@ -29,7 +30,8 @@ export function RecipeMachinesSection({
   handleAddMachine,
   handleEditMachine,
   handleSaveMachine,
-  handleDeleteMachine
+  handleDeleteMachine,
+  disabled = false
 }: RecipeMachinesSectionProps) {
   return (
     <div>
@@ -37,6 +39,7 @@ export function RecipeMachinesSection({
         type="button"
         className="flex items-center w-full mb-2"
         onClick={() => setShowMachines(!showMachines)}
+        disabled={disabled}
       >
         <span className="font-semibold text-blue-700 pr-2">Machines ({machines.length})</span>
         <span>{showMachines ? <Minus size={16} /> : <Plus size={16} />}</span>
@@ -57,10 +60,10 @@ export function RecipeMachinesSection({
                   <td className="px-2 py-1">{mach.machine}</td>
                   <td className="px-2 py-1">{mach.hours}</td>
                   <td className="px-2 py-1 flex gap-1">
-                    <Button variant="ghost" size="icon" type="button" onClick={() => handleEditMachine(mach)}>
+                    <Button variant="ghost" size="icon" type="button" onClick={() => handleEditMachine(mach)} disabled={disabled}>
                       <Pencil className="w-3 h-3" />
                     </Button>
-                    <Button variant="ghost" size="icon" type="button" onClick={() => handleDeleteMachine(mach.id)}>
+                    <Button variant="ghost" size="icon" type="button" onClick={() => handleDeleteMachine(mach.id)} disabled={disabled}>
                       <Trash className="w-3 h-3" />
                     </Button>
                   </td>
@@ -76,6 +79,7 @@ export function RecipeMachinesSection({
                 className="text-xs"
                 onChange={e => setEditingMachine({ ...editingMachine, machine: e.target.value })}
                 autoFocus
+                disabled={disabled}
               />
               <Input
                 placeholder="Hours"
@@ -84,11 +88,12 @@ export function RecipeMachinesSection({
                 className="w-16 text-xs"
                 value={editingMachine.hours ?? 1}
                 onChange={e => setEditingMachine({ ...editingMachine, hours: Number(e.target.value) })}
+                disabled={disabled}
               />
-              <Button variant="outline" size="sm" type="button" onClick={handleSaveMachine}>
+              <Button variant="outline" size="sm" type="button" onClick={handleSaveMachine} disabled={disabled}>
                 Save
               </Button>
-              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingMachine(null)}>
+              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingMachine(null)} disabled={disabled}>
                 Cancel
               </Button>
             </div>
@@ -100,6 +105,7 @@ export function RecipeMachinesSection({
               type="button"
               className="text-xs mt-1"
               onClick={handleAddMachine}
+              disabled={disabled}
             >
               <Plus className="w-3 h-3 mr-1" /> Add Machine
             </Button>

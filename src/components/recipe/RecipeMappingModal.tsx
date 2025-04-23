@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -10,11 +11,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { insertRecipe, updateRecipe, Recipe } from "./recipeUtils";
-import { supabase } from "@/integrations/supabase/client";
 import { RecipeProductSelect } from "./RecipeProductSelect";
 import { RecipeMaterialsSection } from "./RecipeMaterialsSection";
 import { RecipePersonnelSection } from "./RecipePersonnelSection";
 import { RecipeMachinesSection } from "./RecipeMachinesSection";
+import { 
+  fetchProducts, 
+  fetchMaterials, 
+  fetchPersonnelRoles, 
+  ProductOption, 
+  MaterialOption, 
+  PersonnelRoleOption 
+} from "./recipeDataUtils";
+import { useToast } from "@/components/ui/use-toast";
 
 interface RecipeMappingModalProps {
   open: boolean;
@@ -23,19 +32,6 @@ interface RecipeMappingModalProps {
   initialRecipe?: Recipe | null;
 }
 
-interface ProductOption {
-  id: string;
-  name: string;
-}
-interface MaterialOption {
-  id: string;
-  name: string;
-  unit: string;
-}
-interface PersonnelRoleOption {
-  id: string;
-  role: string;
-}
 interface Material {
   id: string;
   name: string;
@@ -59,110 +55,50 @@ export default function RecipeMappingModal({
   onSuccess,
   initialRecipe,
 }: RecipeMappingModalProps) {
+  const { toast } = useToast();
   const [productList, setProductList] = useState<ProductOption[]>([]);
   const [materialList, setMaterialList] = useState<MaterialOption[]>([]);
   const [personnelRoleList, setPersonnelRoleList] = useState<PersonnelRoleOption[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    const mockProducts = [
-      { id: "PFP_5L", name: "Packaged Food Product, 5L Canister" },
-      { id: "WT", name: "Wooden Table" },
-      { id: "BO00001", name: "Mechanical Subassembly BOM" },
-    ];
-    setProductList(mockProducts);
-
-    const fetchMaterials = async () => {
-      try {
-        const { data: recipesData } = await supabase
-          .from('recipes')
-          .select('materials')
-          .not('materials', 'is', null);
-        if (recipesData && recipesData.length) {
-          const materialsSet = new Set<string>();
-          const materialsMap = new Map<string, string>();
-          recipesData.forEach(recipe => {
-            if (recipe.materials && Array.isArray(recipe.materials)) {
-              recipe.materials.forEach((mat: any) => {
-                if (mat.name) {
-                  materialsSet.add(mat.name);
-                  materialsMap.set(mat.name, mat.unit || 'pcs');
-                }
-              });
-            }
+    const loadData = async () => {
+      if (open) {
+        setLoading(true);
+        try {
+          // Fetch products, materials and personnel roles in parallel
+          const [products, materials, personnelRoles] = await Promise.all([
+            fetchProducts(),
+            fetchMaterials(),
+            fetchPersonnelRoles()
+          ]);
+          
+          setProductList(products);
+          setMaterialList(materials);
+          setPersonnelRoleList(personnelRoles);
+        } catch (error) {
+          console.error("Error loading recipe data:", error);
+          toast({
+            title: "Error loading data",
+            description: "Could not load products and materials. Using fallback data.",
+            variant: "destructive"
           });
-          const uniqueMaterials = Array.from(materialsSet).map(name => ({
-            id: name,
-            name,
-            unit: materialsMap.get(name) || 'pcs'
-          }));
-          if (uniqueMaterials.length > 0) {
-            setMaterialList(uniqueMaterials);
-            return;
-          }
+        } finally {
+          setLoading(false);
         }
-        setMaterialList([
-          { id: "mat1", name: "Plastic Resin", unit: "kg" },
-          { id: "mat2", name: "Sticker Label", unit: "pcs" },
-        ]);
-      } catch (error) {
-        setMaterialList([
-          { id: "mat1", name: "Plastic Resin", unit: "kg" },
-          { id: "mat2", name: "Sticker Label", unit: "pcs" },
-        ]);
       }
     };
 
-    const fetchPersonnelRoles = async () => {
-      try {
-        const { data: recipesData } = await supabase
-          .from('recipes')
-          .select('personnel')
-          .not('personnel', 'is', null);
-        if (recipesData && recipesData.length) {
-          const rolesSet = new Set<string>();
-          recipesData.forEach(recipe => {
-            if (recipe.personnel && Array.isArray(recipe.personnel)) {
-              recipe.personnel.forEach((pers: any) => {
-                if (pers.role) {
-                  rolesSet.add(pers.role);
-                }
-              });
-            }
-          });
-          const uniqueRoles = Array.from(rolesSet).map((role, index) => ({
-            id: String(index + 1),
-            role
-          }));
-          if (uniqueRoles.length > 0) {
-            setPersonnelRoleList(uniqueRoles);
-            return;
-          }
-        }
-        setPersonnelRoleList([
-          { id: "1", role: "Operator" },
-          { id: "2", role: "Quality Control" },
-        ]);
-      } catch (error) {
-        setPersonnelRoleList([
-          { id: "1", role: "Operator" },
-          { id: "2", role: "Quality Control" },
-        ]);
-      }
-    };
-
-    if (open) {
-      fetchMaterials();
-      fetchPersonnelRoles();
-    }
-  }, [open]);
+    loadData();
+  }, [open, toast]);
 
   const [productId, setProductId] = useState(initialRecipe?.product_id || "");
   const [productName, setProductName] = useState(initialRecipe?.product_name || "");
   const [name, setName] = useState(initialRecipe?.name || "");
   const [description, setDescription] = useState(initialRecipe?.description || "");
-  const [materials, setMaterials] = useState<Material[]>( initialRecipe?.materials ?? [] );
-  const [personnel, setPersonnel] = useState<Personnel[]>( initialRecipe?.personnel ?? [] );
-  const [machines, setMachines] = useState<Machine[]>( initialRecipe?.machines ?? [] );
+  const [materials, setMaterials] = useState<Material[]>(initialRecipe?.materials ?? []);
+  const [personnel, setPersonnel] = useState<Personnel[]>(initialRecipe?.personnel ?? []);
+  const [machines, setMachines] = useState<Machine[]>(initialRecipe?.machines ?? []);
   const [showMaterials, setShowMaterials] = useState(true);
   const [showPersonnel, setShowPersonnel] = useState(false);
   const [showMachines, setShowMachines] = useState(false);
@@ -264,15 +200,31 @@ export default function RecipeMappingModal({
     };
 
     try {
+      setLoading(true);
       if (isEditing && initialRecipe) {
         await updateRecipe(initialRecipe.id, { ...payload });
+        toast({
+          title: "Success",
+          description: "Recipe updated successfully"
+        });
       } else {
         await insertRecipe(payload);
+        toast({
+          title: "Success",
+          description: "Recipe created successfully"
+        });
       }
       onSuccess();
       onClose();
     } catch (err: any) {
-      alert("Failed to save recipe: " + err.message);
+      console.error("Error saving recipe:", err);
+      toast({
+        title: "Error saving recipe",
+        description: err.message || "An error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -290,15 +242,24 @@ export default function RecipeMappingModal({
             productList={productList}
             productId={productId}
             onProductChange={handleProductChange}
-            disabled={isEditing}
+            disabled={isEditing || loading}
           />
           <div>
             <label className="block text-sm font-medium mb-1">Recipe Name<span className="text-red-500">*</span></label>
-            <Input value={name} onChange={e => setName(e.target.value)} required />
+            <Input 
+              value={name} 
+              onChange={e => setName(e.target.value)} 
+              required 
+              disabled={loading}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Description</label>
-            <Input value={description} onChange={e => setDescription(e.target.value)} />
+            <Input 
+              value={description} 
+              onChange={e => setDescription(e.target.value)}
+              disabled={loading}
+            />
           </div>
           <div className="pt-2">
             <RecipeMaterialsSection
@@ -313,6 +274,7 @@ export default function RecipeMappingModal({
               handleEditMaterial={handleEditMaterial}
               handleSaveMaterial={handleSaveMaterial}
               handleDeleteMaterial={handleDeleteMaterial}
+              disabled={loading}
             />
             <RecipePersonnelSection
               personnel={personnel}
@@ -325,6 +287,7 @@ export default function RecipeMappingModal({
               handleEditPersonnel={handleEditPersonnel}
               handleSavePersonnel={handleSavePersonnel}
               handleDeletePersonnel={handleDeletePersonnel}
+              disabled={loading}
             />
             <RecipeMachinesSection
               machines={machines}
@@ -336,11 +299,16 @@ export default function RecipeMappingModal({
               handleEditMachine={handleEditMachine}
               handleSaveMachine={handleSaveMachine}
               handleDeleteMachine={handleDeleteMachine}
+              disabled={loading}
             />
           </div>
           <DialogFooter>
-            <Button type="submit">{isEditing ? "Save" : "Create"}</Button>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : isEditing ? "Save" : "Create"}
+            </Button>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+              Cancel
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

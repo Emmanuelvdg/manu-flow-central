@@ -28,6 +28,7 @@ interface RecipeMaterialsSectionProps {
   handleEditMaterial: (m: Material) => void;
   handleSaveMaterial: () => void;
   handleDeleteMaterial: (id: string) => void;
+  disabled?: boolean;
 }
 export function RecipeMaterialsSection({
   materials,
@@ -40,7 +41,8 @@ export function RecipeMaterialsSection({
   handleAddMaterial,
   handleEditMaterial,
   handleSaveMaterial,
-  handleDeleteMaterial
+  handleDeleteMaterial,
+  disabled = false
 }: RecipeMaterialsSectionProps) {
   return (
     <div>
@@ -48,6 +50,7 @@ export function RecipeMaterialsSection({
         type="button"
         className="flex items-center w-full mb-2"
         onClick={() => setShowMaterials(!showMaterials)}
+        disabled={disabled}
       >
         <span className="font-semibold text-indigo-700 pr-2">
           Materials ({materials.length})
@@ -77,6 +80,7 @@ export function RecipeMaterialsSection({
                       size="icon"
                       type="button"
                       onClick={() => handleEditMaterial(mat)}
+                      disabled={disabled}
                     >
                       <Pencil className="w-3 h-3" />
                     </Button>
@@ -85,6 +89,7 @@ export function RecipeMaterialsSection({
                       size="icon"
                       type="button"
                       onClick={() => handleDeleteMaterial(mat.id)}
+                      disabled={disabled}
                     >
                       <Trash className="w-3 h-3" />
                     </Button>
@@ -105,6 +110,7 @@ export function RecipeMaterialsSection({
                     unit: mat?.unit ?? (editingMaterial?.unit ?? "")
                   });
                 }}
+                disabled={disabled}
               >
                 <SelectTrigger className="w-48 text-xs">
                   <SelectValue placeholder="Material name" />
@@ -122,17 +128,19 @@ export function RecipeMaterialsSection({
                 className="w-16 text-xs"
                 value={editingMaterial.quantity ?? 1}
                 onChange={e => setEditingMaterial({ ...editingMaterial, quantity: Number(e.target.value) })}
+                disabled={disabled}
               />
               <Input
                 placeholder="Unit"
                 className="w-16 text-xs"
                 value={editingMaterial.unit ?? ""}
                 readOnly
+                disabled={disabled}
               />
-              <Button variant="outline" size="sm" type="button" onClick={handleSaveMaterial}>
+              <Button variant="outline" size="sm" type="button" onClick={handleSaveMaterial} disabled={disabled}>
                 Save
               </Button>
-              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingMaterial(null)}>
+              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingMaterial(null)} disabled={disabled}>
                 Cancel
               </Button>
             </div>
@@ -144,6 +152,7 @@ export function RecipeMaterialsSection({
               type="button"
               className="text-xs mt-1"
               onClick={handleAddMaterial}
+              disabled={disabled}
             >
               <Plus className="w-3 h-3 mr-1" /> Add Material
             </Button>
