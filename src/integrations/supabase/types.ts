@@ -456,7 +456,10 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image: string | null
+          lead_time: string | null
           name: string
+          price: number | null
           updated_at: string
         }
         Insert: {
@@ -464,7 +467,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id: string
+          image?: string | null
+          lead_time?: string | null
           name: string
+          price?: number | null
           updated_at?: string
         }
         Update: {
@@ -472,7 +478,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image?: string | null
+          lead_time?: string | null
           name?: string
+          price?: number | null
           updated_at?: string
         }
         Relationships: []

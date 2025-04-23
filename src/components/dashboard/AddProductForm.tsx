@@ -14,12 +14,15 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
+  id: z.string().min(2, 'Product ID must be at least 2 characters'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   category: z.string().min(2, 'Category must be at least 2 characters'),
   price: z.string().refine((val) => !isNaN(Number(val)), 'Must be a valid number'),
-  leadTime: z.string().min(2, 'Lead time is required'),
+  lead_time: z.string().min(2, 'Lead time is required'),
+  image: z.string().url('Must be a valid URL').or(z.literal('')).default('https://via.placeholder.com/150x100?text=Product'),
 });
 
 type ProductFormData = z.infer<typeof formSchema>;
@@ -29,18 +32,34 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
   const form = useForm<ProductFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      id: '',
       name: '',
       category: '',
       price: '',
-      leadTime: '',
+      lead_time: '',
+      image: 'https://via.placeholder.com/150x100?text=Product',
     },
   });
 
-  const onSubmit = (data: ProductFormData) => {
-    // In a real app, this would be an API call
-    console.log('Adding product:', data);
+  const onSubmit = async (data: ProductFormData) => {
+    const { error } = await supabase
+      .from('products')
+      .insert([{
+        ...data,
+        price: Number(data.price),
+      }]);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     toast({
-      title: 'Product Added',
+      title: 'Success',
       description: `${data.name} has been added to the catalog.`,
     });
     onClose();
@@ -49,6 +68,20 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Product ID</FormLabel>
+              <FormControl>
+                <Input placeholder="PROD-001" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="name"
@@ -93,12 +126,26 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
 
         <FormField
           control={form.control}
-          name="leadTime"
+          name="lead_time"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Lead Time</FormLabel>
               <FormControl>
                 <Input placeholder="4 weeks" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="image"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/image.jpg" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

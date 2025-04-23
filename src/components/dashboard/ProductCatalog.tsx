@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +12,8 @@ import {
 import { AddProductForm } from './AddProductForm';
 import { ProductCard } from './components/ProductCard';
 import { CartSection } from './components/CartSection';
-import { mockProducts } from './data/mockProducts';
 import { Product } from './types/product';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface CartItem {
   product: Product;
@@ -22,22 +21,45 @@ export interface CartItem {
 }
 
 export const ProductCatalog = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  // Use CartItem[] instead of Product[]
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const { toast } = useToast();
 
-  const filteredProducts = mockProducts.filter(product => {
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        toast({
+          title: "Error loading products",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setProducts(data || []);
+      setLoading(false);
+    };
+
+    fetchProducts();
+  }, [toast]);
+
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === '' || product.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const categories = Array.from(new Set(mockProducts.map(p => p.category)));
+  const categories = Array.from(new Set(products.map(p => p.category)));
 
-  // If product is in cart, increment quantity, else add with quantity 1
   const addToCart = (product: Product) => {
     setCartItems(prev => {
       const idx = prev.findIndex(item => item.product.id === product.id);
@@ -59,7 +81,6 @@ export const ProductCatalog = () => {
     });
   };
 
-  // Remove entire item from cart (regardless of quantity)
   const removeFromCart = (id: number) => {
     setCartItems(cartItems.filter(item => item.product.id !== id));
     toast({
@@ -68,7 +89,6 @@ export const ProductCatalog = () => {
     });
   };
 
-  // Update quantity for a given cart item, remove if quantity is 0
   const updateQuantity = (productId: number, newQty: number) => {
     setCartItems(prev => {
       if (newQty < 1) {
@@ -137,17 +157,20 @@ export const ProductCatalog = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAddToCart={addToCart}
-            // Provide active quantity if in cart
-            quantity={cartItems.find(item => item.product.id === product.id)?.quantity || 0}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div className="text-center py-12">Loading products...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={addToCart}
+              quantity={cartItems.find(item => item.product.id === product.id)?.quantity || 0}
+            />
+          ))}
+        </div>
+      )}
 
       <CartSection
         cartItems={cartItems}

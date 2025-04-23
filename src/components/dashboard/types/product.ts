@@ -1,9 +1,11 @@
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   category: string;
   price: number;
-  leadTime: string;
+  lead_time: string;
   image: string;
+  created_at?: string;
+  updated_at?: string;
 }
