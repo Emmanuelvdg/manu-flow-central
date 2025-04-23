@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -81,15 +82,15 @@ export const ProductCatalog = () => {
     });
   };
 
-  const removeFromCart = (id: number) => {
-    setCartItems(cartItems.filter(item => item.product.id !== id));
+  const removeFromCart = (productId: string) => {
+    setCartItems(cartItems.filter(item => item.product.id !== productId));
     toast({
       title: "Removed from RFQ",
       description: "Item has been removed from your quote request.",
     });
   };
 
-  const updateQuantity = (productId: number, newQty: number) => {
+  const updateQuantity = (productId: string, newQty: number) => {
     setCartItems(prev => {
       if (newQty < 1) {
         toast({
@@ -175,8 +176,8 @@ export const ProductCatalog = () => {
       <CartSection
         cartItems={cartItems}
         onRemoveItem={removeFromCart}
-        onClearCart={() => setCartItems([])}
         onUpdateQuantity={updateQuantity}
+        onClearCart={() => setCartItems([])}
       />
     </div>
   );

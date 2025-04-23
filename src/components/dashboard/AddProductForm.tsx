@@ -44,10 +44,14 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
   const onSubmit = async (data: ProductFormData) => {
     const { error } = await supabase
       .from('products')
-      .insert([{
-        ...data,
+      .insert({
+        id: data.id,
+        name: data.name,
+        category: data.category,
         price: Number(data.price),
-      }]);
+        lead_time: data.lead_time,
+        image: data.image,
+      });
 
     if (error) {
       toast({

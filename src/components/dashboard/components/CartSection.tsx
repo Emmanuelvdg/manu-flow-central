@@ -11,9 +11,9 @@ import { CartItem } from '../ProductCatalog';
 
 interface CartSectionProps {
   cartItems: CartItem[];
-  onRemoveItem: (id: number) => void;
+  onRemoveItem: (id: string) => void;
   onClearCart: () => void;
-  onUpdateQuantity: (productId: number, newQty: number) => void;
+  onUpdateQuantity: (productId: string, newQty: number) => void;
 }
 
 export const CartSection: React.FC<CartSectionProps> = ({
