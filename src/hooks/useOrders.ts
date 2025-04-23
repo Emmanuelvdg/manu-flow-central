@@ -5,6 +5,15 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Order } from "@/types/order";
 
+// Define interfaces for product data in JSON
+interface ProductData {
+  id?: string;
+  name?: string;
+  quantity?: string | number;
+  unit?: string;
+  category?: string;
+}
+
 // Helper function to get status color
 const getStatusColor = (status: string): string => {
   switch (status?.toLowerCase()) {
@@ -132,7 +141,7 @@ export const useOrders = () => {
           
           // Create order_products entries for better data normalization
           if (newOrder && newOrder[0] && quote.products && Array.isArray(quote.products)) {
-            for (const product of quote.products) {
+            for (const product of quote.products as ProductData[]) {
               if (!product.name && !product.id) continue;
               
               // Find recipe for this product if exists
@@ -153,7 +162,7 @@ export const useOrders = () => {
               const productEntry = {
                 order_id: newOrder[0].id,
                 product_id: product.id || product.name,
-                quantity: parseInt(product.quantity) || 1,
+                quantity: parseInt(String(product.quantity)) || 1,
                 unit: product.unit || 'pcs',
                 status: 'pending',
                 materials_status: 'Not booked',
