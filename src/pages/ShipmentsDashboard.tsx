@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchShipmentsWithLinks } from "@/components/dashboard/shipments/fetchShipmentsWithLinks";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { FileText } from "lucide-react";
+import { ShippingDocumentsDialog } from "@/components/dashboard/shipments/ShippingDocumentsDialog";
 
 const ShipmentsDashboard = () => {
   const navigate = useNavigate();
@@ -14,6 +16,14 @@ const ShipmentsDashboard = () => {
     queryKey: ["shipments-dashboard"],
     queryFn: fetchShipmentsWithLinks,
   });
+
+  const [selectedShipment, setSelectedShipment] = useState<any | null>(null);
+  const [isDocumentsDialogOpen, setIsDocumentsDialogOpen] = useState(false);
+
+  const handleOpenDocuments = (shipment: any) => {
+    setSelectedShipment(shipment);
+    setIsDocumentsDialogOpen(true);
+  };
 
   return (
     <MainLayout title="Shipments">
@@ -102,8 +112,14 @@ const ShipmentsDashboard = () => {
                           : (shipment.delivery_date ? new Date(shipment.delivery_date).toLocaleDateString() : "-")}
                       </TableCell>
                       <TableCell>
-                        {/* Placeholder for shipping documents, could become a dialog for upload/download */}
-                        <span className="text-gray-500 italic">Coming soon</span>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleOpenDocuments(shipment)}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          Manage Documents
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -113,6 +129,14 @@ const ShipmentsDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {selectedShipment && (
+        <ShippingDocumentsDialog
+          open={isDocumentsDialogOpen}
+          onOpenChange={setIsDocumentsDialogOpen}
+          shipment={selectedShipment}
+        />
+      )}
     </MainLayout>
   );
 };
