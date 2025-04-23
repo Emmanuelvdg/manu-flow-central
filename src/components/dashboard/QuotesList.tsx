@@ -10,13 +10,13 @@ import { Eye, FileCheck, FileX, Plus } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
-// Define the Quote type
+// Define the Quote type to match Supabase data structure
 interface Quote {
   id: string;
   rfq_id?: string;
   customer_name: string;
   created_at: string;
-  products: any[];
+  products: any; // Changed from any[] to any to accept JSON from Supabase
   status: string;
   total: number;
   payment_terms?: string;
