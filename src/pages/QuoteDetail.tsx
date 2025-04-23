@@ -16,19 +16,35 @@ interface FromRFQ {
   location?: string;
 }
 
+interface RFQProductItem {
+  id?: number | string;
+  name: string;
+  quantity?: number;
+}
+
 const QuoteDetail = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const fromRFQ: FromRFQ | undefined = location.state?.fromRFQ;
 
-  // Prefill form fields using RFQ info if present
+  // Track parsed products if coming from RFQ
   const [customerName, setCustomerName] = useState<string>(fromRFQ?.customerName ?? "");
+  const [rfqProducts, setRFQProducts] = useState<RFQProductItem[] | undefined>(
+    fromRFQ?.products && Array.isArray(fromRFQ.products)
+      ? fromRFQ.products.map((p: any) => ({
+          id: p.id ?? undefined,
+          name: p.name ?? String(p),
+          quantity: p.quantity ?? 1,
+        }))
+      : undefined
+  );
+  // Fallback to plain products text for generic case
   const [products, setProducts] = useState<string>(
-    fromRFQ?.products
-      ? Array.isArray(fromRFQ.products)
+    !fromRFQ?.products
+      ? ""
+      : Array.isArray(fromRFQ.products)
         ? fromRFQ.products.map((prod: any) => prod.name || prod).join(", ")
         : String(fromRFQ.products)
-      : ""
   );
   const [currency, setCurrency] = useState<string>("");
   const [top, setTop] = useState<string>("");
@@ -54,12 +70,21 @@ const QuoteDetail = () => {
   useEffect(() => {
     if (fromRFQ) {
       setCustomerName(fromRFQ.customerName ?? "");
+      setRFQProducts(
+        fromRFQ.products && Array.isArray(fromRFQ.products)
+          ? fromRFQ.products.map((p: any) => ({
+              id: p.id ?? undefined,
+              name: p.name ?? String(p),
+              quantity: p.quantity ?? 1,
+            }))
+          : undefined
+      );
       setProducts(
-        fromRFQ.products
-          ? Array.isArray(fromRFQ.products)
+        !fromRFQ.products
+          ? ""
+          : Array.isArray(fromRFQ.products)
             ? fromRFQ.products.map((prod: any) => prod.name || prod).join(", ")
             : String(fromRFQ.products)
-          : ""
       );
       setLocationField(fromRFQ.location ?? "");
     }
@@ -103,15 +128,27 @@ const QuoteDetail = () => {
                   onChange={e => setLocationField(e.target.value)}
                 />
               </div>
+              {/* Display RFQ products as list if present, otherwise fallback to input */}
               <div>
-                <label className="block text-sm font-medium mb-1">Products</label>
-                <input
-                  type="text"
-                  className="w-full rounded border p-2"
-                  placeholder="Products"
-                  value={products}
-                  onChange={e => setProducts(e.target.value)}
-                />
+                <label className="block text-sm font-medium mb-1">Products Requested</label>
+                {rfqProducts && rfqProducts.length > 0 ? (
+                  <ul className="border rounded p-2 bg-gray-50">
+                    {rfqProducts.map((prod, idx) => (
+                      <li key={prod.id ?? prod.name ?? idx} className="flex justify-between">
+                        <span className="font-medium">{prod.name}</span>
+                        <span className="text-xs text-gray-600">Qty: {prod.quantity ?? 1}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <input
+                    type="text"
+                    className="w-full rounded border p-2"
+                    placeholder="Products"
+                    value={products}
+                    onChange={e => setProducts(e.target.value)}
+                  />
+                )}
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
