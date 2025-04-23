@@ -99,7 +99,10 @@ export const OrdersFilters: React.FC<OrdersFiltersProps> = ({
           >
             <option value="">Parts status</option>
             <option>Not booked</option>
+            <option>Not enough</option>
             <option>Requested</option>
+            <option>Delayed</option>
+            <option>Expected</option>
             <option>Received</option>
           </select>
         </td>

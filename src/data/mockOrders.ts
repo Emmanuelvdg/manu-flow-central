@@ -1,3 +1,4 @@
+
 import { Order } from "@/types/order";
 
 export const mockOrders: Order[] = [
@@ -21,8 +22,8 @@ export const mockOrders: Order[] = [
     partDescription: "Packaged Food Product, 5L Canister",
     quantity: "200 pcs",
     status: "Scheduled",
-    partsStatus: "Requested",
-    partsStatusColor: "bg-orange-100 text-orange-500",
+    partsStatus: "Not enough",
+    partsStatusColor: "bg-yellow-100 text-yellow-700",
     statusColor: "text-orange-500",
     editable: true,
     checked: false,
@@ -34,8 +35,8 @@ export const mockOrders: Order[] = [
     partDescription: "Base Bulk Food Product",
     quantity: "1000 kg",
     status: "Scheduled",
-    partsStatus: "Received",
-    partsStatusColor: "bg-green-100 text-green-600",
+    partsStatus: "Requested",
+    partsStatusColor: "bg-orange-100 text-orange-600",
     statusColor: "",
     editable: true,
     checked: false,
@@ -47,8 +48,8 @@ export const mockOrders: Order[] = [
     partDescription: "Final assembly",
     quantity: "10 pcs",
     status: "Scheduled",
-    partsStatus: "Received",
-    partsStatusColor: "bg-green-100 text-green-600",
+    partsStatus: "Delayed",
+    partsStatusColor: "bg-pink-100 text-pink-600",
     statusColor: "",
     editable: true,
     checked: false,
@@ -60,8 +61,8 @@ export const mockOrders: Order[] = [
     partDescription: "Base Bulk Food Product",
     quantity: "100 kg",
     status: "Done",
-    partsStatus: "Received",
-    partsStatusColor: "bg-green-100 text-green-600",
+    partsStatus: "Expected",
+    partsStatusColor: "bg-sky-100 text-sky-600",
     statusColor: "text-blue-800",
     editable: true,
     checked: false,
