@@ -32,16 +32,22 @@ export const MaterialsSection = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = React.useState(false);
 
-  // Sync 'materials' state when DB loads
+  // Sync 'materials' state when DB loads - properly map the dbMaterials to the Material type
   React.useEffect(() => {
-    setMaterials(
-      dbMaterials.map((m) => ({
-        ...m,
-        batches: m.batches ?? [], // make sure we at least have empty array for batches
-        stock: m.stock ?? 0,
-        costPerUnit: m.costPerUnit ?? 0,
-      }))
-    );
+    if (dbMaterials && dbMaterials.length > 0) {
+      const formattedMaterials: Material[] = dbMaterials.map((m) => ({
+        id: m.id,
+        name: m.name,
+        category: m.category || "",
+        unit: m.unit,
+        status: m.status || "Active",
+        vendor: m.vendor || "",
+        batches: [],
+        stock: 0,
+        costPerUnit: 0
+      }));
+      setMaterials(formattedMaterials);
+    }
   }, [dbMaterials]);
 
   // The rest: handlers for dialogs, formatters (kept nearly the same)
