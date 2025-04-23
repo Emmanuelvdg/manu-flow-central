@@ -79,7 +79,7 @@ const generateOrderNumber = () => {
   return `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 };
 
-// Create an order from a quote
+// Enhanced function to create an order from a quote
 export const createOrderFromQuote = async (quote: Quote) => {
   console.log("Creating order from quote:", quote);
   
@@ -110,6 +110,7 @@ export const createOrderFromQuote = async (quote: Quote) => {
     // Create new order number
     const orderNumber = generateOrderNumber();
     
+    // Prepare order payload with normalized product data
     const orderPayload = {
       quote_id: quote.id,
       order_number: orderNumber,
@@ -145,10 +146,44 @@ export const createOrderFromQuote = async (quote: Quote) => {
     // Step 3: Check if we need to create a new shipment for this order
     await createShipmentIfNeeded(quote.id, orderData.id);
     
+    // Step 4: Create order_products entries to better represent the products
+    if (quote.products && Array.isArray(quote.products) && quote.products.length > 0) {
+      await createOrderProducts(orderData.id, quote.products);
+    }
+    
     return orderData;
   } catch (error) {
     console.error("Error in createOrderFromQuote:", error);
     throw error;
+  }
+};
+
+// Create order_products entries for better data normalization
+const createOrderProducts = async (orderId: string, products: any[]) => {
+  try {
+    for (const product of products) {
+      // Skip if no product name/id
+      if (!product.name && !product.id) continue;
+      
+      const productEntry = {
+        order_id: orderId,
+        product_id: product.id || product.name,
+        quantity: parseInt(product.quantity) || 1,
+        unit: product.unit || 'pcs',
+        status: 'pending',
+        materials_status: 'Not booked'
+      };
+      
+      const { error } = await supabase
+        .from('order_products')
+        .insert(productEntry);
+        
+      if (error) {
+        console.error(`Error creating order product entry:`, error);
+      }
+    }
+  } catch (error) {
+    console.error("Error in createOrderProducts:", error);
   }
 };
 

@@ -11,6 +11,10 @@ export interface Order {
   statusColor: string;
   editable: boolean;
   checked: boolean;
+  // Added fields to match with quote data
+  customerName?: string;
+  total?: number;
+  products?: any[];
 }
 
 export interface ColumnHeader {

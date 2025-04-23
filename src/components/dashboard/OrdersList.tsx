@@ -11,28 +11,40 @@ import { Order } from "@/types/order";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-const parseOrderRow = (row: any): Order => ({
-  number: row.order_number || "-",
-  groupName: "-", // Placeholder since groupName is not in 'orders' table
-  partNo: "-",    // Placeholder
-  partDescription: "-", // Placeholder
-  quantity: row.products && Array.isArray(row.products) && row.products.length > 0 && typeof row.products[0].quantity === 'string'
-    ? row.products[0].quantity
-    : row.products && Array.isArray(row.products) && row.products.length > 0
-      ? String(row.products[0].quantity)
-      : "-",
-  status: row.status || "-",
-  partsStatus: row.parts_status || "-",
-  partsStatusColor: getStatusColor(row.status),
-  statusColor: getStatusColor(row.status),      
-  editable: true,
-  checked: false,
-});
+// Improved parser that better extracts and normalizes data from order rows
+const parseOrderRow = (row: any): Order => {
+  // Extract product details if available
+  const productInfo = row.products && Array.isArray(row.products) && row.products.length > 0
+    ? row.products[0]
+    : null;
+  
+  // Calculate total quantity from all products
+  const totalQuantity = row.products && Array.isArray(row.products) 
+    ? row.products.reduce((sum: number, prod: any) => sum + (parseInt(prod.quantity) || 0), 0)
+    : 0;
+    
+  return {
+    number: row.order_number || "-",
+    groupName: productInfo?.category || "-",
+    partNo: productInfo?.id || "-",
+    partDescription: productInfo?.name || "-",
+    quantity: String(totalQuantity) || "0",
+    status: row.status || "-",
+    partsStatus: row.parts_status || "-",
+    partsStatusColor: getStatusColor(row.parts_status),
+    statusColor: getStatusColor(row.status),      
+    editable: true,
+    checked: false,
+    customerName: row.customer_name,
+    total: row.total
+  };
+};
 
 // Helper function to get status color
 const getStatusColor = (status: string): string => {
   switch (status?.toLowerCase()) {
     case 'processing':
+    case 'created':
       return 'bg-blue-100 text-blue-800';
     case 'completed':
       return 'bg-green-100 text-green-800';
@@ -57,9 +69,14 @@ export const OrdersList = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [partsStatusFilter, setPartsStatusFilter] = useState("");
 
-  // Check if any accepted quotes are missing orders
+  // Check if any accepted quotes are missing orders and sync them
   const syncAcceptedQuotes = async () => {
     try {
+      toast({
+        title: "Syncing orders",
+        description: "Checking for accepted quotes without orders...",
+      });
+      
       // Find quotes that have been accepted but don't have corresponding orders
       const { data: acceptedQuotes, error: quotesError } = await supabase
         .from("quotes")
@@ -68,15 +85,20 @@ export const OrdersList = () => {
       
       if (quotesError) {
         console.error("Error fetching accepted quotes:", quotesError);
-        return;
+        throw quotesError;
       }
 
       if (!acceptedQuotes || acceptedQuotes.length === 0) {
         console.log("No accepted quotes found needing synchronization");
+        toast({
+          title: "Sync complete",
+          description: "No new orders to create.",
+        });
         return;
       }
 
       console.log(`Found ${acceptedQuotes.length} accepted quotes to check`);
+      let newOrdersCount = 0;
       
       // For each accepted quote, check if an order exists
       for (const quote of acceptedQuotes) {
@@ -121,6 +143,7 @@ export const OrdersList = () => {
           }
           
           console.log(`Successfully created order ${orderNumber} for quote ${quote.quote_number}`);
+          newOrdersCount++;
           
           // Update any shipments related to this quote with the new order ID
           if (newOrder) {
@@ -137,10 +160,19 @@ export const OrdersList = () => {
       }
       
       // After synchronization, refresh the orders list
-      fetchOrders();
+      await fetchOrders();
       
-    } catch (err) {
+      toast({
+        title: "Sync complete",
+        description: `Created ${newOrdersCount} new orders from accepted quotes.`,
+      });
+    } catch (err: any) {
       console.error("Error in syncAcceptedQuotes:", err);
+      toast({
+        title: "Sync error",
+        description: err.message || "An error occurred while syncing orders",
+        variant: "destructive",
+      });
     }
   };
 
@@ -199,7 +231,7 @@ export const OrdersList = () => {
   };
 
   const handleCreateOrder = () => {
-    // Navigate to new order creation page
+    // Navigate to quotes page to create an order from a quote
     navigate('/quotes');
   };
 

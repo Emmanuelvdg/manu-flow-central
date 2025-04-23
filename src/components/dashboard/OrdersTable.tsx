@@ -27,11 +27,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
         </td>
         <td className="font-bold px-2 py-2 text-blue-900">
           {filteredOrders
-            .map((o) =>
-              (o.quantity.match(/\d+/g) || [])
-                .map(Number)
-                .reduce((a, b) => a + b, 0)
-            )
+            .map((o) => parseInt(o.quantity) || 0)
             .reduce((a, b) => a + b, 0)}
         </td>
         <td />
@@ -42,7 +38,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
       {filteredOrders.length === 0 && (
         <tr>
           <td colSpan={9} className="text-center text-sm py-10">
-            No results.
+            No orders found. Try creating orders from accepted quotes with the "Sync Orders" button.
           </td>
         </tr>
       )}
