@@ -113,7 +113,7 @@ export const useOrderOperations = (refetch: () => void) => {
       
       const { data: acceptedQuotes, error: quotesError } = await supabase
         .from("quotes")
-        .select("id, quote_number, customer_name, products, total, status")
+        .select("*")
         .eq("status", "accepted");
       
       if (quotesError) throw quotesError;

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Safe date formatting function
@@ -80,13 +79,19 @@ const generateOrderNumber = () => {
 };
 
 // Enhanced function to create an order from a quote
-export const createOrderFromQuote = async (quote: Quote) => {
+export const createOrderFromQuote = async (quote: Partial<Quote> & { id: string; customer_name: string; products: any; total: number; }) => {
   console.log("Creating order from quote:", quote);
   
   if (!quote || !quote.id || !quote.customer_name) {
     console.error("Invalid quote data for order creation");
     throw new Error("Invalid quote data for order creation");
   }
+  
+  // Ensure created_at exists (add current timestamp if missing)
+  const quoteWithDefaults = {
+    ...quote,
+    created_at: quote.created_at || new Date().toISOString()
+  };
   
   try {
     // Check if an order already exists for this quote to prevent duplicates
