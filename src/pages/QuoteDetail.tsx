@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { calculateRisk, getRecommendedDeposit } from "@/utils/riskCalculator";
 import { QuoteCustomerFields } from "./QuoteCustomerFields";
 import { QuoteProductsSection, RFQProductItem } from "./QuoteProductsSection";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchQuote } from "@/components/dashboard/quotes/quoteUtils";
 
@@ -29,7 +29,8 @@ const QuoteDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const fromRFQ: FromRFQ | undefined = location.state?.fromRFQ;
-  const onQuoteCreated: ((quoteId: string) => void) | undefined = (location.state as any)?.onQuoteCreated;
+  const rfqIdForShipment: string | undefined = location.state?.rfqIdForShipment;
+  const { toast } = useToast();
 
   const [customerName, setCustomerName] = useState<string>(fromRFQ?.customerName ?? "");
   const [customerEmail, setCustomerEmail] = useState<string>(fromRFQ?.customerEmail ?? "");
@@ -149,22 +150,25 @@ const QuoteDetail = () => {
     setRecommendedDeposit(recommendedDepositValue);
   }, [incoterm, paymentTerm]);
 
-  const createShipmentIfNeeded = async (rfqId: string, quoteId: string) => {
-    if (typeof onQuoteCreated === "function") {
-      await onQuoteCreated(quoteId);
-    } else {
-      const { data: shipments } = await supabase
-        .from('shipments')
-        .select('id')
-        .eq('rfq_id', rfqId)
-        .eq('quote_id', quoteId);
-      if (!shipments || shipments.length === 0) {
-        await supabase.from('shipments').insert({
-          rfq_id: rfqId,
-          quote_id: quoteId,
-          status: 'pending'
-        });
+  const createShipmentFromRFQ = async (rfqId: string, quoteId: string) => {
+    try {
+      const { error } = await supabase.from('shipments').insert({
+        rfq_id: rfqId,
+        quote_id: quoteId,
+        status: 'pending',
+      });
+      
+      if (error) {
+        console.error("Error creating shipment:", error);
+        throw error;
       }
+    } catch (error: any) {
+      console.error("Error in createShipmentFromRFQ:", error);
+      toast({
+        title: "Error",
+        description: `Failed to create shipment: ${error.message}`,
+        variant: "destructive"
+      });
     }
   };
 
@@ -254,7 +258,15 @@ const QuoteDetail = () => {
         }
 
         const newQuoteId = result.data.id as string;
-        if (fromRFQ?.rfqId && newQuoteId) {
+        
+        if (rfqIdForShipment && newQuoteId) {
+          await createShipmentFromRFQ(rfqIdForShipment, newQuoteId);
+        } 
+        else if (fromRFQ?.rfqId && newQuoteId) {
+          await createShipmentFromRFQ(fromRFQ.rfqId, newQuoteId);
+        }
+
+        if (fromRFQ?.rfqId) {
           const { error: rfqError } = await supabase
             .from('rfqs')
             .update({ status: 'quoted' })
@@ -262,7 +274,6 @@ const QuoteDetail = () => {
           if (rfqError) {
             console.error("Error updating RFQ status:", rfqError);
           }
-          await createShipmentIfNeeded(fromRFQ.rfqId, newQuoteId);
         }
         
         toast({

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,10 +9,11 @@ import { Eye, Plus, FileCheck } from 'lucide-react';
 import { fetchRFQs } from "@/integrations/supabase/rfq";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 export const RFQList = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { data: rfqs = [], isLoading, error, refetch } = useQuery({
     queryKey: ['rfqs'],
     queryFn: fetchRFQs,
@@ -43,6 +45,8 @@ export const RFQList = () => {
   };
 
   const handleAcceptAndCreateQuote = async (rfq: any) => {
+    // Navigate to the quote creation page with RFQ data
+    // But don't pass the callback function directly
     navigate('/quotes/create', {
       state: {
         fromRFQ: {
@@ -51,10 +55,13 @@ export const RFQList = () => {
           products: rfq.products,
           contact: rfq.customer_email,
           location: rfq.location,
+          customerEmail: rfq.customer_email,
+          customerPhone: rfq.customer_phone,
+          companyName: rfq.company_name,
+          notes: rfq.notes
         },
-        onQuoteCreated: async (quoteId: string) => {
-          await createShipmentFromRFQ(rfq.id, quoteId);
-        },
+        // Pass the rfqId instead of the callback function
+        rfqIdForShipment: rfq.id
       },
     });
   };
@@ -102,9 +109,9 @@ export const RFQList = () => {
               <Button
                 variant="default"
                 size="sm"
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation();
-                  await handleAcceptAndCreateQuote(row);
+                  handleAcceptAndCreateQuote(row);
                 }}
               >
                 <FileCheck className="mr-2 h-4 w-4" />
@@ -142,3 +149,4 @@ export const RFQList = () => {
     </Card>
   );
 };
+
