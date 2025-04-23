@@ -29,19 +29,24 @@ export const RFQList = () => {
   };
 
   const handleAcceptAndCreateQuote = async (rfq: any) => {
+    // Process products to ensure they're in the correct format for the quote
+    const processedProducts = rfq.products.map((product: any) => ({
+      name: product.name || product.toString(),
+      quantity: product.quantity || 1
+    }));
+
     // Navigate to the quote creation page with RFQ data
-    // Making sure to pass all necessary RFQ data including the ID
     navigate('/quotes/create', {
       state: {
         fromRFQ: {
           rfqId: rfq.id,
           customerName: rfq.customer_name,
-          products: rfq.products,
+          customerEmail: rfq.customer_email,
+          companyName: rfq.company_name,
+          products: processedProducts,
           contact: rfq.customer_email,
           location: rfq.location,
-          customerEmail: rfq.customer_email,
           customerPhone: rfq.customer_phone,
-          companyName: rfq.company_name,
           notes: rfq.notes
         },
         // Pass the rfqId to ensure it gets linked in the shipment

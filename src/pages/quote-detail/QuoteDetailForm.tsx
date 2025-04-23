@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -25,8 +25,13 @@ export interface QuoteDetailFormProps {
 export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const isNew = !id || id === "create";
+
+  // Extract RFQ data if coming from RFQ list
+  const rfqData = location.state?.fromRFQ;
+  const rfqIdForShipment = location.state?.rfqIdForShipment;
 
   // Form state
   const [customerName, setCustomerName] = useState("");
@@ -48,8 +53,9 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
   // Loading state 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form with data if editing
+  // Initialize form with data if editing or coming from RFQ
   useEffect(() => {
+    // If editing existing quote
     if (initialData) {
       setCustomerName(initialData.customer_name || "");
       setCustomerEmail(initialData.customer_email || "");
@@ -66,8 +72,24 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
       setRiskLevel(initialData.risk_level || "Low");
       setDepositPercentage(initialData.deposit_percentage || 30);
       setQuoteNumber(initialData.quote_number || "");
+    } 
+    // If creating from RFQ
+    else if (rfqData) {
+      console.log("Setting form data from RFQ:", rfqData);
+      setCustomerName(rfqData.customerName || "");
+      setCustomerEmail(rfqData.customerEmail || "");
+      setCompanyName(rfqData.companyName || "");
+      setRfqId(rfqData.rfqId);
+      
+      // Handle products from RFQ
+      if (rfqData.products && Array.isArray(rfqData.products)) {
+        setProducts(rfqData.products.map((p: any) => ({
+          name: typeof p === 'object' ? p.name : String(p),
+          quantity: typeof p === 'object' ? (p.quantity || 1) : 1
+        })));
+      }
     }
-  }, [initialData]);
+  }, [initialData, rfqData]);
 
   // Generate quote number for new quotes
   useEffect(() => {
@@ -91,7 +113,7 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
         customer_name: customerName,
         customer_email: customerEmail,
         company_name: companyName,
-        rfq_id: rfqId,
+        rfq_id: rfqId || rfqIdForShipment, // Use rfqId from form or from location state
         products: jsonProducts as unknown as Json,
         status,
         total,
@@ -109,21 +131,38 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
 
       // Insert or update the quote in Supabase
       let result;
+      let quoteId;
       
       if (isNew) {
         // Create new quote
-        result = await supabase.from("quotes").insert(quoteData);
+        result = await supabase.from("quotes").insert(quoteData).select();
+        if (result.data && result.data.length > 0) {
+          quoteId = result.data[0].id;
+        }
       } else {
         // Update existing quote
         result = await supabase
           .from("quotes")
           .update(quoteData)
-          .eq("id", id);
+          .eq("id", id)
+          .select();
+        quoteId = id;
       }
 
       // Handle errors
       if (result.error) {
         throw result.error;
+      }
+
+      // Create shipment record for tracking if it's a new quote with RFQ
+      if (isNew && (rfqId || rfqIdForShipment)) {
+        const shipmentData = {
+          rfq_id: rfqId || rfqIdForShipment,
+          quote_id: quoteId,
+          status: 'pending'
+        };
+        
+        await supabase.from("shipments").insert(shipmentData);
       }
 
       // Show success message
@@ -134,7 +173,7 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
 
       // Redirect to quotes list
       navigate("/quotes");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving quote:", error);
       toast({
         title: "Failed to save quote",
@@ -146,6 +185,9 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
     }
   };
 
+  // Check if form is valid for submission
+  const isFormValid = customerName.trim() !== '' && products.length > 0;
+
   return (
     <div className="space-y-8">
       <QuoteDetailCustomerFields 
@@ -155,7 +197,7 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
         setCustomerEmail={setCustomerEmail}
         companyName={companyName}
         setCompanyName={setCompanyName}
-        rfqId={rfqId}
+        rfqId={rfqId || rfqIdForShipment}
       />
 
       <QuoteDetailProductsSection 
@@ -282,7 +324,7 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
           <Button 
             type="button" 
             onClick={handleSave}
-            disabled={!customerName || products.length === 0 || isSubmitting}
+            disabled={!isFormValid || isSubmitting}
           >
             {isSubmitting ? "Saving..." : (isNew ? "Create Quote" : "Save Changes")}
           </Button>
