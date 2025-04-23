@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DataTable, Column, ColumnCellProps } from '@/components/ui/DataTable';
@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Plus, FileCheck } from 'lucide-react';
 import { fetchRFQs } from "@/integrations/supabase/rfq";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/components/ui/use-toast';
 
 export const RFQList = () => {
@@ -29,24 +28,9 @@ export const RFQList = () => {
     }
   };
 
-  const createShipmentFromRFQ = async (rfqId: string, quoteId: string) => {
-    const { error } = await supabase.from('shipments').insert({
-      rfq_id: rfqId,
-      quote_id: quoteId,
-      status: 'pending',
-    });
-    if (error) {
-      toast({
-        title: "Error",
-        description: `Failed to create shipment: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleAcceptAndCreateQuote = async (rfq: any) => {
     // Navigate to the quote creation page with RFQ data
-    // But don't pass the callback function directly
+    // Making sure to pass all necessary RFQ data including the ID
     navigate('/quotes/create', {
       state: {
         fromRFQ: {
@@ -60,7 +44,7 @@ export const RFQList = () => {
           companyName: rfq.company_name,
           notes: rfq.notes
         },
-        // Pass the rfqId instead of the callback function
+        // Pass the rfqId to ensure it gets linked in the shipment
         rfqIdForShipment: rfq.id
       },
     });
@@ -149,4 +133,3 @@ export const RFQList = () => {
     </Card>
   );
 };
-
