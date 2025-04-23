@@ -16,9 +16,15 @@ import { CartSection } from './components/CartSection';
 import { mockProducts } from './data/mockProducts';
 import { Product } from './types/product';
 
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
 export const ProductCatalog = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [cartItems, setCartItems] = useState<Product[]>([]);
+  // Use CartItem[] instead of Product[]
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const { toast } = useToast();
@@ -31,27 +37,50 @@ export const ProductCatalog = () => {
 
   const categories = Array.from(new Set(mockProducts.map(p => p.category)));
 
+  // If product is in cart, increment quantity, else add with quantity 1
   const addToCart = (product: Product) => {
-    if (!cartItems.some(item => item.id === product.id)) {
-      setCartItems([...cartItems, product]);
-      toast({
-        title: "Added to RFQ",
-        description: `${product.name} has been added to your quote request.`,
-      });
-    } else {
-      toast({
-        title: "Already in RFQ",
-        description: `${product.name} is already in your quote request.`,
-        variant: "destructive",
-      });
-    }
+    setCartItems(prev => {
+      const idx = prev.findIndex(item => item.product.id === product.id);
+      if (idx === -1) {
+        toast({
+          title: "Added to RFQ",
+          description: `${product.name} has been added to your quote request.`,
+        });
+        return [...prev, { product, quantity: 1 }];
+      } else {
+        const newCart = [...prev];
+        newCart[idx].quantity += 1;
+        toast({
+          title: "Quantity Increased",
+          description: `Increased quantity of ${product.name} to ${newCart[idx].quantity}.`,
+        });
+        return newCart;
+      }
+    });
   };
 
+  // Remove entire item from cart (regardless of quantity)
   const removeFromCart = (id: number) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
+    setCartItems(cartItems.filter(item => item.product.id !== id));
     toast({
       title: "Removed from RFQ",
       description: "Item has been removed from your quote request.",
+    });
+  };
+
+  // Update quantity for a given cart item, remove if quantity is 0
+  const updateQuantity = (productId: number, newQty: number) => {
+    setCartItems(prev => {
+      if (newQty < 1) {
+        toast({
+          title: "Removed from RFQ",
+          description: "Item has been removed from your quote request.",
+        });
+        return prev.filter(item => item.product.id !== productId);
+      }
+      return prev.map(item =>
+        item.product.id === productId ? { ...item, quantity: newQty } : item
+      );
     });
   };
 
@@ -114,6 +143,8 @@ export const ProductCatalog = () => {
             key={product.id}
             product={product}
             onAddToCart={addToCart}
+            // Provide active quantity if in cart
+            quantity={cartItems.find(item => item.product.id === product.id)?.quantity || 0}
           />
         ))}
       </div>
@@ -122,6 +153,7 @@ export const ProductCatalog = () => {
         cartItems={cartItems}
         onRemoveItem={removeFromCart}
         onClearCart={() => setCartItems([])}
+        onUpdateQuantity={updateQuantity}
       />
     </div>
   );

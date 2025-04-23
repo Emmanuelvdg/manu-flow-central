@@ -9,9 +9,10 @@ import { Product } from '../types/product';
 interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product) => void;
+  quantity?: number;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, quantity }) => {
   return (
     <Card className="overflow-hidden">
       <div className="relative h-48 bg-gray-200">
@@ -34,10 +35,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }
           <Button 
             onClick={() => onAddToCart(product)} 
             className="w-full"
-            variant="default"
+            variant={quantity && quantity > 0 ? "secondary" : "default"}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
-            Add to RFQ
+            {quantity && quantity > 0 ? `Added (${quantity})` : "Add to RFQ"}
           </Button>
         </div>
       </CardContent>

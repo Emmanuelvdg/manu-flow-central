@@ -1,94 +1,86 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Product } from '../types/product';
-import { useToast } from '@/hooks/use-toast';
-import { RFQInfoDialog } from './RFQInfoDialog';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { CartItem } from "../ProductCatalog";
+import { Minus, Plus } from "lucide-react";
 
 interface CartSectionProps {
-  cartItems: Product[];
+  cartItems: CartItem[];
   onRemoveItem: (id: number) => void;
   onClearCart: () => void;
+  onUpdateQuantity: (productId: number, newQty: number) => void;
 }
 
-export const CartSection: React.FC<CartSectionProps> = ({ 
-  cartItems, 
-  onRemoveItem, 
-  onClearCart 
+export const CartSection: React.FC<CartSectionProps> = ({
+  cartItems,
+  onRemoveItem,
+  onClearCart,
+  onUpdateQuantity,
 }) => {
-  const { toast } = useToast();
-  const [showRFQDialog, setShowRFQDialog] = useState(false);
-
-  const handleRFQSubmit = (info: any) => {
-    toast({
-      title: "RFQ Created",
-      description: `Quote request for ${info.companyName} with ${cartItems.length} items has been submitted.`,
-    });
-    setShowRFQDialog(false);
-    onClearCart();
-  };
-
   if (cartItems.length === 0) return null;
 
   return (
-    <>
-      <div className="bg-white rounded-lg shadow-lg p-6 space-y-4 border">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-lg">Your RFQ Items ({cartItems.length})</h3>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={onClearCart}
-          >
-            Clear All
-          </Button>
-        </div>
-        
-        <div className="space-y-3">
-          {cartItems.map((item) => (
-            <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <div className="flex items-center space-x-3">
-                <img 
-                  src={item.image} 
-                  alt={item.name} 
-                  className="w-12 h-12 object-cover rounded"
-                />
-                <span>{item.name}</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className="font-medium">${item.price.toLocaleString()}</span>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => onRemoveItem(item.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Remove
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="flex justify-between pt-4 border-t">
-          <span className="font-semibold">Total Items:</span>
-          <span className="font-semibold">{cartItems.length}</span>
-        </div>
-        
-        <Button 
-          className="w-full"
-          size="lg"
-          onClick={() => setShowRFQDialog(true)}
+    <div className="bg-white rounded shadow p-4 border mt-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-lg">RFQ Cart</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClearCart}
+          className="ml-2"
         >
-          Submit RFQ
+          Clear Cart
         </Button>
       </div>
-
-      <RFQInfoDialog 
-        isOpen={showRFQDialog}
-        onClose={() => setShowRFQDialog(false)}
-        onSubmit={handleRFQSubmit}
-      />
-    </>
+      <div className="space-y-3">
+        {cartItems.map(({ product, quantity }) => (
+          <div
+            key={product.id}
+            className="flex items-center gap-4 border-b pb-2 last:border-b-0"
+          >
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-14 h-14 object-cover rounded"
+            />
+            <div className="flex-1">
+              <div className="font-medium">{product.name}</div>
+              <div className="text-xs text-gray-500">{product.category}</div>
+              <div className="text-sm text-gray-800">${product.price.toLocaleString()}</div>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="w-7 h-7"
+                aria-label="Decrease quantity"
+                onClick={() => onUpdateQuantity(product.id, quantity - 1)}
+                disabled={quantity <= 1}
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="min-w-[24px] text-center font-mono">{quantity}</span>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="w-7 h-7"
+                aria-label="Increase quantity"
+                onClick={() => onUpdateQuantity(product.id, quantity + 1)}
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Remove item"
+              onClick={() => onRemoveItem(product.id)}
+            >
+              Remove
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
