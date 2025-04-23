@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -125,8 +126,9 @@ const QuoteDetail = () => {
     setIsSubmitting(true);
 
     try {
+      // Format products data to be JSON compatible
       let productsData;
-      if (rfqProducts) {
+      if (rfqProducts && Array.isArray(rfqProducts)) {
         productsData = rfqProducts.map(p => ({
           name: p.name,
           quantity: p.quantity || 1
