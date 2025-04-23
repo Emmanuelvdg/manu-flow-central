@@ -19,7 +19,7 @@ interface QuoteCustomerFieldsProps {
   setNotes: (notes: string) => void;
 }
 
-export const QuoteCustomerFields: React.FC<QuoteCustomerFieldsProps> = ({
+export const QuoteDetailCustomerFields: React.FC<QuoteCustomerFieldsProps> = ({
   customerName,
   setCustomerName,
   customerEmail,
@@ -44,7 +44,7 @@ export const QuoteCustomerFields: React.FC<QuoteCustomerFieldsProps> = ({
         required
       />
     </div>
-    
+
     <div className="space-y-2">
       <Label htmlFor="customerEmail">Customer Email</Label>
       <Input
@@ -55,7 +55,7 @@ export const QuoteCustomerFields: React.FC<QuoteCustomerFieldsProps> = ({
         onChange={(e) => setCustomerEmail(e.target.value)}
       />
     </div>
-    
+
     <div className="space-y-2">
       <Label htmlFor="customerPhone">Customer Phone</Label>
       <Input
@@ -65,7 +65,7 @@ export const QuoteCustomerFields: React.FC<QuoteCustomerFieldsProps> = ({
         onChange={(e) => setCustomerPhone(e.target.value)}
       />
     </div>
-    
+
     <div className="space-y-2">
       <Label htmlFor="companyName">Company Name</Label>
       <Input
@@ -75,7 +75,7 @@ export const QuoteCustomerFields: React.FC<QuoteCustomerFieldsProps> = ({
         onChange={(e) => setCompanyName(e.target.value)}
       />
     </div>
-    
+
     <div className="space-y-2">
       <Label htmlFor="location">Location</Label>
       <Input
@@ -85,7 +85,7 @@ export const QuoteCustomerFields: React.FC<QuoteCustomerFieldsProps> = ({
         onChange={(e) => setLocationField(e.target.value)}
       />
     </div>
-    
+
     <div className="space-y-2">
       <Label htmlFor="notes">Notes</Label>
       <Textarea

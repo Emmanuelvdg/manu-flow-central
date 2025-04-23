@@ -1,11 +1,6 @@
 
 import React from "react";
-
-export interface RFQProductItem {
-  id?: number | string;
-  name: string;
-  quantity?: number;
-}
+import type { RFQProductItem } from "./quoteDetailUtils";
 
 interface QuoteProductsSectionProps {
   rfqProducts: RFQProductItem[] | undefined;
@@ -14,7 +9,7 @@ interface QuoteProductsSectionProps {
   setProducts: (val: string) => void;
 }
 
-export const QuoteProductsSection: React.FC<QuoteProductsSectionProps> = ({
+export const QuoteDetailProductsSection: React.FC<QuoteProductsSectionProps> = ({
   rfqProducts,
   setRFQProducts,
   products,
@@ -51,7 +46,6 @@ export const QuoteProductsSection: React.FC<QuoteProductsSectionProps> = ({
       </div>
     );
   }
-  // Else, fallback to free text input
   return (
     <div>
       <label className="block text-sm font-medium mb-1">Products Requested</label>

@@ -1,0 +1,431 @@
+
+import React, { useState, useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { calculateRisk, getRecommendedDeposit } from "@/utils/riskCalculator";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchQuote } from "@/components/dashboard/quotes/quoteUtils";
+import { QuoteDetailCustomerFields } from "./QuoteDetailCustomerFields";
+import { QuoteDetailProductsSection } from "./QuoteDetailProductsSection";
+import { migrateProducts, productsToString, stringToProducts, RFQProductItem } from "./quoteDetailUtils";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+
+export const QuoteDetailForm: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Incoming RFQ state management
+  const fromRFQ = location.state?.fromRFQ as any | undefined;
+  const rfqIdForShipment: string | undefined = location.state?.rfqIdForShipment;
+  // States
+  const [customerName, setCustomerName] = useState(fromRFQ?.customerName ?? "");
+  const [customerEmail, setCustomerEmail] = useState(fromRFQ?.customerEmail ?? "");
+  const [customerPhone, setCustomerPhone] = useState(fromRFQ?.customerPhone ?? "");
+  const [companyName, setCompanyName] = useState(fromRFQ?.companyName ?? "");
+  const [notes, setNotes] = useState(fromRFQ?.notes ?? "");
+  const [rfqProducts, setRFQProducts] = useState<RFQProductItem[] | undefined>(
+    fromRFQ?.products ? migrateProducts(fromRFQ.products) : undefined
+  );
+  const [products, setProducts] = useState<string>(
+    !fromRFQ?.products ? "" : productsToString(fromRFQ.products)
+  );
+  const [currency, setCurrency] = useState("USD");
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [top, setTop] = useState<string>("");
+  const [shippingMethod, setShippingMethod] = useState<string>("");
+  const [paymentTerm, setPaymentTerm] = useState<string>("");
+  const [incoterm, setIncoterm] = useState<string>("");
+  const [risk, setRisk] = useState<string>("");
+  const [recommendedDeposit, setRecommendedDeposit] = useState<number>(0);
+  const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
+  const [locationField, setLocationField] = useState<string>(fromRFQ?.location ?? "");
+  const [status, setStatus] = useState<string>("submitted");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [quoteNumber, setQuoteNumber] = useState<string>("");
+
+  useEffect(() => {
+    if (id && id !== 'create') {
+      setIsLoading(true);
+      fetchQuote(id)
+        .then((quoteData) => {
+          if (quoteData) {
+            setCustomerName(quoteData.customer_name || "");
+            setCustomerEmail(quoteData.customer_email || "");
+            setCompanyName(quoteData.company_name || "");
+            setCurrency(quoteData.currency || "USD");
+            setTotalAmount(quoteData.total || 0);
+            setPaymentTerm(quoteData.payment_terms || "");
+            setShippingMethod(quoteData.shipping_method || "");
+            setIncoterm(quoteData.incoterms || "");
+            setRisk(quoteData.risk_level || "");
+            setDepositPercentage(quoteData.deposit_percentage);
+            setStatus(quoteData.status || "submitted");
+            setQuoteNumber(quoteData.quote_number || "");
+
+            if (quoteData.products) {
+              if (Array.isArray(quoteData.products)) {
+                setRFQProducts(migrateProducts(quoteData.products));
+              } else {
+                setProducts(String(quoteData.products));
+              }
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error loading quote:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load quote data",
+            variant: "destructive"
+          });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setQuoteNumber(`Q-${Date.now()}`);
+    }
+    // eslint-disable-next-line
+  }, [id]);
+
+  useEffect(() => {
+    if (fromRFQ) {
+      setCustomerName(fromRFQ.customerName ?? "");
+      setCustomerEmail(fromRFQ.customerEmail ?? "");
+      setCustomerPhone(fromRFQ.customerPhone ?? "");
+      setCompanyName(fromRFQ.companyName ?? "");
+      setNotes(fromRFQ.notes ?? "");
+      setRFQProducts(migrateProducts(fromRFQ.products));
+      setProducts(productsToString(fromRFQ.products));
+      setLocationField(fromRFQ.location ?? "");
+    }
+  }, [fromRFQ]);
+
+  useEffect(() => {
+    const calculatedRisk = calculateRisk(
+      incoterm as 'cif' | 'ddp' | 'fob' | 'exw' | '', 
+      paymentTerm as 'advance' | 'lc' | 'open' | ''
+    );
+    setRisk(calculatedRisk);
+    const recommendedDepositValue = getRecommendedDeposit(calculatedRisk);
+    setRecommendedDeposit(recommendedDepositValue);
+  }, [incoterm, paymentTerm]);
+
+  const createShipmentFromRFQ = async (rfqId: string, quoteId: string) => {
+    try {
+      const { error } = await supabase.from('shipments').insert({
+        rfq_id: rfqId,
+        quote_id: quoteId,
+        status: 'pending',
+      });
+
+      if (error) {
+        console.error("Error creating shipment:", error);
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error in createShipmentFromRFQ:", error);
+      toast({
+        title: "Error",
+        description: `Failed to create shipment: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!customerName) {
+      toast({
+        title: "Error",
+        description: "Customer name is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (totalAmount <= 0) {
+      toast({
+        title: "Error",
+        description: "Total amount must be greater than 0",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!quoteNumber) {
+      setQuoteNumber(`Q-${Date.now()}`);
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      let productsData;
+      if (rfqProducts && Array.isArray(rfqProducts)) {
+        productsData = rfqProducts.map(p => ({
+          name: p.name,
+          quantity: p.quantity || 1
+        }));
+      } else if (products) {
+        productsData = stringToProducts(products);
+      } else {
+        productsData = [];
+      }
+
+      const quoteData = {
+        quote_number: quoteNumber,
+        rfq_id: fromRFQ?.rfqId,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        company_name: companyName,
+        products: productsData,
+        total: totalAmount,
+        currency,
+        payment_terms: paymentTerm,
+        shipping_method: shippingMethod,
+        incoterms: incoterm,
+        risk_level: risk,
+        deposit_percentage: depositPercentage,
+        status
+      };
+
+      let result;
+      if (id && id !== 'create') {
+        result = await supabase
+          .from('quotes')
+          .update(quoteData)
+          .eq('id', id);
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        toast({
+          title: "Success",
+          description: "Quote updated successfully",
+        });
+      } else {
+        result = await supabase
+          .from('quotes')
+          .insert(quoteData)
+          .select('id')
+          .single();
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        const newQuoteId = result.data.id as string;
+
+        if (rfqIdForShipment && newQuoteId) {
+          await createShipmentFromRFQ(rfqIdForShipment, newQuoteId);
+        }
+        else if (fromRFQ?.rfqId && newQuoteId) {
+          await createShipmentFromRFQ(fromRFQ.rfqId, newQuoteId);
+        }
+
+        if (fromRFQ?.rfqId) {
+          const { error: rfqError } = await supabase
+            .from('rfqs')
+            .update({ status: 'quoted' })
+            .eq('id', fromRFQ.rfqId);
+          if (rfqError) {
+            console.error("Error updating RFQ status:", rfqError);
+          }
+        }
+
+        toast({
+          title: "Success",
+          description: "Quote saved successfully",
+        });
+
+        navigate('/quotes');
+      }
+    } catch (error: any) {
+      console.error("Error saving quote:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save quote",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      {isLoading ? (
+        <div className="flex justify-center py-8">
+          <div className="animate-pulse">Loading quote data...</div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <QuoteDetailCustomerFields
+            customerName={customerName}
+            setCustomerName={setCustomerName}
+            customerEmail={customerEmail}
+            setCustomerEmail={setCustomerEmail}
+            customerPhone={customerPhone}
+            setCustomerPhone={setCustomerPhone}
+            companyName={companyName}
+            setCompanyName={setCompanyName}
+            locationField={locationField}
+            setLocationField={setLocationField}
+            notes={notes}
+            setNotes={setNotes}
+          />
+          <QuoteDetailProductsSection
+            rfqProducts={rfqProducts}
+            setRFQProducts={setRFQProducts}
+            products={products}
+            setProducts={setProducts}
+          />
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium mb-1">Total Amount</label>
+              <input
+                type="number"
+                className="w-full rounded border p-2"
+                placeholder="Total"
+                value={totalAmount || ''}
+                onChange={(e) => setTotalAmount(Number(e.target.value))}
+                required
+              />
+            </div>
+            <div className="w-32">
+              <label className="block text-sm font-medium mb-1">Currency</label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="IDR">IDR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Terms of Payment (Days)</label>
+            <Select value={top} onValueChange={setTop}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select payment terms" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">0</SelectItem>
+                <SelectItem value="7">+7</SelectItem>
+                <SelectItem value="14">+14</SelectItem>
+                <SelectItem value="30">+30</SelectItem>
+                <SelectItem value="60">+60</SelectItem>
+                <SelectItem value="90">+90</SelectItem>
+                <SelectItem value="120">+120</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Shipping Method</label>
+            <Select value={shippingMethod} onValueChange={setShippingMethod}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select shipping method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="self_collect">Self Collect</SelectItem>
+                <SelectItem value="sea">Sea</SelectItem>
+                <SelectItem value="air">Air</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Payment Terms</label>
+            <Select value={paymentTerm} onValueChange={setPaymentTerm}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select payment terms" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="advance">Advance Payment</SelectItem>
+                <SelectItem value="lc">Letter of Credit</SelectItem>
+                <SelectItem value="open">Open Account</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Incoterms</label>
+            <Select value={incoterm} onValueChange={setIncoterm}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select incoterms" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cif">CIF</SelectItem>
+                <SelectItem value="ddp">DDP</SelectItem>
+                <SelectItem value="fob">FOB</SelectItem>
+                <SelectItem value="exw">EXW</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Risk Level</label>
+            <input
+              type="text"
+              className="w-full rounded border p-2 bg-gray-50"
+              value={risk}
+              readOnly
+              placeholder="Select Incoterms and Payment Terms to calculate risk"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Deposit Required (%)
+              {recommendedDeposit > 0 && (
+                <span className="text-sm text-gray-500 ml-2">
+                  Recommended: {recommendedDeposit}%
+                </span>
+              )}
+            </label>
+            <input
+              type="number"
+              className="w-full rounded border p-2"
+              placeholder="Enter deposit percentage"
+              min="0"
+              max="100"
+              value={depositPercentage ?? ''}
+              onChange={(e) =>
+                setDepositPercentage(e.target.value ? Number(e.target.value) : undefined)
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Status</label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="submitted">Submitted</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            type="submit"
+            className="ml-auto"
+            disabled={isSubmitting || isLoading}
+          >
+            {isSubmitting
+              ? "Saving..."
+              : id && id !== "create"
+              ? "Update Quote"
+              : "Save Quote"}
+          </Button>
+        </form>
+      )}
+    </>
+  );
+};
