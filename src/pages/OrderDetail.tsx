@@ -10,28 +10,40 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// Types for normalized order product
+type OrderProductRow = {
+  id: string;
+  product_id: string;
+  quantity: number;
+  unit: string;
+  status: string;
+  materials_status: string;
+  materials_progress: number | null;
+  personnel_progress: number | null;
+  machines_progress: number | null;
+  notes: string | null;
+  recipe_id: string | null;
+  // for UI
+  product_name: string | null;
+  product_description: string | null;
+  group: string | null;
+};
+
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
-  
-  // Fetch order data from Supabase - modified to search by order_number instead of id
+
+  // Fetch order data (still needed for metadata)
   const { data: order, isLoading, error } = useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
       if (!id) return null;
-      
-      // Query by order_number instead of id
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .eq('order_number', id)
         .single();
-        
-      if (error) {
-        console.error("Error fetching order:", error);
-        throw error;
-      }
-      
+      if (error) throw error;
       return data;
     },
     enabled: !!id,
@@ -46,21 +58,50 @@ const OrderDetail = () => {
     }
   });
 
-  // Placeholder for mocked progress data that would normally come from the database
-  const getProgressData = (productId: string) => ({
-    materials: Math.floor(Math.random() * 100),
-    personnel: Math.floor(Math.random() * 100),
-    machines: Math.floor(Math.random() * 100)
+  // Fetch normalized order products, joined with product info
+  const { data: orderProducts = [], isLoading: productsLoading } = useQuery({
+    queryKey: ['orderProducts', id],
+    queryFn: async () => {
+      if (!id) return [];
+      // Must first query order to get internal order.id
+      const { data: orderRow } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('order_number', id)
+        .maybeSingle();
+      if (!orderRow) return [];
+      // Query order_products joined with products
+      const { data, error } = await supabase
+        .from('order_products')
+        .select(`
+          *,
+          products:product_id (
+            name,
+            description,
+            category
+          )
+        `)
+        .eq('order_id', orderRow.id)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return (data || []).map((row: any) => ({
+        ...row,
+        product_name: row.products?.name ?? null,
+        product_description: row.products?.description ?? null,
+        group: row.products?.category ?? null,
+      }));
+    },
+    enabled: !!id,
   });
 
-  // Define state for the form
+  // Define state for order metadata form
   const [formData, setFormData] = useState({
     customerName: "",
     status: "Processing",
     shippingAddress: "",
   });
 
-  // Update form when order data is loaded
+  // Update form when order metadata is loaded
   useEffect(() => {
     if (order) {
       setFormData({
@@ -76,20 +117,8 @@ const OrderDetail = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Process products from order data
-  const processedProducts = order?.products ? 
-    Array.isArray(order.products) ? 
-      order.products.map((p: any) => ({
-        id: p.id || `prod-${Math.random().toString(36).substr(2, 9)}`,
-        name: p.name || "Unknown Product",
-        quantity: p.quantity || 1,
-        group: p.group || "General",
-        progress: getProgressData(p.id || "")
-      })) : [] : [];
-
   const handleSaveOrder = async () => {
     if (!order) return;
-    
     try {
       const { error } = await supabase
         .from('orders')
@@ -99,9 +128,7 @@ const OrderDetail = () => {
           shipping_address: formData.shippingAddress,
         })
         .eq('order_number', id);
-        
       if (error) throw error;
-      
       toast({
         title: "Order updated",
         description: `Order #${id} has been successfully updated.`,
@@ -125,7 +152,7 @@ const OrderDetail = () => {
             Back to Orders
           </Link>
         </Button>
-        
+
         <Card className="mt-4">
           <CardHeader>
             <CardTitle>
@@ -179,21 +206,28 @@ const OrderDetail = () => {
 
                 <div className="border rounded-lg p-4 space-y-4">
                   <h3 className="font-semibold">Products & Progress</h3>
-                  {processedProducts.length === 0 ? (
+                  {productsLoading ? (
+                    <div className="text-muted-foreground italic text-center py-2">Loading products...</div>
+                  ) : orderProducts.length === 0 ? (
                     <div className="text-gray-500 italic text-center py-2">No products found</div>
                   ) : (
-                    processedProducts.map((product: any, idx: number) => (
-                      <div key={idx} className="border-b last:border-0 pb-4 last:pb-0">
+                    orderProducts.map((product: OrderProductRow, idx: number) => (
+                      <div key={product.id} className="border-b last:border-0 pb-4 last:pb-0">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <h4 className="font-medium">{product.name}</h4>
+                            <h4 className="font-medium">{product.product_name || "Unknown Product"}</h4>
                             <p className="text-sm text-gray-600">
-                              Quantity: {product.quantity} | Group: {product.group}
+                              Quantity: {product.quantity} {product.unit} | Group: {product.group || "General"}
                             </p>
+                            {product.product_description && (
+                              <p className="text-xs text-muted-foreground">{product.product_description}</p>
+                            )}
                           </div>
                           <Link 
-                            to={`/recipes/${product.id}`}
-                            className="text-sm text-blue-600 hover:underline"
+                            to={product.recipe_id ? `/recipes/${product.recipe_id}` : "#"}
+                            className={`text-sm ${product.recipe_id ? "text-blue-600 hover:underline" : "text-gray-400 cursor-not-allowed"}`}
+                            tabIndex={product.recipe_id ? 0 : -1}
+                            aria-disabled={!product.recipe_id}
                           >
                             View Recipe
                           </Link>
@@ -203,25 +237,25 @@ const OrderDetail = () => {
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span>Materials</span>
-                              <span>{product.progress.materials}%</span>
+                              <span>{product.materials_progress ?? 0}%</span>
                             </div>
-                            <Progress value={product.progress.materials} />
+                            <Progress value={product.materials_progress ?? 0} />
                           </div>
 
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span>Personnel</span>
-                              <span>{product.progress.personnel}%</span>
+                              <span>{product.personnel_progress ?? 0}%</span>
                             </div>
-                            <Progress value={product.progress.personnel} />
+                            <Progress value={product.personnel_progress ?? 0} />
                           </div>
 
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span>Machines</span>
-                              <span>{product.progress.machines}%</span>
+                              <span>{product.machines_progress ?? 0}%</span>
                             </div>
-                            <Progress value={product.progress.machines} />
+                            <Progress value={product.machines_progress ?? 0} />
                           </div>
                         </div>
                       </div>
@@ -248,3 +282,4 @@ const OrderDetail = () => {
 };
 
 export default OrderDetail;
+

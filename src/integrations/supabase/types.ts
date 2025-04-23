@@ -205,12 +205,137 @@ export type Database = {
         }
         Relationships: []
       }
+      order_materials: {
+        Row: {
+          allocated: boolean | null
+          created_at: string
+          id: string
+          material_id: string
+          order_product_id: string
+          quantity: number
+          status: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          allocated?: boolean | null
+          created_at?: string
+          id?: string
+          material_id: string
+          order_product_id: string
+          quantity: number
+          status?: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          allocated?: boolean | null
+          created_at?: string
+          id?: string
+          material_id?: string
+          order_product_id?: string
+          quantity?: number
+          status?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_materials_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_materials_order_product_id_fkey"
+            columns: ["order_product_id"]
+            isOneToOne: false
+            referencedRelation: "order_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_products: {
+        Row: {
+          created_at: string
+          id: string
+          machines_progress: number | null
+          materials_progress: number | null
+          materials_status: string
+          notes: string | null
+          order_id: string
+          personnel_progress: number | null
+          product_id: string
+          quantity: number
+          recipe_id: string | null
+          status: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          machines_progress?: number | null
+          materials_progress?: number | null
+          materials_status?: string
+          notes?: string | null
+          order_id: string
+          personnel_progress?: number | null
+          product_id: string
+          quantity?: number
+          recipe_id?: string | null
+          status?: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          machines_progress?: number | null
+          materials_progress?: number | null
+          materials_status?: string
+          notes?: string | null
+          order_id?: string
+          personnel_progress?: number | null
+          product_id?: string
+          quantity?: number
+          recipe_id?: string | null
+          status?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_products_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_products_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
           customer_name: string
           deposit_paid: boolean | null
           id: string
+          order_date: string | null
           order_number: string
           parts_status: string
           products: Json
@@ -225,6 +350,7 @@ export type Database = {
           customer_name: string
           deposit_paid?: boolean | null
           id?: string
+          order_date?: string | null
           order_number: string
           parts_status?: string
           products: Json
@@ -239,6 +365,7 @@ export type Database = {
           customer_name?: string
           deposit_paid?: boolean | null
           id?: string
+          order_date?: string | null
           order_number?: string
           parts_status?: string
           products?: Json
