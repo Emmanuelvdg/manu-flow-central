@@ -1,17 +1,13 @@
-
-import React from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { MaterialEditDialog } from "./MaterialEditDialog";
-import { PurchaseOrderDialog } from "./PurchaseOrderDialog";
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { Material, PurchaseOrder } from "@/types/material";
 import { MaterialsTable } from "./MaterialsTable";
 import { PurchaseOrdersTable } from "./PurchaseOrdersTable";
-import { fetchMaterials } from "@/components/recipe/recipeDataUtils";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { MaterialsHeader } from "./MaterialsHeader";
+import { MaterialDialogs } from "./MaterialDialogs";
+import { useMaterials } from "./hooks/useMaterials";
 
 // We'll provide fallback mock POs only for demo—real data integration can be added later if relevant.
 const mockPurchaseOrders: PurchaseOrder[] = [
@@ -22,41 +18,13 @@ const mockPurchaseOrders: PurchaseOrder[] = [
 
 export const MaterialsSection = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { materials, setMaterials, isLoading, error, queryClient } = useMaterials();
   
-  // Fetch materials from Supabase
-  const { data: dbMaterials = [], isLoading, error } = useQuery({
-    queryKey: ["materials"],
-    queryFn: fetchMaterials,
-  });
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(mockPurchaseOrders);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
 
-  // These manage dialog state as before, but use DB data as source.
-  const [materials, setMaterials] = React.useState<Material[]>([]);
-  const [purchaseOrders, setPurchaseOrders] = React.useState<PurchaseOrder[]>(mockPurchaseOrders);
-  const [selectedMaterial, setSelectedMaterial] = React.useState<Material | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
-  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = React.useState(false);
-
-  // Sync 'materials' state when DB loads - properly map the dbMaterials to the Material type
-  React.useEffect(() => {
-    if (dbMaterials && dbMaterials.length > 0) {
-      const formattedMaterials: Material[] = dbMaterials.map((m) => ({
-        id: m.id,
-        name: m.name,
-        unit: m.unit,
-        // Use type assertion to handle the MaterialOption type mismatch
-        category: (m as any).category || "",
-        status: (m as any).status || "Active",
-        vendor: (m as any).vendor || "",
-        batches: [],
-        stock: 0,
-        costPerUnit: 0
-      }));
-      setMaterials(formattedMaterials);
-    }
-  }, [dbMaterials]);
-
-  // The rest: handlers for dialogs, formatters (kept nearly the same)
   const handleEditMaterial = (material: Material) => {
     setSelectedMaterial(material);
     setIsEditDialogOpen(true);
@@ -69,10 +37,8 @@ export const MaterialsSection = () => {
 
   const handleSaveMaterial = async (updatedMaterial: Material) => {
     try {
-      // Check if this is a new material or an update
       const isNewMaterial = !materials.some((m) => m.id === updatedMaterial.id);
       
-      // Save to Supabase
       const materialData = {
         id: updatedMaterial.id,
         name: updatedMaterial.name,
@@ -93,17 +59,15 @@ export const MaterialsSection = () => {
         if (updateError) throw updateError;
       }
       
-      // Invalidate and refetch the materials query to update the UI
       await queryClient.invalidateQueries({ queryKey: ["materials"] });
       
-      // Update local state for immediate UI feedback
       setMaterials(prev => {
         const filtered = prev.filter((m) => m.id !== updatedMaterial.id);
         return [...filtered, updatedMaterial];
       });
       
       toast({
-        title: isNewMaterial ? "Material Added" : "Material Updated",
+        title: `Material ${isNewMaterial ? "Added" : "Updated"}`,
         description: `${updatedMaterial.name} has been ${isNewMaterial ? "added" : "updated"} successfully.`,
       });
     } catch (error) {
@@ -120,16 +84,6 @@ export const MaterialsSection = () => {
     setPurchaseOrders([...purchaseOrders, { ...newPO, id: `po-${Date.now()}` }]);
   };
 
-  const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return 'N/A';
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return String(dateString);
-    }
-  };
-
   const formatCurrency = (value: number | null | undefined): string => {
     if (value === null || value === undefined) return '$0.00';
     try {
@@ -143,27 +97,20 @@ export const MaterialsSection = () => {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Materials</CardTitle>
-          <Button
-            size="sm"
-            onClick={() => {
-              setSelectedMaterial({
-                id: `mat-${Date.now()}`,
-                name: "",
-                category: "",
-                unit: "",
-                status: "Active",
-                vendor: "",
-                batches: [],
-              });
-              setIsEditDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Material
-          </Button>
-        </CardHeader>
+        <MaterialsHeader 
+          onNewMaterial={() => {
+            setSelectedMaterial({
+              id: `mat-${Date.now()}`,
+              name: "",
+              category: "",
+              unit: "",
+              status: "Active",
+              vendor: "",
+              batches: [],
+            });
+            setIsEditDialogOpen(true);
+          }}
+        />
         <CardContent>
           {isLoading ? (
             <div className="text-muted-foreground py-8 text-center">Loading materials...</div>
@@ -181,34 +128,24 @@ export const MaterialsSection = () => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Purchase Orders</CardTitle>
-        </CardHeader>
         <CardContent>
           <PurchaseOrdersTable
             purchaseOrders={purchaseOrders}
             materials={materials}
-            formatDate={formatDate}
+            formatDate={(date) => new Date(date).toLocaleDateString()}
           />
         </CardContent>
       </Card>
 
-      {selectedMaterial && (
-        <>
-          <MaterialEditDialog
-            material={selectedMaterial}
-            isOpen={isEditDialogOpen}
-            onClose={() => setIsEditDialogOpen(false)}
-            onSave={handleSaveMaterial}
-          />
-          <PurchaseOrderDialog
-            material={selectedMaterial}
-            isOpen={isPurchaseDialogOpen}
-            onClose={() => setIsPurchaseDialogOpen(false)}
-            onCreateOrder={handleCreatePurchaseOrder}
-          />
-        </>
-      )}
+      <MaterialDialogs
+        selectedMaterial={selectedMaterial}
+        isEditDialogOpen={isEditDialogOpen}
+        isPurchaseDialogOpen={isPurchaseDialogOpen}
+        onCloseEditDialog={() => setIsEditDialogOpen(false)}
+        onClosePurchaseDialog={() => setIsPurchaseDialogOpen(false)}
+        onSaveMaterial={handleSaveMaterial}
+        onCreateOrder={handleCreatePurchaseOrder}
+      />
     </>
   );
 };
