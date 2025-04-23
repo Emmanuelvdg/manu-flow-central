@@ -1,6 +1,52 @@
 
 import { Order } from "@/types/order";
 
+// Parts Status constants
+export type PartsStatus =
+  | "Not booked"
+  | "Not enough"
+  | "Requested"
+  | "Expected"
+  | "Delayed"
+  | "Received";
+
+// Define transition events
+export type PartsStatusEvent =
+  | "PartsReserved"
+  | "POCreated"
+  | "DelaysOccur"
+  | "OnTimeDelivery"
+  | "InsufficientStock";
+
+// Map valid transitions based on business rules
+const partsStatusFlow: Record<
+  PartsStatus,
+  Partial<Record<PartsStatusEvent, PartsStatus>>
+> = {
+  "Not booked": {
+    PartsReserved: "Requested",
+    InsufficientStock: "Not enough",
+  },
+  "Requested": {
+    POCreated: "Expected",
+  },
+  "Expected": {
+    DelaysOccur: "Delayed",
+    OnTimeDelivery: "Received",
+  },
+  "Delayed": {},
+  "Received": {},
+  "Not enough": {},
+};
+
+// Helper to get next status based on current status and event
+export function getNextPartsStatus(
+  currentStatus: PartsStatus,
+  event: PartsStatusEvent
+): PartsStatus | undefined {
+  return partsStatusFlow[currentStatus]?.[event];
+}
+
 export const mockOrders: Order[] = [
   {
     number: "MO00199",
