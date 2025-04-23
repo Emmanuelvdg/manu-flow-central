@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -9,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { OrderMetaForm } from "./order-detail/OrderMetaForm";
+import { OrderProductsProgress } from "./order-detail/OrderProductsProgress";
 
 // Types for normalized order product
 type OrderProductRow = {
@@ -165,116 +166,20 @@ const OrderDetail = () => {
             ) : error ? (
               <div className="text-red-500 py-4 text-center">Error loading order</div>
             ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Customer Name</label>
-                    <input 
-                      type="text" 
-                      name="customerName"
-                      className="w-full rounded border p-2" 
-                      value={formData.customerName}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Status</label>
-                    <select 
-                      name="status"
-                      className="w-full rounded border p-2" 
-                      value={formData.status}
-                      onChange={handleChange}
-                    >
-                      <option>Submitted</option>
-                      <option>Processing</option>
-                      <option>Completed</option>
-                      <option>Fulfilled</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Shipping Address</label>
-                  <input 
-                    type="text" 
-                    name="shippingAddress"
-                    className="w-full rounded border p-2" 
-                    value={formData.shippingAddress}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="border rounded-lg p-4 space-y-4">
-                  <h3 className="font-semibold">Products & Progress</h3>
-                  {productsLoading ? (
-                    <div className="text-muted-foreground italic text-center py-2">Loading products...</div>
-                  ) : orderProducts.length === 0 ? (
-                    <div className="text-gray-500 italic text-center py-2">No products found</div>
-                  ) : (
-                    orderProducts.map((product: OrderProductRow, idx: number) => (
-                      <div key={product.id} className="border-b last:border-0 pb-4 last:pb-0">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-medium">{product.product_name || "Unknown Product"}</h4>
-                            <p className="text-sm text-gray-600">
-                              Quantity: {product.quantity} {product.unit} | Group: {product.group || "General"}
-                            </p>
-                            {product.product_description && (
-                              <p className="text-xs text-muted-foreground">{product.product_description}</p>
-                            )}
-                          </div>
-                          <Link 
-                            to={product.recipe_id ? `/recipes/${product.recipe_id}` : "#"}
-                            className={`text-sm ${product.recipe_id ? "text-blue-600 hover:underline" : "text-gray-400 cursor-not-allowed"}`}
-                            tabIndex={product.recipe_id ? 0 : -1}
-                            aria-disabled={!product.recipe_id}
-                          >
-                            View Recipe
-                          </Link>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div>
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>Materials</span>
-                              <span>{product.materials_progress ?? 0}%</span>
-                            </div>
-                            <Progress value={product.materials_progress ?? 0} />
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>Personnel</span>
-                              <span>{product.personnel_progress ?? 0}%</span>
-                            </div>
-                            <Progress value={product.personnel_progress ?? 0} />
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>Machines</span>
-                              <span>{product.machines_progress ?? 0}%</span>
-                            </div>
-                            <Progress value={product.machines_progress ?? 0} />
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              <>
+                <OrderMetaForm 
+                  formData={formData}
+                  isLoading={isLoading}
+                  onChange={handleChange}
+                  onSave={handleSaveOrder}
+                />
+                <OrderProductsProgress 
+                  productsLoading={productsLoading}
+                  orderProducts={orderProducts}
+                />
+              </>
             )}
           </CardContent>
-          <CardFooter>
-            <Button 
-              type="button" 
-              className="ml-auto" 
-              disabled={isLoading}
-              onClick={handleSaveOrder}
-            >
-              Save Order
-            </Button>
-          </CardFooter>
         </Card>
       </div>
     </MainLayout>
@@ -282,4 +187,3 @@ const OrderDetail = () => {
 };
 
 export default OrderDetail;
-
