@@ -1,26 +1,21 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Material, PurchaseOrder } from "@/types/material";
+import { Material } from "@/types/material";
 import { MaterialsTable } from "./MaterialsTable";
-import { PurchaseOrdersTable } from "./PurchaseOrdersTable";
 import { supabase } from "@/integrations/supabase/client";
 import { MaterialsHeader } from "./MaterialsHeader";
 import { MaterialDialogs } from "./MaterialDialogs";
 import { useMaterials } from "./hooks/useMaterials";
-
-// We'll provide fallback mock POs only for demo—real data integration can be added later if relevant.
-const mockPurchaseOrders: PurchaseOrder[] = [
-  { id: "po-001", materialId: "mat-001", quantity: 20, status: "ordered", orderDate: "2025-03-01", expectedDelivery: "2025-03-15", vendor: "MetalWorks Ltd", totalCost: 250 },
-  { id: "po-002", materialId: "mat-004", quantity: 500, status: "delivered", orderDate: "2025-02-15", expectedDelivery: "2025-02-28", vendor: "SealMaster", totalCost: 125 },
-  { id: "po-003", materialId: "mat-006", quantity: 50, status: "ordered", orderDate: "2025-03-05", expectedDelivery: "2025-03-20", vendor: "CircuitPro", totalCost: 340 },
-];
+import { PurchaseOrdersSection } from "./PurchaseOrdersSection";
+import { usePurchaseOrders } from "./hooks/usePurchaseOrders";
 
 export const MaterialsSection = () => {
   const { toast } = useToast();
   const { materials, setMaterials, isLoading, error, queryClient } = useMaterials();
+  const { purchaseOrders, handleCreatePurchaseOrder } = usePurchaseOrders();
   
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(mockPurchaseOrders);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
@@ -80,10 +75,6 @@ export const MaterialsSection = () => {
     }
   };
 
-  const handleCreatePurchaseOrder = (newPO: PurchaseOrder) => {
-    setPurchaseOrders([...purchaseOrders, { ...newPO, id: `po-${Date.now()}` }]);
-  };
-
   const formatCurrency = (value: number | null | undefined): string => {
     if (value === null || value === undefined) return '$0.00';
     try {
@@ -92,6 +83,11 @@ export const MaterialsSection = () => {
       console.error("Error formatting currency:", error);
       return `$${String(value)}`;
     }
+  };
+
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString();
   };
 
   return (
@@ -127,15 +123,11 @@ export const MaterialsSection = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent>
-          <PurchaseOrdersTable
-            purchaseOrders={purchaseOrders}
-            materials={materials}
-            formatDate={(date) => new Date(date).toLocaleDateString()}
-          />
-        </CardContent>
-      </Card>
+      <PurchaseOrdersSection 
+        purchaseOrders={purchaseOrders}
+        materials={materials}
+        formatDate={formatDate}
+      />
 
       <MaterialDialogs
         selectedMaterial={selectedMaterial}
