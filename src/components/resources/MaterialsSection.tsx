@@ -38,10 +38,11 @@ export const MaterialsSection = () => {
       const formattedMaterials: Material[] = dbMaterials.map((m) => ({
         id: m.id,
         name: m.name,
-        category: m.category || "",
         unit: m.unit,
-        status: m.status || "Active",
-        vendor: m.vendor || "",
+        // Since MaterialOption doesn't have these properties, we provide default values
+        category: "",
+        status: "Active",
+        vendor: "",
         batches: [],
         stock: 0,
         costPerUnit: 0
