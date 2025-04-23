@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -30,6 +29,7 @@ const QuoteDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const fromRFQ: FromRFQ | undefined = location.state?.fromRFQ;
+  const onQuoteCreated: ((quoteId: string) => void) | undefined = (location.state as any)?.onQuoteCreated;
 
   const [customerName, setCustomerName] = useState<string>(fromRFQ?.customerName ?? "");
   const [customerEmail, setCustomerEmail] = useState<string>(fromRFQ?.customerEmail ?? "");
@@ -67,7 +67,6 @@ const QuoteDetail = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Load quote data if editing an existing quote
   useEffect(() => {
     if (id && id !== 'create') {
       setIsLoading(true);
@@ -86,7 +85,6 @@ const QuoteDetail = () => {
             setDepositPercentage(quoteData.deposit_percentage);
             setStatus(quoteData.status || "submitted");
             
-            // Handle products
             if (quoteData.products) {
               if (Array.isArray(quoteData.products)) {
                 setRFQProducts(quoteData.products.map((p: any) => ({
@@ -151,6 +149,25 @@ const QuoteDetail = () => {
     setRecommendedDeposit(recommendedDepositValue);
   }, [incoterm, paymentTerm]);
 
+  const createShipmentIfNeeded = async (rfqId: string, quoteId: string) => {
+    if (typeof onQuoteCreated === "function") {
+      await onQuoteCreated(quoteId);
+    } else {
+      const { data: shipments } = await supabase
+        .from('shipments')
+        .select('id')
+        .eq('rfq_id', rfqId)
+        .eq('quote_id', quoteId);
+      if (!shipments || shipments.length === 0) {
+        await supabase.from('shipments').insert({
+          rfq_id: rfqId,
+          quote_id: quoteId,
+          status: 'pending'
+        });
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -175,7 +192,6 @@ const QuoteDetail = () => {
     setIsSubmitting(true);
 
     try {
-      // Format products data to be JSON compatible
       let productsData;
       if (rfqProducts && Array.isArray(rfqProducts)) {
         productsData = rfqProducts.map(p => ({
@@ -213,7 +229,6 @@ const QuoteDetail = () => {
       let result;
       
       if (id && id !== 'create') {
-        // Update existing quote
         result = await supabase
           .from('quotes')
           .update(quoteData)
@@ -228,7 +243,6 @@ const QuoteDetail = () => {
           description: "Quote updated successfully",
         });
       } else {
-        // Create new quote
         result = await supabase
           .from('quotes')
           .insert(quoteData)
@@ -239,15 +253,16 @@ const QuoteDetail = () => {
           throw result.error;
         }
 
-        if (fromRFQ?.rfqId) {
+        const newQuoteId = result.data.id as string;
+        if (fromRFQ?.rfqId && newQuoteId) {
           const { error: rfqError } = await supabase
             .from('rfqs')
             .update({ status: 'quoted' })
             .eq('id', fromRFQ.rfqId);
-
           if (rfqError) {
             console.error("Error updating RFQ status:", rfqError);
           }
+          await createShipmentIfNeeded(fromRFQ.rfqId, newQuoteId);
         }
         
         toast({

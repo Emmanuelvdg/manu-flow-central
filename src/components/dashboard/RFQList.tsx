@@ -7,16 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Plus, FileCheck } from 'lucide-react';
 import { fetchRFQs } from "@/integrations/supabase/rfq";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from '@/components/ui/use-toast';
 
 export const RFQList = () => {
   const navigate = useNavigate();
-  // Remove local mockRFQs, use Supabase data
   const { data: rfqs = [], isLoading, error, refetch } = useQuery({
     queryKey: ['rfqs'],
     queryFn: fetchRFQs,
   });
 
-  // Safe date formatting function
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return 'N/A';
     try {
@@ -27,15 +27,22 @@ export const RFQList = () => {
     }
   };
 
-  // Handler to accept and create quote from an RFQ
-  const handleAcceptAndCreateQuote = (rfq: any) => {
-    // Update local status to 'quoted'
-    // setRFQs((prevRFQs) =>
-    //   prevRFQs.map((item) =>
-    //     item.id === rfq.id ? { ...item, status: 'quoted' } : item
-    //   )
-    // );
-    // Route to "/quotes/create" and pass the RFQ info via state
+  const createShipmentFromRFQ = async (rfqId: string, quoteId: string) => {
+    const { error } = await supabase.from('shipments').insert({
+      rfq_id: rfqId,
+      quote_id: quoteId,
+      status: 'pending',
+    });
+    if (error) {
+      toast({
+        title: "Error",
+        description: `Failed to create shipment: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAcceptAndCreateQuote = async (rfq: any) => {
     navigate('/quotes/create', {
       state: {
         fromRFQ: {
@@ -44,6 +51,9 @@ export const RFQList = () => {
           products: rfq.products,
           contact: rfq.customer_email,
           location: rfq.location,
+        },
+        onQuoteCreated: async (quoteId: string) => {
+          await createShipmentFromRFQ(rfq.id, quoteId);
         },
       },
     });
@@ -92,9 +102,9 @@ export const RFQList = () => {
               <Button
                 variant="default"
                 size="sm"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.stopPropagation();
-                  handleAcceptAndCreateQuote(row);
+                  await handleAcceptAndCreateQuote(row);
                 }}
               >
                 <FileCheck className="mr-2 h-4 w-4" />

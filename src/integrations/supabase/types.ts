@@ -471,7 +471,10 @@ export type Database = {
           created_at: string
           delivery_date: string | null
           id: string
+          invoice_id: string | null
           order_id: string | null
+          quote_id: string | null
+          rfq_id: string | null
           ship_date: string | null
           status: string
           tracking_number: string | null
@@ -482,7 +485,10 @@ export type Database = {
           created_at?: string
           delivery_date?: string | null
           id?: string
+          invoice_id?: string | null
           order_id?: string | null
+          quote_id?: string | null
+          rfq_id?: string | null
           ship_date?: string | null
           status?: string
           tracking_number?: string | null
@@ -493,7 +499,10 @@ export type Database = {
           created_at?: string
           delivery_date?: string | null
           id?: string
+          invoice_id?: string | null
           order_id?: string | null
+          quote_id?: string | null
+          rfq_id?: string | null
           ship_date?: string | null
           status?: string
           tracking_number?: string | null
@@ -501,10 +510,31 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "shipments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "shipments_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
             referencedColumns: ["id"]
           },
         ]

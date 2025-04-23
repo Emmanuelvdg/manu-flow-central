@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -42,16 +41,29 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
 
     if (orderError) throw orderError;
     
+    if (data && data.id) {
+      await updateShipmentWithOrder(quote.id, data.id);
+    }
     return data.id;
+  };
+
+  const updateShipmentWithOrder = async (quoteId: string, orderId: string) => {
+    const { data: shipments } = await supabase
+      .from('shipments')
+      .select('id')
+      .eq('quote_id', quoteId)
+      .order('created_at', { ascending: true });
+    if (shipments && shipments.length > 0) {
+      const shipmentId = shipments[0].id;
+      await supabase.from('shipments').update({ order_id: orderId }).eq('id', shipmentId);
+    }
   };
 
   const acceptQuote = async () => {
     try {
-      // Fetch the complete quote data
       const quote = await fetchQuote(quoteId);
       if (!quote) throw new Error("Quote not found");
       
-      // Update quote status to accepted
       const { error } = await supabase
         .from('quotes')
         .update({ status: 'accepted' })
@@ -59,7 +71,6 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
       
       if (error) throw error;
       
-      // Create manufacturing order based on the quote
       const orderId = await createOrderFromQuote(quote);
       
       toast({
