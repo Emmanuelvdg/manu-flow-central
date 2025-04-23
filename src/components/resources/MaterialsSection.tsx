@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -10,6 +10,8 @@ import { Material, PurchaseOrder } from "@/types/material";
 import { MaterialsTable } from "./MaterialsTable";
 import { PurchaseOrdersTable } from "./PurchaseOrdersTable";
 import { fetchMaterials } from "@/components/recipe/recipeDataUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 // We'll provide fallback mock POs only for demo—real data integration can be added later if relevant.
 const mockPurchaseOrders: PurchaseOrder[] = [
@@ -19,6 +21,9 @@ const mockPurchaseOrders: PurchaseOrder[] = [
 ];
 
 export const MaterialsSection = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   // Fetch materials from Supabase
   const { data: dbMaterials = [], isLoading, error } = useQuery({
     queryKey: ["materials"],
@@ -40,9 +45,9 @@ export const MaterialsSection = () => {
         name: m.name,
         unit: m.unit,
         // Since MaterialOption doesn't have these properties, we provide default values
-        category: "",
-        status: "Active",
-        vendor: "",
+        category: m.category || "",
+        status: m.status || "Active",
+        vendor: m.vendor || "",
         batches: [],
         stock: 0,
         costPerUnit: 0
@@ -62,10 +67,53 @@ export const MaterialsSection = () => {
     setIsPurchaseDialogOpen(true);
   };
 
-  const handleSaveMaterial = (updatedMaterial: Material) => {
-    setMaterials(
-      materials.map((mat) => (mat.id === updatedMaterial.id ? updatedMaterial : mat))
-    );
+  const handleSaveMaterial = async (updatedMaterial: Material) => {
+    try {
+      // Check if this is a new material or an update
+      const isNewMaterial = !materials.some((m) => m.id === updatedMaterial.id);
+      
+      // Save to Supabase
+      const materialData = {
+        id: updatedMaterial.id,
+        name: updatedMaterial.name,
+        category: updatedMaterial.category,
+        unit: updatedMaterial.unit,
+        status: updatedMaterial.status,
+        vendor: updatedMaterial.vendor
+      };
+      
+      if (isNewMaterial) {
+        const { error: insertError } = await supabase.from("materials").insert(materialData);
+        if (insertError) throw insertError;
+      } else {
+        const { error: updateError } = await supabase
+          .from("materials")
+          .update(materialData)
+          .eq("id", updatedMaterial.id);
+        if (updateError) throw updateError;
+      }
+      
+      // Invalidate and refetch the materials query to update the UI
+      await queryClient.invalidateQueries({ queryKey: ["materials"] });
+      
+      // Update local state for immediate UI feedback
+      setMaterials(prev => {
+        const filtered = prev.filter((m) => m.id !== updatedMaterial.id);
+        return [...filtered, updatedMaterial];
+      });
+      
+      toast({
+        title: isNewMaterial ? "Material Added" : "Material Updated",
+        description: `${updatedMaterial.name} has been ${isNewMaterial ? "added" : "updated"} successfully.`,
+      });
+    } catch (error) {
+      console.error("Error saving material:", error);
+      toast({
+        title: "Error",
+        description: `Failed to save material: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCreatePurchaseOrder = (newPO: PurchaseOrder) => {

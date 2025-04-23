@@ -103,7 +103,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     setBatches(batches.filter(batch => batch.id !== id));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Calculate total remaining stock and average cost per unit
@@ -118,11 +118,10 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
       stock: totalRemainingStock
     };
     
-    onSave(updatedMaterial);
-    toast({
-      title: "Material Updated",
-      description: `${formData.name} has been updated successfully.`,
-    });
+    // Pass the updated material to the parent component
+    await onSave(updatedMaterial);
+    
+    // We don't need to show a toast here as the parent component will do that
     onClose();
   };
 
