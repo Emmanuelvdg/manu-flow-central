@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
@@ -7,16 +8,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft } from "lucide-react";
 import { calculateRisk, getRecommendedDeposit } from "@/utils/riskCalculator";
 
+interface FromRFQ {
+  rfqId: string;
+  customerName: string;
+  products?: any;
+  contact?: string;
+  location?: string;
+}
+
 const QuoteDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [incoterm, setIncoterm] = useState<string>('');
-  const [paymentTerm, setPaymentTerm] = useState<string>('');
-  const [risk, setRisk] = useState<string>('');
+  const location = useLocation();
+  const fromRFQ: FromRFQ | undefined = location.state?.fromRFQ;
+
+  // Prefill form fields using RFQ info if present
+  const [customerName, setCustomerName] = useState<string>(fromRFQ?.customerName ?? "");
+  const [products, setProducts] = useState<string>(
+    fromRFQ?.products
+      ? Array.isArray(fromRFQ.products)
+        ? fromRFQ.products.map((prod: any) => prod.name || prod).join(", ")
+        : String(fromRFQ.products)
+      : ""
+  );
+  const [currency, setCurrency] = useState<string>("");
+  const [top, setTop] = useState<string>("");
+  const [shippingMethod, setShippingMethod] = useState<string>("");
+  const [paymentTerm, setPaymentTerm] = useState<string>("");
+  const [incoterm, setIncoterm] = useState<string>("");
+  const [risk, setRisk] = useState<string>("");
   const [recommendedDeposit, setRecommendedDeposit] = useState<number>(0);
   const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
-  const [currency, setCurrency] = useState<string>('');
-  const [top, setTop] = useState<string>('');
-  const [shippingMethod, setShippingMethod] = useState<string>('');
+  const [locationField, setLocationField] = useState<string>(fromRFQ?.location ?? "");
 
   useEffect(() => {
     const calculatedRisk = calculateRisk(
@@ -28,8 +50,23 @@ const QuoteDetail = () => {
     setRecommendedDeposit(recommendedDepositValue);
   }, [incoterm, paymentTerm]);
 
+  // Autofill on navigation for /quotes/create
+  useEffect(() => {
+    if (fromRFQ) {
+      setCustomerName(fromRFQ.customerName ?? "");
+      setProducts(
+        fromRFQ.products
+          ? Array.isArray(fromRFQ.products)
+            ? fromRFQ.products.map((prod: any) => prod.name || prod).join(", ")
+            : String(fromRFQ.products)
+          : ""
+      );
+      setLocationField(fromRFQ.location ?? "");
+    }
+  }, [fromRFQ]);
+
   return (
-    <MainLayout title={`Quote Detail - ${id}`}>
+    <MainLayout title={`Quote Detail${id ? ` - ${id}` : ""}`}>
       <div className="max-w-2xl mx-auto mt-8">
         <Button variant="outline" size="sm" asChild>
           <Link to="/quotes">
@@ -39,17 +76,42 @@ const QuoteDetail = () => {
         </Button>
         <Card className="mt-4">
           <CardHeader>
-            <CardTitle>Quote #{id}</CardTitle>
+            <CardTitle>
+              {id ? `Quote #${id}` : "Create Quote"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Customer Name</label>
-                <input type="text" className="w-full rounded border p-2" placeholder="Customer Name" />
+                <input
+                  type="text"
+                  className="w-full rounded border p-2"
+                  placeholder="Customer Name"
+                  value={customerName}
+                  onChange={e => setCustomerName(e.target.value)}
+                />
+              </div>
+              {/* Location field */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Location</label>
+                <input
+                  type="text"
+                  className="w-full rounded border p-2"
+                  placeholder="Location"
+                  value={locationField}
+                  onChange={e => setLocationField(e.target.value)}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Products</label>
-                <input type="text" className="w-full rounded border p-2" placeholder="Products" />
+                <input
+                  type="text"
+                  className="w-full rounded border p-2"
+                  placeholder="Products"
+                  value={products}
+                  onChange={e => setProducts(e.target.value)}
+                />
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
@@ -181,3 +243,4 @@ const QuoteDetail = () => {
 };
 
 export default QuoteDetail;
+
