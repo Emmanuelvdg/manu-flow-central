@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -30,7 +29,6 @@ const QuoteDetail = () => {
   const navigate = useNavigate();
   const fromRFQ: FromRFQ | undefined = location.state?.fromRFQ;
 
-  // New: fields for customer/contact/company/email/phone/notes if present
   const [customerName, setCustomerName] = useState<string>(fromRFQ?.customerName ?? "");
   const [customerEmail, setCustomerEmail] = useState<string>(fromRFQ?.customerEmail ?? "");
   const [customerPhone, setCustomerPhone] = useState<string>(fromRFQ?.customerPhone ?? "");
@@ -66,7 +64,6 @@ const QuoteDetail = () => {
   const [status, setStatus] = useState<string>("submitted");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Autofill on navigation for /quotes/create
   useEffect(() => {
     if (fromRFQ) {
       setCustomerName(fromRFQ.customerName ?? "");
@@ -104,7 +101,6 @@ const QuoteDetail = () => {
     setRecommendedDeposit(recommendedDepositValue);
   }, [incoterm, paymentTerm]);
 
-  // New: handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -129,14 +125,21 @@ const QuoteDetail = () => {
     setIsSubmitting(true);
 
     try {
-      // Prepare the products data
-      const productsData = rfqProducts || 
-        (products ? products.split(',').map(p => ({ 
+      let productsData;
+      if (rfqProducts) {
+        productsData = rfqProducts.map(p => ({
+          name: p.name,
+          quantity: p.quantity || 1
+        }));
+      } else if (products) {
+        productsData = products.split(',').map(p => ({ 
           name: p.trim(),
           quantity: 1
-        })) : []);
+        }));
+      } else {
+        productsData = [];
+      }
 
-      // Generate a quote number with timestamp
       const quoteNumber = `Q-${Date.now()}`;
 
       const quoteData = {
@@ -156,7 +159,6 @@ const QuoteDetail = () => {
         status
       };
 
-      // Insert the new quote into the database
       const { data, error } = await supabase
         .from('quotes')
         .insert(quoteData)
@@ -167,7 +169,6 @@ const QuoteDetail = () => {
         throw error;
       }
 
-      // If there's an RFQ, update its status to 'quoted'
       if (fromRFQ?.rfqId) {
         const { error: rfqError } = await supabase
           .from('rfqs')
@@ -184,7 +185,6 @@ const QuoteDetail = () => {
         description: "Quote saved successfully",
       });
 
-      // Navigate to the quotes list
       navigate('/quotes');
     } catch (error: any) {
       console.error("Error saving quote:", error);
@@ -215,7 +215,6 @@ const QuoteDetail = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Customer/Company/Email/Phone/Location/Notes */}
               <QuoteCustomerFields
                 customerName={customerName}
                 setCustomerName={setCustomerName}
@@ -230,7 +229,6 @@ const QuoteDetail = () => {
                 notes={notes}
                 setNotes={setNotes}
               />
-              {/* Products Section - supports list mode with quantities or fallback to free text */}
               <QuoteProductsSection
                 rfqProducts={rfqProducts}
                 setRFQProducts={setRFQProducts}
