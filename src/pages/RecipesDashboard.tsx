@@ -1,153 +1,95 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { DataTable } from '@/components/ui/DataTable';
 import { Input } from '@/components/ui/input';
-import { Download, Upload, Plus, Search, Edit, BarChart } from 'lucide-react';
-import ColorBox from '@/components/recipe/colorBox';
-
-// Mock data for the recipe dashboard
-const mockRecipes = [
-  {
-    id: "BO00001",
-    name: "Mechanical Subassembly BOM",
-    partNo: "MS11",
-    partDescription: "Mechanical Subassembly",
-    groupNumber: "M2",
-    groupName: "Mechanical: Subassemblies",
-    approxCost: "USD 35.00"
-  },
-  {
-    id: "BO00010",
-    name: "FA Final assembly BOM",
-    partNo: "FA",
-    partDescription: "Final assembly",
-    groupNumber: "M1",
-    groupName: "Mechanical: Finished goods",
-    approxCost: "USD 380.00"
-  },
-  {
-    id: "BO00011",
-    name: "Main Subassembly BOM",
-    partNo: "MS1",
-    partDescription: "Main Subassembly",
-    groupNumber: "M2",
-    groupName: "Mechanical: Subassemblies",
-    approxCost: "USD 230.00"
-  },
-  {
-    id: "BO00024",
-    name: "BFP Base Product BOM",
-    partNo: "BBFP",
-    partDescription: "Base Bulk Food Product",
-    groupNumber: "F2",
-    groupName: "Food: Half-products",
-    approxCost: "USD 0.60"
-  },
-  {
-    id: "PFP_5L",
-    name: "Packaged Food Product, 5L Canister",
-    partNo: "PFP-5L",
-    partDescription: "Food Product in 5L Canister",
-    groupNumber: "F1",
-    groupName: "Food: Finished goods",
-    approxCost: "USD 12.50"
-  },
-  {
-    id: "WT",
-    name: "Wooden Table",
-    partNo: "WT-STD",
-    partDescription: "Standard Wooden Table",
-    groupNumber: "F1",
-    groupName: "Furniture: Finished goods",
-    approxCost: "USD 95.00"
-  }
-];
+import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import RecipeMappingModal from '@/components/recipe/RecipeMappingModal';
+import { fetchRecipes, deleteRecipe, Recipe } from '@/components/recipe/recipeUtils';
 
 const RecipesDashboard = () => {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
   const [minCost, setMinCost] = useState('');
   const [maxCost, setMaxCost] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchRecipes();
+        setRecipes(data);
+      } catch (e) {
+        setRecipes([]);
+      }
+      setLoading(false);
+    };
+    load();
+  }, [modalOpen]);
 
   const columns = [
     {
       header: "#",
       accessorKey: "id",
       cell: (_row: any) => {
-        // Instead of accessing row.row.index, we'll use a different approach
-        const index = mockRecipes.findIndex(recipe => recipe.id === _row.id);
+        const index = recipes.findIndex(recipe => recipe.id === _row.id);
         return index > -1 ? index + 1 : '—';
       }
     },
     {
-      header: "Number",
-      accessorKey: "id"
-    },
-    {
-      header: "Name",
-      accessorKey: "name",
+      header: "Product",
+      accessorKey: "product_name",
       cell: (_row: any) => (
-        <span className="text-blue-600 underline hover:text-blue-800">
-          {_row.name}
-        </span>
+        <span>{_row.product_name} <span className="text-xs text-muted-foreground ml-2">({_row.product_id})</span></span>
       )
     },
     {
-      header: "Part No.",
-      accessorKey: "partNo"
+      header: "Recipe Name",
+      accessorKey: "name"
     },
     {
-      header: "Part description",
-      accessorKey: "partDescription"
+      header: "Description",
+      accessorKey: "description"
     },
     {
-      header: "Group number",
-      accessorKey: "groupNumber"
-    },
-    {
-      header: "Group name",
-      accessorKey: "groupName"
-    },
-    {
-      header: "Approximate cost",
-      accessorKey: "approxCost"
+      header: "Created",
+      accessorKey: "created_at",
+      cell: (_row: any) => new Date(_row.created_at).toLocaleDateString()
     },
     {
       header: "Actions",
       accessorKey: "actions",
       cell: (_row: any) => (
-        <div className="flex gap-2">
-          <Link to={`/recipes/${_row.id}`}>
-            <Button variant="ghost" size="sm">
-              <Edit className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Button variant="ghost" size="sm">
-            <BarChart className="h-4 w-4" />
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={e => { e.stopPropagation(); setEditRecipe(_row); setModalOpen(true); }}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={async e => {
+            e.stopPropagation();
+            if (window.confirm('Delete this recipe mapping?')) {
+              await deleteRecipe(_row.id);
+              setRecipes(r => r.filter(rec => rec.id !== _row.id));
+            }
+          }}>
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       )
     }
   ];
 
-  const filteredRecipes = mockRecipes.filter(recipe => {
-    // Extract numeric value from cost string, e.g., "USD 35.00" -> 35.00
-    const cost = parseFloat(recipe.approxCost.replace("USD ", "").replace(",", ""));
-    const minCostValue = minCost ? parseFloat(minCost) : 0;
-    const maxCostValue = maxCost ? parseFloat(maxCost) : Infinity;
-    
-    // Apply search filter
-    const matchesSearch = searchTerm === '' || 
-      Object.values(recipe).some(value => 
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRecipes = recipes.filter(recipe => {
+    // Ignore cost filtering since recipes don't contain cost in this schema
+    const matchesSearch = searchTerm === '' ||
+      [recipe.product_id, recipe.product_name, recipe.name, recipe.description].some(value =>
+        (value || "").toString().toLowerCase().includes(searchTerm.toLowerCase())
       );
-    
-    // Apply cost range filter
-    const matchesCostRange = cost >= minCostValue && cost <= maxCostValue;
-    
-    return matchesSearch && matchesCostRange;
+    return matchesSearch;
   });
 
   const handleClearFilters = () => {
@@ -157,80 +99,61 @@ const RecipesDashboard = () => {
   };
 
   const handleSearch = () => {
-    // The filtering is already reactive based on state
-    console.log('Search triggered with term:', searchTerm);
+    // No-op, as filters are reactive
   };
 
   return (
     <MainLayout title="Recipe Management">
+      <RecipeMappingModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setEditRecipe(null); }}
+        onSuccess={() => { setModalOpen(false); setEditRecipe(null); }}
+        initialRecipe={editRecipe}
+      />
       <div className="space-y-5">
         <div className="flex justify-between items-center">
-          <div className="text-2xl font-bold">BOM</div>
-          <div className="flex gap-2">
-            <Button asChild variant="default">
-              <Link to="/recipes/create">
-                <Plus className="mr-2 h-4 w-4" />
-                Create
-              </Link>
-            </Button>
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              CSV
-            </Button>
-            <Button variant="outline">
-              <Upload className="mr-2 h-4 w-4" />
-              Import from CSV
+          <div className="text-2xl font-bold">Recipe/Product Mapping</div>
+          <div>
+            <Button variant="default" onClick={() => { setEditRecipe(null); setModalOpen(true); }}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Mapping
             </Button>
           </div>
         </div>
-
         <div className="bg-white rounded-md border">
-          <div className="p-4 grid grid-cols-1 md:grid-cols-7 gap-4 items-end">
-            <div className="md:col-span-5 grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              <Input placeholder="Number" />
-              <Input placeholder="Name" />
-              <Input placeholder="Part No." />
-              <Input placeholder="Part description" />
-              <Input placeholder="Group number" />
-            </div>
-            <div className="flex items-center gap-2">
-              <Input 
-                placeholder="min" 
-                className="w-24" 
-                value={minCost}
-                onChange={(e) => setMinCost(e.target.value)}
-              />
-              <span>-</span>
-              <Input 
-                placeholder="max" 
-                className="w-24"
-                value={maxCost}
-                onChange={(e) => setMaxCost(e.target.value)}
-              />
+          <div className="p-4 grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+            <div className="md:col-span-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <Input placeholder="Product" />
+              <Input placeholder="Recipe Name" />
+              <Input placeholder="Description" />
+              <Input placeholder="Product ID" />
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Input
+                placeholder="Search"
+                className="w-32"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <Button
+                variant="outline"
                 onClick={handleSearch}
               >
                 <Search className="h-4 w-4 mr-1" />
                 Search
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleClearFilters}
               >
                 Clear
               </Button>
             </div>
           </div>
-
-          <DataTable 
-            columns={columns} 
+          <DataTable
+            columns={columns}
             data={filteredRecipes}
-            onRowClick={(row) => {
-              window.location.href = `/recipes/${row.id}`;
-            }}
+            // Optionally: onRowClick goes to detail (out of scope for simple mapping)
           />
         </div>
       </div>
