@@ -27,7 +27,17 @@ export const useMaterials = () => {
         .order('purchase_date', { ascending: false });
       
       if (error) throw error;
-      return data as MaterialBatch[];
+      
+      // Transform Supabase column names to match our TypeScript interface
+      return data.map(batch => ({
+        id: batch.id,
+        materialId: batch.material_id,
+        batchNumber: batch.batch_number,
+        initialStock: batch.initial_stock,
+        remainingStock: batch.remaining_stock,
+        costPerUnit: batch.cost_per_unit,
+        purchaseDate: batch.purchase_date
+      })) as MaterialBatch[];
     }
   });
 
