@@ -24,7 +24,7 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
   const createOrderFromQuote = async (quote: Quote) => {
     const orderNumber = `ORD-${Date.now()}`;
     
-    const orderData = {
+    const orderPayload = {
       quote_id: quote.id,
       order_number: orderNumber,
       customer_name: quote.customer_name,
@@ -34,15 +34,15 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
       parts_status: 'Not booked'
     };
 
-    const { data: orderData, error: orderError } = await supabase
+    const { data, error: orderError } = await supabase
       .from('orders')
-      .insert(orderData)
-      .select('id')
+      .insert(orderPayload)
+      .select()
       .single();
 
     if (orderError) throw orderError;
     
-    return orderData.id;
+    return data.id;
   };
 
   const acceptQuote = async () => {
