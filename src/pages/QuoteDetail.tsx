@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -67,6 +68,7 @@ const QuoteDetail = () => {
   const [status, setStatus] = useState<string>("submitted");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [quoteNumber, setQuoteNumber] = useState<string>("");
 
   useEffect(() => {
     if (id && id !== 'create') {
@@ -85,6 +87,7 @@ const QuoteDetail = () => {
             setRisk(quoteData.risk_level || "");
             setDepositPercentage(quoteData.deposit_percentage);
             setStatus(quoteData.status || "submitted");
+            setQuoteNumber(quoteData.quote_number || "");
             
             if (quoteData.products) {
               if (Array.isArray(quoteData.products)) {
@@ -110,6 +113,9 @@ const QuoteDetail = () => {
         .finally(() => {
           setIsLoading(false);
         });
+    } else {
+      // Generate a new quote number when creating a new quote
+      setQuoteNumber(`Q-${Date.now()}`);
     }
   }, [id]);
 
@@ -193,6 +199,11 @@ const QuoteDetail = () => {
       return;
     }
 
+    // Ensure we have a quote number
+    if (!quoteNumber) {
+      setQuoteNumber(`Q-${Date.now()}`);
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -211,10 +222,8 @@ const QuoteDetail = () => {
         productsData = [];
       }
 
-      const quoteNumber = id ? undefined : `Q-${Date.now()}`;
-
       const quoteData = {
-        ...(quoteNumber && { quote_number: quoteNumber }),
+        quote_number: quoteNumber,
         rfq_id: fromRFQ?.rfqId,
         customer_name: customerName,
         customer_email: customerEmail,
