@@ -74,23 +74,52 @@ export const fetchQuote = async (quoteId: string): Promise<Quote | null> => {
   return data;
 };
 
+// Generate a unique order number
+const generateOrderNumber = () => {
+  return `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+};
+
 // Create an order from a quote
 export const createOrderFromQuote = async (quote: Quote) => {
   console.log("Creating order from quote:", quote);
   
-  const orderNumber = `ORD-${Date.now()}`;
+  if (!quote || !quote.id || !quote.customer_name) {
+    console.error("Invalid quote data for order creation");
+    throw new Error("Invalid quote data for order creation");
+  }
   
-  const orderPayload = {
-    quote_id: quote.id,
-    order_number: orderNumber,
-    customer_name: quote.customer_name,
-    products: quote.products,
-    total: quote.total,
-    status: 'created',
-    parts_status: 'Not booked'
-  };
-
   try {
+    // Check if an order already exists for this quote to prevent duplicates
+    const { data: existingOrder, error: checkError } = await supabase
+      .from('orders')
+      .select('id, order_number')
+      .eq('quote_id', quote.id)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error("Error checking for existing order:", checkError);
+      // Continue with order creation despite check error
+    }
+    
+    // If order already exists, return it
+    if (existingOrder) {
+      console.log("Order already exists for this quote:", existingOrder);
+      return existingOrder;
+    }
+    
+    // Create new order number
+    const orderNumber = generateOrderNumber();
+    
+    const orderPayload = {
+      quote_id: quote.id,
+      order_number: orderNumber,
+      customer_name: quote.customer_name,
+      products: quote.products,
+      total: quote.total,
+      status: 'created',
+      parts_status: 'Not booked'
+    };
+
     // Step 1: Create the order
     const { data: orderData, error: orderError } = await supabase
       .from('orders')
