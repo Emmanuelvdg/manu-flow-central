@@ -27,8 +27,11 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
 }) => {
   const { formData, handleChange, handleSaveOrder } = useOrderForm(order, orderId, refetch);
 
-  if (isLoading || error || !order) {
-    return <OrderDetailState isLoading={isLoading} error={error} />;
+  // If we're on the root orders page with no specific order ID, show mappings
+  const showMappings = orderId === "quote-order-mapping";
+
+  if (isLoading || error || !order || showMappings) {
+    return <OrderDetailState isLoading={isLoading} error={error} showMappings={showMappings} />;
   }
 
   return (

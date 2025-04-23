@@ -8,6 +8,11 @@ import { useOrderDetail } from "@/hooks/useOrderDetail";
 
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const orderId = id || "";
+  
+  // Special case for quote-order mapping view
+  const isQuoteOrderMapping = orderId === "quote-order-mapping";
+  
   const { 
     order,
     orderProducts,
@@ -15,16 +20,16 @@ const OrderDetail = () => {
     productsLoading,
     error,
     refetch
-  } = useOrderDetail(id);
+  } = useOrderDetail(isQuoteOrderMapping ? undefined : orderId);
 
   return (
-    <MainLayout title={`Order Detail - ${id}`}>
+    <MainLayout title={isQuoteOrderMapping ? "Quote-Order Mappings" : `Order Detail - ${orderId}`}>
       <div className="max-w-4xl mx-auto mt-8">
-        <OrderDetailHeader orderId={id!} />
+        <OrderDetailHeader orderId={orderId} />
         <div className="mt-4">
           <OrderDetailContent
             order={order}
-            orderId={id!}
+            orderId={orderId}
             isLoading={isLoading}
             error={error}
             productsLoading={productsLoading}

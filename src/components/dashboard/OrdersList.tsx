@@ -8,6 +8,7 @@ import { OrdersHeader } from "./orders/OrdersHeader";
 import { useOrders } from "@/hooks/useOrders";
 import { Button } from "@/components/ui/button";
 import { columnHeaders } from "@/data/mockOrders";
+import { Table } from "lucide-react";
 
 export const OrdersList = () => {
   const navigate = useNavigate();
@@ -94,7 +95,7 @@ export const OrdersList = () => {
               />
             )}
           </table>
-          <div className="flex justify-center items-center mt-4 pb-4">
+          <div className="flex justify-center items-center gap-4 mt-4 pb-4">
             <Button 
               variant="link" 
               size="sm" 
@@ -102,6 +103,15 @@ export const OrdersList = () => {
               onClick={syncAcceptedQuotes}
             >
               Sync Orders
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-blue-700"
+              onClick={() => navigate('/orders/quote-order-mapping')}
+            >
+              <Table className="w-4 h-4 mr-2" />
+              View Quote-Order Mappings
             </Button>
           </div>
         </div>
