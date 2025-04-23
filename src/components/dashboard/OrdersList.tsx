@@ -7,6 +7,7 @@ import { OrdersTable } from "./OrdersTable";
 import { OrdersHeader } from "./orders/OrdersHeader";
 import { useOrders } from "@/hooks/useOrders";
 import { Button } from "@/components/ui/button";
+import { columnHeaders } from "@/data/mockOrders";
 
 export const OrdersList = () => {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ export const OrdersList = () => {
               <tbody>
                 <tr>
                   <td colSpan={9} className="text-center py-12 text-red-600">
-                    Error loading orders: {error}
+                    Error loading orders: {error.toString()}
                   </td>
                 </tr>
               </tbody>
