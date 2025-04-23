@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -12,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { insertRecipe, updateRecipe, Recipe } from "./recipeUtils";
 import { Minus, Pencil, Plus, Trash } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RecipeMappingModalProps {
   open: boolean;
@@ -23,6 +24,15 @@ interface RecipeMappingModalProps {
 interface ProductOption {
   id: string;
   name: string;
+}
+interface MaterialOption {
+  id: string;
+  name: string;
+  unit: string;
+}
+interface PersonnelRoleOption {
+  id: string;
+  role: string;
 }
 
 interface Material {
@@ -42,27 +52,67 @@ interface Machine {
   hours: number;
 }
 
-const productOptions: ProductOption[] = [
-  { id: "PFP_5L", name: "Packaged Food Product, 5L Canister" },
-  { id: "WT", name: "Wooden Table" },
-  { id: "BO00001", name: "Mechanical Subassembly BOM" },
-];
-
-const emptyMaterial: Material = { id: "", name: "", quantity: 1, unit: "" };
-const emptyPersonnel: Personnel = { id: "", role: "", hours: 1 };
-const emptyMachine: Machine = { id: "", machine: "", hours: 1 };
-
 export default function RecipeMappingModal({
   open,
   onClose,
   onSuccess,
   initialRecipe,
 }: RecipeMappingModalProps) {
+  const [productList, setProductList] = useState<ProductOption[]>([]);
+  const [materialList, setMaterialList] = useState<MaterialOption[]>([]);
+  const [personnelRoleList, setPersonnelRoleList] = useState<PersonnelRoleOption[]>([]);
+
+  useEffect(() => {
+    supabase.from("products").select("id, name")
+      .then(({ data, error }) => {
+        if (!error && data && data.length) {
+          setProductList(data.map((p: any) => ({ id: String(p.id), name: p.name })));
+        } else {
+          setProductList([
+            { id: "PFP_5L", name: "Packaged Food Product, 5L Canister" },
+            { id: "WT", name: "Wooden Table" },
+            { id: "BO00001", name: "Mechanical Subassembly BOM" },
+          ]);
+        }
+      });
+    supabase.from("materials").select("id, name, unit")
+      .then(({ data, error }) => {
+        if (!error && data && data.length) {
+          setMaterialList(data.map((m: any) => ({
+            id: String(m.id), name: m.name, unit: m.unit
+          })));
+        } else {
+          setMaterialList([
+            { id: "mat1", name: "Plastic Resin", unit: "kg" },
+            { id: "mat2", name: "Sticker Label", unit: "pcs" },
+          ]);
+        }
+      });
+    supabase.from("personnel").select("id, role")
+      .then(({ data, error }) => {
+        if (!error && data && data.length) {
+          const seen = new Set();
+          const roles: PersonnelRoleOption[] = [];
+          data.forEach((p: any) => {
+            if (p.role && !seen.has(p.role)) {
+              seen.add(p.role);
+              roles.push({ id: String(p.id), role: p.role });
+            }
+          });
+          setPersonnelRoleList(roles);
+        } else {
+          setPersonnelRoleList([
+            { id: "1", role: "Operator" },
+            { id: "2", role: "Quality Control" },
+          ]);
+        }
+      });
+  }, [open]);
+
   const [productId, setProductId] = useState(initialRecipe?.product_id || "");
   const [productName, setProductName] = useState(initialRecipe?.product_name || "");
   const [name, setName] = useState(initialRecipe?.name || "");
   const [description, setDescription] = useState(initialRecipe?.description || "");
-  // New: material/personnel/machine requirements
   const [materials, setMaterials] = useState<Material[]>(
     initialRecipe?.materials ?? []
   );
@@ -72,12 +122,10 @@ export default function RecipeMappingModal({
   const [machines, setMachines] = useState<Machine[]>(
     initialRecipe?.machines ?? []
   );
-  // Section expand/collapse state for UX
   const [showMaterials, setShowMaterials] = useState(true);
   const [showPersonnel, setShowPersonnel] = useState(false);
   const [showMachines, setShowMachines] = useState(false);
 
-  // For editing/adding a row inline
   const [editingMaterial, setEditingMaterial] = useState<Partial<Material> | null>(null);
   const [editingPersonnel, setEditingPersonnel] = useState<Partial<Personnel> | null>(null);
   const [editingMachine, setEditingMachine] = useState<Partial<Machine> | null>(null);
@@ -100,18 +148,15 @@ export default function RecipeMappingModal({
 
   const isEditing = Boolean(initialRecipe);
 
-  // Handlers for Material rows
-  const handleAddMaterial = () => setEditingMaterial({ ...emptyMaterial });
+  const handleAddMaterial = () => setEditingMaterial({ id: "", name: "", quantity: 1, unit: "" });
   const handleEditMaterial = (mat: Material) => setEditingMaterial({ ...mat });
   const handleSaveMaterial = () => {
     if (!editingMaterial?.name || !editingMaterial.unit) return;
     if (editingMaterial.id) {
-      // Update existing
       setMaterials(mats =>
         mats.map(m => (m.id === editingMaterial.id ? { ...editingMaterial, id: editingMaterial.id } as Material : m))
       );
     } else {
-      // Create new
       setMaterials(mats => [
         ...mats,
         { ...editingMaterial, id: Date.now().toString() } as Material
@@ -121,8 +166,7 @@ export default function RecipeMappingModal({
   };
   const handleDeleteMaterial = (id: string) => setMaterials(mats => mats.filter(m => m.id !== id));
 
-  // Handlers for Personnel rows
-  const handleAddPersonnel = () => setEditingPersonnel({ ...emptyPersonnel });
+  const handleAddPersonnel = () => setEditingPersonnel({ id: "", role: "", hours: 1 });
   const handleEditPersonnel = (p: Personnel) => setEditingPersonnel({ ...p });
   const handleSavePersonnel = () => {
     if (!editingPersonnel?.role) return;
@@ -140,8 +184,7 @@ export default function RecipeMappingModal({
   };
   const handleDeletePersonnel = (id: string) => setPersonnel(arr => arr.filter(p => p.id !== id));
 
-  // Handlers for Machine rows
-  const handleAddMachine = () => setEditingMachine({ ...emptyMachine });
+  const handleAddMachine = () => setEditingMachine({ id: "", machine: "", hours: 1 });
   const handleEditMachine = (m: Machine) => setEditingMachine({ ...m });
   const handleSaveMachine = () => {
     if (!editingMachine?.machine) return;
@@ -161,7 +204,7 @@ export default function RecipeMappingModal({
 
   const handleProductChange = (id: string) => {
     setProductId(id);
-    const prod = productOptions.find(p => p.id === id);
+    const prod = productList.find(p => p.id === id);
     setProductName(prod ? prod.name : "");
   };
 
@@ -204,18 +247,20 @@ export default function RecipeMappingModal({
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-sm font-medium mb-1">Product<span className="text-red-500">*</span></label>
-            <select
-              className="w-full border rounded px-3 py-2"
+            <Select
               value={productId}
-              onChange={e => handleProductChange(e.target.value)}
-              required
+              onValueChange={handleProductChange}
               disabled={isEditing}
             >
-              <option value="">Select product</option>
-              {productOptions.map(opt => (
-                <option key={opt.id} value={opt.id}>{opt.name} ({opt.id})</option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select product" />
+              </SelectTrigger>
+              <SelectContent>
+                {productList.map(opt => (
+                  <SelectItem key={opt.id} value={opt.id}>{opt.name} ({opt.id})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Recipe Name<span className="text-red-500">*</span></label>
@@ -225,9 +270,7 @@ export default function RecipeMappingModal({
             <label className="block text-sm font-medium mb-1">Description</label>
             <Input value={description} onChange={e => setDescription(e.target.value)} />
           </div>
-          {/* Dynamic Requirements Sections */}
           <div className="pt-2">
-            {/* Materials */}
             <div>
               <button
                 type="button"
@@ -266,16 +309,28 @@ export default function RecipeMappingModal({
                       ))}
                     </tbody>
                   </table>
-                  {/* Inline Add/Edit Input Row */}
                   {editingMaterial && (
                     <div className="flex gap-2 items-end">
-                      <Input
-                        placeholder="Material name"
-                        value={editingMaterial.name ?? ""}
-                        className="text-xs"
-                        onChange={e => setEditingMaterial(m => ({ ...m!, name: e.target.value }))}
-                        autoFocus
-                      />
+                      <Select
+                        value={editingMaterial.name || ""}
+                        onValueChange={v => {
+                          const mat = materialList.find(m => m.name === v);
+                          setEditingMaterial(m => ({
+                            ...m!,
+                            name: v,
+                            unit: mat?.unit ?? (m?.unit ?? "")
+                          }));
+                        }}
+                      >
+                        <SelectTrigger className="w-48 text-xs">
+                          <SelectValue placeholder="Material name" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {materialList.map(mat => (
+                            <SelectItem key={mat.id} value={mat.name}>{mat.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Input
                         placeholder="Qty"
                         type="number"
@@ -288,7 +343,7 @@ export default function RecipeMappingModal({
                         placeholder="Unit"
                         className="w-16 text-xs"
                         value={editingMaterial.unit ?? ""}
-                        onChange={e => setEditingMaterial(m => ({ ...m!, unit: e.target.value }))}
+                        readOnly
                       />
                       <Button variant="outline" size="sm" type="button" onClick={handleSaveMaterial}>
                         Save
@@ -312,7 +367,6 @@ export default function RecipeMappingModal({
                 </div>
               )}
             </div>
-            {/* Personnel */}
             <div>
               <button
                 type="button"
@@ -351,13 +405,19 @@ export default function RecipeMappingModal({
                   </table>
                   {editingPersonnel && (
                     <div className="flex gap-2 items-end">
-                      <Input
-                        placeholder="Personnel role"
-                        value={editingPersonnel.role ?? ""}
-                        className="text-xs"
-                        onChange={e => setEditingPersonnel(p => ({ ...p!, role: e.target.value }))}
-                        autoFocus
-                      />
+                      <Select
+                        value={editingPersonnel.role || ""}
+                        onValueChange={v => setEditingPersonnel(p => ({ ...p!, role: v }))}
+                      >
+                        <SelectTrigger className="w-48 text-xs">
+                          <SelectValue placeholder="Personnel role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {personnelRoleList.map(pers => (
+                            <SelectItem key={pers.id} value={pers.role}>{pers.role}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Input
                         placeholder="Hours"
                         type="number"
@@ -388,7 +448,6 @@ export default function RecipeMappingModal({
                 </div>
               )}
             </div>
-            {/* Machines */}
             <div>
               <button
                 type="button"
@@ -465,7 +524,6 @@ export default function RecipeMappingModal({
               )}
             </div>
           </div>
-          {/* Actions */}
           <DialogFooter>
             <Button type="submit">{isEditing ? "Save" : "Create"}</Button>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
