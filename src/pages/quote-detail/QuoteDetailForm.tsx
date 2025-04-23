@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
 import { QuoteDetailCustomerFields } from "./QuoteDetailCustomerFields";
@@ -16,6 +16,7 @@ export interface QuoteDetailFormProps {
 export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData }) => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate(); // Added useNavigate hook
   const rfqData = location.state?.fromRFQ;
   const rfqIdForShipment = location.state?.rfqIdForShipment;
 
@@ -89,3 +90,5 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
     </div>
   );
 };
+
+export default QuoteDetailForm;
