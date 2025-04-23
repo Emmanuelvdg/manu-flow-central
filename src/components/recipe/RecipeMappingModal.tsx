@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -62,51 +63,122 @@ export default function RecipeMappingModal({
   const [materialList, setMaterialList] = useState<MaterialOption[]>([]);
   const [personnelRoleList, setPersonnelRoleList] = useState<PersonnelRoleOption[]>([]);
 
+  // Fetch mock data or from existing tables
   useEffect(() => {
-    supabase.from("products").select("id, name")
-      .then(({ data, error }) => {
-        if (!error && data && data.length) {
-          setProductList(data.map((p: any) => ({ id: String(p.id), name: p.name })));
-        } else {
-          setProductList([
-            { id: "PFP_5L", name: "Packaged Food Product, 5L Canister" },
-            { id: "WT", name: "Wooden Table" },
-            { id: "BO00001", name: "Mechanical Subassembly BOM" },
-          ]);
-        }
-      });
-    supabase.from("materials").select("id, name, unit")
-      .then(({ data, error }) => {
-        if (!error && data && data.length) {
-          setMaterialList(data.map((m: any) => ({
-            id: String(m.id), name: m.name, unit: m.unit
-          })));
-        } else {
-          setMaterialList([
-            { id: "mat1", name: "Plastic Resin", unit: "kg" },
-            { id: "mat2", name: "Sticker Label", unit: "pcs" },
-          ]);
-        }
-      });
-    supabase.from("personnel").select("id, role")
-      .then(({ data, error }) => {
-        if (!error && data && data.length) {
-          const seen = new Set();
-          const roles: PersonnelRoleOption[] = [];
-          data.forEach((p: any) => {
-            if (p.role && !seen.has(p.role)) {
-              seen.add(p.role);
-              roles.push({ id: String(p.id), role: p.role });
+    // For products, use mock data since there's no products table
+    const mockProducts = [
+      { id: "PFP_5L", name: "Packaged Food Product, 5L Canister" },
+      { id: "WT", name: "Wooden Table" },
+      { id: "BO00001", name: "Mechanical Subassembly BOM" },
+    ];
+    setProductList(mockProducts);
+
+    // For materials, try to get from recipes.materials as a fallback
+    const fetchMaterials = async () => {
+      try {
+        // Try to get unique materials from recipes
+        const { data: recipesData } = await supabase
+          .from('recipes')
+          .select('materials')
+          .not('materials', 'is', null);
+          
+        if (recipesData && recipesData.length) {
+          // Extract unique materials from all recipes
+          const materialsSet = new Set<string>();
+          const materialsMap = new Map<string, string>();
+          
+          recipesData.forEach(recipe => {
+            if (recipe.materials && Array.isArray(recipe.materials)) {
+              recipe.materials.forEach((mat: any) => {
+                if (mat.name) {
+                  materialsSet.add(mat.name);
+                  materialsMap.set(mat.name, mat.unit || 'pcs');
+                }
+              });
             }
           });
-          setPersonnelRoleList(roles);
-        } else {
-          setPersonnelRoleList([
-            { id: "1", role: "Operator" },
-            { id: "2", role: "Quality Control" },
-          ]);
+          
+          const uniqueMaterials = Array.from(materialsSet).map(name => ({
+            id: name,
+            name,
+            unit: materialsMap.get(name) || 'pcs'
+          }));
+          
+          if (uniqueMaterials.length > 0) {
+            setMaterialList(uniqueMaterials);
+            return;
+          }
         }
-      });
+        
+        // Fallback to mock data if no materials found
+        setMaterialList([
+          { id: "mat1", name: "Plastic Resin", unit: "kg" },
+          { id: "mat2", name: "Sticker Label", unit: "pcs" },
+        ]);
+      } catch (error) {
+        console.error("Error fetching materials:", error);
+        // Fallback to mock data
+        setMaterialList([
+          { id: "mat1", name: "Plastic Resin", unit: "kg" },
+          { id: "mat2", name: "Sticker Label", unit: "pcs" },
+        ]);
+      }
+    };
+    
+    // For personnel roles, try to get from recipes.personnel as a fallback
+    const fetchPersonnelRoles = async () => {
+      try {
+        // Try to get unique personnel roles from recipes
+        const { data: recipesData } = await supabase
+          .from('recipes')
+          .select('personnel')
+          .not('personnel', 'is', null);
+          
+        if (recipesData && recipesData.length) {
+          // Extract unique roles from all recipes
+          const rolesSet = new Set<string>();
+          
+          recipesData.forEach(recipe => {
+            if (recipe.personnel && Array.isArray(recipe.personnel)) {
+              recipe.personnel.forEach((pers: any) => {
+                if (pers.role) {
+                  rolesSet.add(pers.role);
+                }
+              });
+            }
+          });
+          
+          const uniqueRoles = Array.from(rolesSet).map((role, index) => ({
+            id: String(index + 1),
+            role
+          }));
+          
+          if (uniqueRoles.length > 0) {
+            setPersonnelRoleList(uniqueRoles);
+            return;
+          }
+        }
+        
+        // Fallback to mock data if no personnel roles found
+        setPersonnelRoleList([
+          { id: "1", role: "Operator" },
+          { id: "2", role: "Quality Control" },
+        ]);
+      } catch (error) {
+        console.error("Error fetching personnel roles:", error);
+        // Fallback to mock data
+        setPersonnelRoleList([
+          { id: "1", role: "Operator" },
+          { id: "2", role: "Quality Control" },
+        ]);
+      }
+    };
+    
+    // Execute fetch functions when modal is opened
+    if (open) {
+      fetchMaterials();
+      fetchPersonnelRoles();
+    }
   }, [open]);
 
   const [productId, setProductId] = useState(initialRecipe?.product_id || "");
