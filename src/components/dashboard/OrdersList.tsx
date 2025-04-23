@@ -8,7 +8,7 @@ import { OrdersHeader } from "./orders/OrdersHeader";
 import { useOrders } from "@/hooks/useOrders";
 import { Button } from "@/components/ui/button";
 import { columnHeaders } from "@/data/mockOrders";
-import { Table } from "lucide-react";
+import { Table, RefreshCw } from "lucide-react";
 
 export const OrdersList = () => {
   const navigate = useNavigate();
@@ -26,7 +26,8 @@ export const OrdersList = () => {
     setStatusFilter,
     partsStatusFilter,
     setPartsStatusFilter,
-    syncAcceptedQuotes
+    syncAcceptedQuotes,
+    resetAndRecreatAllOrders
   } = useOrders();
 
   const isChecked = (idx: number) => selected.includes(idx);
@@ -103,6 +104,15 @@ export const OrdersList = () => {
               onClick={syncAcceptedQuotes}
             >
               Sync Orders
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="text-white"
+              onClick={resetAndRecreatAllOrders}
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reset & Recreate All Orders
             </Button>
             <Button 
               variant="outline" 

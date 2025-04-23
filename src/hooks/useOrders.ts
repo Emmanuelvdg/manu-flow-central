@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Order } from "@/types/order";
 import { ProductData } from "@/types/orderTypes";
 import { parseOrderRow } from "@/utils/orderUtils";
+import { createOrderFromQuote, fetchQuotes } from "@/components/dashboard/quotes/quoteUtils";
 
 export const useOrders = () => {
   const [selected, setSelected] = useState<number[]>([]);
@@ -31,6 +32,75 @@ export const useOrders = () => {
       return data ? data.map(parseOrderRow) : [];
     }
   });
+
+  const resetAndRecreatAllOrders = async () => {
+    try {
+      toast({
+        title: "Reset in progress",
+        description: "Deleting all existing orders...",
+      });
+      
+      // Step 1: Delete all current orders
+      const { error: deleteError } = await supabase
+        .from("orders")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete everything
+      
+      if (deleteError) throw deleteError;
+      
+      toast({
+        title: "Orders deleted",
+        description: "Now recreating orders from all accepted quotes...",
+      });
+      
+      // Step 2: Fetch all accepted quotes
+      const { data: acceptedQuotes, error: quotesError } = await supabase
+        .from("quotes")
+        .select("*")
+        .eq("status", "accepted");
+      
+      if (quotesError) throw quotesError;
+
+      if (!acceptedQuotes || acceptedQuotes.length === 0) {
+        toast({
+          title: "Complete",
+          description: "No accepted quotes found to create orders from.",
+        });
+        refetch();
+        return;
+      }
+      
+      // Step 3: Create new orders for each accepted quote
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const quote of acceptedQuotes) {
+        try {
+          await createOrderFromQuote(quote);
+          successCount++;
+        } catch (err) {
+          console.error(`Error creating order for quote ${quote.quote_number}:`, err);
+          errorCount++;
+        }
+      }
+      
+      toast({
+        title: "Recreation complete",
+        description: `Successfully created ${successCount} orders. ${errorCount > 0 ? `Failed to create ${errorCount} orders.` : ''}`,
+      });
+      
+      // Refetch to update the UI
+      refetch();
+      
+    } catch (err: any) {
+      console.error("Error in resetAndRecreatAllOrders:", err);
+      toast({
+        title: "Reset failed",
+        description: err.message || "An error occurred while resetting orders",
+        variant: "destructive",
+      });
+    }
+  };
 
   const syncAcceptedQuotes = async () => {
     try {
@@ -174,6 +244,7 @@ export const useOrders = () => {
     partsStatusFilter,
     setPartsStatusFilter,
     syncAcceptedQuotes,
+    resetAndRecreatAllOrders,
     refetch
   };
 };
