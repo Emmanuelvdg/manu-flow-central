@@ -172,6 +172,39 @@ export type Database = {
         }
         Relationships: []
       }
+      materials: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          status: string | null
+          unit: string
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id: string
+          name: string
+          status?: string | null
+          unit: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          status?: string | null
+          unit?: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -225,6 +258,27 @@ export type Database = {
           },
         ]
       }
+      personnel_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       productions: {
         Row: {
           created_at: string
@@ -268,6 +322,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       quotes: {
         Row: {
