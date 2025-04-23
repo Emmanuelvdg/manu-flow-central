@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { QuoteDetailCustomerFields } from "./QuoteDetailCustomerFields";
 import { QuoteDetailProductsSection } from "./QuoteDetailProductsSection";
 import { migrateProducts, RFQProductItem } from "./quoteDetailUtils";
+import { Json } from "@/integrations/supabase/types";
 
 // Import status options for quotes
 const STATUS_OPTIONS = [
@@ -79,13 +80,19 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
     try {
       setIsSubmitting(true);
       
+      // Convert RFQProductItem[] to Json compatible format
+      const jsonProducts = products.map(product => ({
+        name: product.name,
+        quantity: product.quantity || 1
+      }));
+      
       // Prepare quote data
       const quoteData = {
         customer_name: customerName,
         customer_email: customerEmail,
         company_name: companyName,
         rfq_id: rfqId,
-        products,
+        products: jsonProducts as unknown as Json,
         status,
         total,
         payment_terms: paymentTerms,

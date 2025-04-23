@@ -47,8 +47,8 @@ const RFQDetail = () => {
         customer_email: rfq.customer_email || "",
         location: rfq.location || "",
         products: Array.isArray(rfq.products) 
-          ? rfq.products.map(p => p.name || p).join(", ")
-          : rfq.products,
+          ? rfq.products.map((p: any) => typeof p === 'object' && p !== null ? p.name || String(p) : String(p)).join(", ")
+          : String(rfq.products || ""),
         status: rfq.status || "Draft",
       });
     }
