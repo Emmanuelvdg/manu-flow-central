@@ -8,20 +8,23 @@ import { ArrowLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
   
-  // Fetch order data from Supabase
+  // Fetch order data from Supabase - modified to search by order_number instead of id
   const { data: order, isLoading, error } = useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
       if (!id) return null;
       
+      // Query by order_number instead of id
       const { data, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('id', id)
+        .eq('order_number', id)
         .single();
         
       if (error) {
@@ -32,6 +35,13 @@ const OrderDetail = () => {
       return data;
     },
     enabled: !!id,
+    onError: (error) => {
+      toast({
+        title: "Error loading order",
+        description: `Could not load order #${id}. Please try again later.`,
+        variant: "destructive",
+      });
+    }
   });
 
   // Placeholder for mocked progress data that would normally come from the database
@@ -74,6 +84,35 @@ const OrderDetail = () => {
         group: p.group || "General",
         progress: getProgressData(p.id || "")
       })) : [] : [];
+
+  const handleSaveOrder = async () => {
+    if (!order) return;
+    
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          customer_name: formData.customerName,
+          status: formData.status,
+          shipping_address: formData.shippingAddress,
+        })
+        .eq('order_number', id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Order updated",
+        description: `Order #${id} has been successfully updated.`,
+      });
+    } catch (err) {
+      console.error("Error updating order:", err);
+      toast({
+        title: "Update failed",
+        description: "Could not update the order. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <MainLayout title={`Order Detail - ${id}`}>
@@ -191,7 +230,12 @@ const OrderDetail = () => {
             )}
           </CardContent>
           <CardFooter>
-            <Button type="button" className="ml-auto" disabled={isLoading}>
+            <Button 
+              type="button" 
+              className="ml-auto" 
+              disabled={isLoading}
+              onClick={handleSaveOrder}
+            >
               Save Order
             </Button>
           </CardFooter>
