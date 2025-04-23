@@ -29,7 +29,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
         <div className="space-y-3">
           <h3 className="font-semibold text-lg">{product.name}</h3>
           <div className="flex justify-between items-center">
-            <span className="font-bold text-lg">${product.price.toLocaleString()}</span>
+            <span className="font-bold text-lg">
+              ${product.price ? product.price.toLocaleString() : '0'}
+            </span>
             <span className="text-sm text-gray-500">Lead time: {product.lead_time}</span>
           </div>
           <Button 
