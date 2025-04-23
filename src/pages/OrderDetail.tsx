@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -49,12 +50,13 @@ const OrderDetail = () => {
     },
     enabled: !!id,
     meta: {
-      onError: () => {
+      onError: (error) => {
         toast({
           title: "Error loading order",
           description: `Could not load order #${id}. Please try again later.`,
           variant: "destructive",
         });
+        console.error("Error loading order:", error);
       }
     }
   });
@@ -64,33 +66,55 @@ const OrderDetail = () => {
     queryKey: ['orderProducts', id],
     queryFn: async () => {
       if (!id) return [];
-      // Must first query order to get internal order.id
-      const { data: orderRow } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('order_number', id)
-        .maybeSingle();
-      if (!orderRow) return [];
-      // Query order_products joined with products
-      const { data, error } = await supabase
-        .from('order_products')
-        .select(`
-          *,
-          products:product_id (
-            name,
-            description,
-            category
-          )
-        `)
-        .eq('order_id', orderRow.id)
-        .order('created_at', { ascending: true });
-      if (error) throw error;
-      return (data || []).map((row: any) => ({
-        ...row,
-        product_name: row.products?.name ?? null,
-        product_description: row.products?.description ?? null,
-        group: row.products?.category ?? null,
-      }));
+      
+      try {
+        // Must first query order to get internal order.id
+        const { data: orderRow, error: orderError } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('order_number', id)
+          .single();
+          
+        if (orderError) {
+          console.error("Error fetching order ID:", orderError);
+          throw orderError;
+        }
+        
+        if (!orderRow) {
+          console.error("Order not found:", id);
+          return [];
+        }
+        
+        // Query order_products joined with products
+        const { data, error } = await supabase
+          .from('order_products')
+          .select(`
+            *,
+            products:product_id (
+              name,
+              description,
+              category
+            )
+          `)
+          .eq('order_id', orderRow.id);
+          
+        if (error) {
+          console.error("Error fetching order products:", error);
+          throw error;
+        }
+
+        console.log("Fetched order products:", data);
+        
+        return (data || []).map((row: any) => ({
+          ...row,
+          product_name: row.products?.name ?? row.product_id,
+          product_description: row.products?.description ?? null,
+          group: row.products?.category ?? null,
+        }));
+      } catch (err) {
+        console.error("Error in orderProducts query:", err);
+        return [];
+      }
     },
     enabled: !!id,
   });
@@ -164,7 +188,7 @@ const OrderDetail = () => {
             {isLoading ? (
               <div className="py-4 text-center">Loading order details...</div>
             ) : error ? (
-              <div className="text-red-500 py-4 text-center">Error loading order</div>
+              <div className="text-red-500 py-4 text-center">Error loading order: {error.toString()}</div>
             ) : (
               <>
                 <OrderMetaForm 

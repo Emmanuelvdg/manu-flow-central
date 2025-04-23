@@ -43,7 +43,8 @@ const parseOrderRow = (row: any): Order => {
     editable: true,
     checked: false,
     customerName: row.customer_name,
-    total: row.total
+    total: row.total,
+    products: row.products || []
   };
 };
 
@@ -57,7 +58,7 @@ export const useOrders = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [partsStatusFilter, setPartsStatusFilter] = useState("");
 
-  const { data: orders = [], isLoading, error } = useQuery({
+  const { data: orders = [], isLoading, error, refetch } = useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
       const { data, error: fetchError } = await supabase
@@ -119,13 +120,50 @@ export const useOrders = () => {
             parts_status: 'Not booked'
           };
           
-          const { error: createError } = await supabase
+          const { data: newOrder, error: createError } = await supabase
             .from('orders')
-            .insert(orderPayload);
+            .insert(orderPayload)
+            .select();
             
           if (createError) {
             console.error(`Error creating order for quote ${quote.quote_number}:`, createError);
             continue;
+          }
+          
+          // Create order_products entries for better data normalization
+          if (newOrder && newOrder[0] && quote.products && Array.isArray(quote.products)) {
+            for (const product of quote.products) {
+              if (!product.name && !product.id) continue;
+              
+              // Find recipe for this product if exists
+              let recipeId = null;
+              
+              if (product.id) {
+                const { data: recipes } = await supabase
+                  .from('recipes')
+                  .select('id')
+                  .eq('product_id', product.id)
+                  .maybeSingle();
+                  
+                if (recipes) {
+                  recipeId = recipes.id;
+                }
+              }
+              
+              const productEntry = {
+                order_id: newOrder[0].id,
+                product_id: product.id || product.name,
+                quantity: parseInt(product.quantity) || 1,
+                unit: product.unit || 'pcs',
+                status: 'pending',
+                materials_status: 'Not booked',
+                recipe_id: recipeId
+              };
+              
+              await supabase
+                .from('order_products')
+                .insert(productEntry);
+            }
           }
           
           newOrdersCount++;
@@ -136,6 +174,10 @@ export const useOrders = () => {
         title: "Sync complete",
         description: `Created ${newOrdersCount} new orders from accepted quotes.`,
       });
+      
+      // Refresh the orders list
+      refetch();
+      
     } catch (err: any) {
       console.error("Error in syncAcceptedQuotes:", err);
       toast({
@@ -172,6 +214,7 @@ export const useOrders = () => {
     setStatusFilter,
     partsStatusFilter,
     setPartsStatusFilter,
-    syncAcceptedQuotes
+    syncAcceptedQuotes,
+    refetch
   };
 };
