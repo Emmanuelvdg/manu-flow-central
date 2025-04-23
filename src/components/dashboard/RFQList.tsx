@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,61 +5,16 @@ import { DataTable, Column, ColumnCellProps } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Plus, FileCheck } from 'lucide-react';
-
-// Define the RFQ type
-interface RFQ {
-  id: string;
-  customerName: string;
-  date: string;
-  products: string[];
-  status: string;
-  location: string;
-  contact: string;
-}
-
-// Mock RFQ data
-const mockRFQs: RFQ[] = [
-  { 
-    id: 'RFQ00123', 
-    customerName: 'Acme Industries', 
-    date: '2025-04-15', 
-    products: ['Industrial Pump XL-5000', 'Control Panel CP-2000'], 
-    status: 'new',
-    location: 'New York, USA',
-    contact: 'john.smith@acme.com'
-  },
-  { 
-    id: 'RFQ00124', 
-    customerName: 'Global Manufacturing', 
-    date: '2025-04-14', 
-    products: ['Electric Motor M-Series', 'Pressure Sensor PS-100'], 
-    status: 'reviewing',
-    location: 'Berlin, Germany',
-    contact: 'info@globalmanufacturing.com'
-  },
-  { 
-    id: 'RFQ00125', 
-    customerName: 'TechCorp', 
-    date: '2025-04-12', 
-    products: ['Circuit Board X-54', 'Power Supply 500W'], 
-    status: 'quoted',
-    location: 'Tokyo, Japan',
-    contact: 'orders@techcorp.co.jp'
-  },
-  { 
-    id: 'RFQ00126', 
-    customerName: 'Eastern Electronics', 
-    date: '2025-04-10', 
-    products: ['Control Panel CP-2000', 'Industrial Fan IF-1200'], 
-    status: 'completed',
-    location: 'Shanghai, China',
-    contact: 'purchase@easternelectronics.cn'
-  },
-];
+import { fetchRFQs } from "@/integrations/supabase/rfq";
+import { useQuery } from "@tanstack/react-query";
 
 export const RFQList = () => {
   const navigate = useNavigate();
-  const [rfqs, setRFQs] = useState<RFQ[]>(mockRFQs);
+  // Remove local mockRFQs, use Supabase data
+  const { data: rfqs = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['rfqs'],
+    queryFn: fetchRFQs,
+  });
 
   // Safe date formatting function
   const formatDate = (dateString: string | null | undefined): string => {
@@ -74,40 +28,40 @@ export const RFQList = () => {
   };
 
   // Handler to accept and create quote from an RFQ
-  const handleAcceptAndCreateQuote = (rfq: RFQ) => {
+  const handleAcceptAndCreateQuote = (rfq: any) => {
     // Update local status to 'quoted'
-    setRFQs((prevRFQs) =>
-      prevRFQs.map((item) =>
-        item.id === rfq.id ? { ...item, status: 'quoted' } : item
-      )
-    );
+    // setRFQs((prevRFQs) =>
+    //   prevRFQs.map((item) =>
+    //     item.id === rfq.id ? { ...item, status: 'quoted' } : item
+    //   )
+    // );
     // Route to "/quotes/create" and pass the RFQ info via state
     navigate('/quotes/create', {
       state: {
         fromRFQ: {
           rfqId: rfq.id,
-          customerName: rfq.customerName,
+          customerName: rfq.customer_name,
           products: rfq.products,
-          contact: rfq.contact,
+          contact: rfq.customer_email,
           location: rfq.location,
         },
       },
     });
   };
 
-  const columns: Column<RFQ>[] = [
+  const columns: Column<any>[] = [
     {
       header: 'RFQ ID',
-      accessorKey: 'id',
+      accessorKey: 'rfq_number',
     },
     {
       header: 'Customer',
-      accessorKey: 'customerName',
+      accessorKey: 'customer_name',
     },
     {
       header: 'Date',
-      accessorKey: 'date',
-      cell: (props: ColumnCellProps<RFQ>) => formatDate(props.getValue())
+      accessorKey: 'created_at',
+      cell: (props: ColumnCellProps<any>) => formatDate(props.getValue())
     },
     {
       header: 'Location',
@@ -116,14 +70,14 @@ export const RFQList = () => {
     {
       header: 'Status',
       accessorKey: 'status',
-      cell: (props: ColumnCellProps<RFQ>) => (
+      cell: (props: ColumnCellProps<any>) => (
         <StatusBadge status={props.getValue() as any} />
       )
     },
     {
       header: 'Actions',
       accessorKey: 'actions',
-      cell: (props: ColumnCellProps<RFQ>) => {
+      cell: (props: ColumnCellProps<any>) => {
         const row = props.row.original;
         return (
           <div className="flex space-x-2">
@@ -163,6 +117,12 @@ export const RFQList = () => {
         </Button>
       </CardHeader>
       <CardContent>
+        {isLoading && <div className="text-center py-8">Loading RFQs...</div>}
+        {error && (
+          <div className="text-red-600 text-center py-8">
+            Error loading RFQs. Please try again.
+          </div>
+        )}
         <DataTable 
           columns={columns} 
           data={rfqs} 

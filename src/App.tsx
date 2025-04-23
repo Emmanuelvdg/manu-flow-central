@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,6 +14,7 @@ import QuoteDetail from "./pages/QuoteDetail";
 import OrderDetail from "./pages/OrderDetail";
 import RecipesDashboard from "./pages/RecipesDashboard";
 import RecipeCreate from "./pages/RecipeCreate";
+import RFQCreate from "./pages/RFQCreate";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +29,7 @@ const App = () => (
           <Route path="/products" element={<Dashboard />} />
           <Route path="/rfqs" element={<Dashboard />} />
           <Route path="/rfqs/:id" element={<RFQDetail />} />
+          <Route path="/rfqs/create" element={<RFQCreate />} />
           <Route path="/quotes" element={<Dashboard />} />
           <Route path="/quotes/:id" element={<QuoteDetail />} />
           <Route path="/orders" element={<Dashboard />} />
@@ -39,7 +40,6 @@ const App = () => (
           <Route path="/recipes/create" element={<RecipeCreate />} />
           <Route path="/recipes/:id" element={<Recipe />} />
           <Route path="/resources" element={<Resource />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
