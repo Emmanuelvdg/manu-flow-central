@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +29,21 @@ export const MaterialsSection = () => {
     setIsPurchaseDialogOpen(true);
   };
 
+  const handleNewMaterial = () => {
+    setSelectedMaterial({
+      id: `mat-${Date.now()}`,
+      name: "",
+      category: "",
+      unit: "",
+      status: "Active",
+      vendor: "",
+      costPerUnit: 0,
+      stock: 0,
+      batches: []
+    });
+    setIsEditDialogOpen(true);
+  };
+
   const handleSaveMaterial = async (updatedMaterial: Material) => {
     try {
       const isNewMaterial = !materials.some((m) => m.id === updatedMaterial.id);
@@ -40,7 +54,9 @@ export const MaterialsSection = () => {
         category: updatedMaterial.category,
         unit: updatedMaterial.unit,
         status: updatedMaterial.status,
-        vendor: updatedMaterial.vendor
+        vendor: updatedMaterial.vendor,
+        costPerUnit: updatedMaterial.costPerUnit,
+        stock: updatedMaterial.stock
       };
       
       if (isNewMaterial) {
@@ -97,18 +113,7 @@ export const MaterialsSection = () => {
     <>
       <Card>
         <MaterialsHeader 
-          onNewMaterial={() => {
-            setSelectedMaterial({
-              id: `mat-${Date.now()}`,
-              name: "",
-              category: "",
-              unit: "",
-              status: "Active",
-              vendor: "",
-              batches: [],
-            });
-            setIsEditDialogOpen(true);
-          }}
+          onNewMaterial={handleNewMaterial}
         />
         <CardContent>
           {isLoading ? (

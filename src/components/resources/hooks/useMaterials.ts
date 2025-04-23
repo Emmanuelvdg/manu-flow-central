@@ -27,7 +27,7 @@ export const useMaterials = () => {
         .order('purchase_date', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      return data as MaterialBatch[];
     }
   });
 
@@ -36,26 +36,26 @@ export const useMaterials = () => {
     if (dbMaterials && dbMaterials.length > 0) {
       const formattedMaterials: Material[] = dbMaterials.map((m) => {
         // Find all batches for this material
-        const materialBatches = batches.filter(
-          (b: any) => b.material_id === m.id
-        ).map((b: any) => ({
-          id: b.id,
-          materialId: b.material_id,
-          batchNumber: b.batch_number,
-          initialStock: b.initial_stock,
-          remainingStock: b.remaining_stock,
-          costPerUnit: b.cost_per_unit,
-          purchaseDate: b.purchase_date
-        }));
+        const materialBatches = batches
+          .filter((b) => b.materialId === m.id)
+          .map((b) => ({
+            id: b.id,
+            materialId: b.materialId,
+            batchNumber: b.batchNumber,
+            initialStock: b.initialStock,
+            remainingStock: b.remainingStock,
+            costPerUnit: b.costPerUnit,
+            purchaseDate: b.purchaseDate
+          }));
         
         // Calculate total stock and average cost
         const totalRemainingStock = materialBatches.reduce(
-          (sum: number, batch: MaterialBatch) => sum + Number(batch.remainingStock), 
+          (sum, batch) => sum + Number(batch.remainingStock), 
           0
         );
         
         const totalCost = materialBatches.reduce(
-          (sum: number, batch: MaterialBatch) => 
+          (sum, batch) => 
             sum + (Number(batch.remainingStock) * Number(batch.costPerUnit)), 
           0
         );
@@ -68,9 +68,9 @@ export const useMaterials = () => {
           id: m.id,
           name: m.name,
           unit: m.unit,
-          category: (m as any).category || "",
-          status: (m as any).status || "Active",
-          vendor: (m as any).vendor || "",
+          category: m.category || "",
+          status: m.status || "Active",
+          vendor: m.vendor || "",
           batches: materialBatches,
           stock: totalRemainingStock,
           costPerUnit: avgCostPerUnit
@@ -81,12 +81,11 @@ export const useMaterials = () => {
     }
   }, [dbMaterials, batches]);
 
-  // Update material batches
   const saveMaterialBatches = async (material: Material) => {
-    if (!material.batches || material.batches.length === 0) return;
+    if (!material.batches) return;
     
     try {
-      // Delete existing batches for this material
+      // First delete existing batches
       const { error: deleteError } = await supabase
         .from("material_batches")
         .delete()
@@ -94,21 +93,23 @@ export const useMaterials = () => {
       
       if (deleteError) throw deleteError;
       
-      // Insert new batches
-      const batchesToInsert = material.batches.map(batch => ({
-        material_id: material.id,
-        batch_number: batch.batchNumber,
-        initial_stock: batch.initialStock,
-        remaining_stock: batch.remainingStock,
-        cost_per_unit: batch.costPerUnit,
-        purchase_date: batch.purchaseDate
-      }));
-      
-      const { error: insertError } = await supabase
-        .from("material_batches")
-        .insert(batchesToInsert);
-      
-      if (insertError) throw insertError;
+      // Then insert new batches
+      if (material.batches.length > 0) {
+        const batchesToInsert = material.batches.map(batch => ({
+          material_id: material.id,
+          batch_number: batch.batchNumber,
+          initial_stock: batch.initialStock,
+          remaining_stock: batch.remainingStock,
+          cost_per_unit: batch.costPerUnit,
+          purchase_date: batch.purchaseDate
+        }));
+        
+        const { error: insertError } = await supabase
+          .from("material_batches")
+          .insert(batchesToInsert);
+        
+        if (insertError) throw insertError;
+      }
       
       // Invalidate queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ["material-batches"] });

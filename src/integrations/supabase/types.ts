@@ -172,6 +172,50 @@ export type Database = {
         }
         Relationships: []
       }
+      material_batches: {
+        Row: {
+          batch_number: string
+          cost_per_unit: number
+          created_at: string
+          id: string
+          initial_stock: number
+          material_id: string
+          purchase_date: string
+          remaining_stock: number
+          updated_at: string
+        }
+        Insert: {
+          batch_number: string
+          cost_per_unit: number
+          created_at?: string
+          id?: string
+          initial_stock: number
+          material_id: string
+          purchase_date: string
+          remaining_stock: number
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: string
+          cost_per_unit?: number
+          created_at?: string
+          id?: string
+          initial_stock?: number
+          material_id?: string
+          purchase_date?: string
+          remaining_stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_batches_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materials: {
         Row: {
           category: string | null
