@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -33,43 +34,66 @@ export const QuoteCustomerFields: React.FC<QuoteCustomerFieldsProps> = ({
   setNotes,
 }) => (
   <>
-    <Input
-      label="Customer Name"
-      placeholder="Customer Name"
-      value={customerName}
-      onChange={(e) => setCustomerName(e.target.value)}
-      required
-    />
-    <Input
-      type="email"
-      label="Customer Email"
-      placeholder="Customer Email"
-      value={customerEmail}
-      onChange={(e) => setCustomerEmail(e.target.value)}
-    />
-    <Input
-      label="Customer Phone"
-      placeholder="Customer Phone"
-      value={customerPhone}
-      onChange={(e) => setCustomerPhone(e.target.value)}
-    />
-    <Input
-      label="Company Name"
-      placeholder="Company Name"
-      value={companyName}
-      onChange={(e) => setCompanyName(e.target.value)}
-    />
-    <Input
-      label="Location"
-      placeholder="Location"
-      value={locationField}
-      onChange={(e) => setLocationField(e.target.value)}
-    />
-    <Textarea
-      label="Notes"
-      placeholder="Additional Notes"
-      value={notes}
-      onChange={(e) => setNotes(e.target.value)}
-    />
+    <div className="space-y-2">
+      <Label htmlFor="customerName">Customer Name</Label>
+      <Input
+        id="customerName"
+        placeholder="Customer Name"
+        value={customerName}
+        onChange={(e) => setCustomerName(e.target.value)}
+        required
+      />
+    </div>
+    
+    <div className="space-y-2">
+      <Label htmlFor="customerEmail">Customer Email</Label>
+      <Input
+        id="customerEmail"
+        type="email"
+        placeholder="Customer Email"
+        value={customerEmail}
+        onChange={(e) => setCustomerEmail(e.target.value)}
+      />
+    </div>
+    
+    <div className="space-y-2">
+      <Label htmlFor="customerPhone">Customer Phone</Label>
+      <Input
+        id="customerPhone"
+        placeholder="Customer Phone"
+        value={customerPhone}
+        onChange={(e) => setCustomerPhone(e.target.value)}
+      />
+    </div>
+    
+    <div className="space-y-2">
+      <Label htmlFor="companyName">Company Name</Label>
+      <Input
+        id="companyName"
+        placeholder="Company Name"
+        value={companyName}
+        onChange={(e) => setCompanyName(e.target.value)}
+      />
+    </div>
+    
+    <div className="space-y-2">
+      <Label htmlFor="location">Location</Label>
+      <Input
+        id="location"
+        placeholder="Location"
+        value={locationField}
+        onChange={(e) => setLocationField(e.target.value)}
+      />
+    </div>
+    
+    <div className="space-y-2">
+      <Label htmlFor="notes">Notes</Label>
+      <Textarea
+        id="notes"
+        placeholder="Additional Notes"
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+      />
+    </div>
   </>
 );

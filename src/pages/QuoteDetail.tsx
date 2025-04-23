@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { ArrowLeft } from "lucide-react";
 import { calculateRisk, getRecommendedDeposit } from "@/utils/riskCalculator";
 import { QuoteCustomerFields } from "./QuoteCustomerFields";
 import { QuoteProductsSection, RFQProductItem } from "./QuoteProductsSection";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FromRFQ {
   rfqId: string;
@@ -25,6 +27,7 @@ interface FromRFQ {
 const QuoteDetail = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const fromRFQ: FromRFQ | undefined = location.state?.fromRFQ;
 
   // New: fields for customer/contact/company/email/phone/notes if present
@@ -50,7 +53,8 @@ const QuoteDetail = () => {
         ? fromRFQ.products.map((prod: any) => prod.name || prod).join(", ")
         : String(fromRFQ.products)
   );
-  const [currency, setCurrency] = useState<string>("");
+  const [currency, setCurrency] = useState<string>("USD");
+  const [totalAmount, setTotalAmount] = useState<number>(0);
   const [top, setTop] = useState<string>("");
   const [shippingMethod, setShippingMethod] = useState<string>("");
   const [paymentTerm, setPaymentTerm] = useState<string>("");
@@ -59,6 +63,8 @@ const QuoteDetail = () => {
   const [recommendedDeposit, setRecommendedDeposit] = useState<number>(0);
   const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
   const [locationField, setLocationField] = useState<string>(fromRFQ?.location ?? "");
+  const [status, setStatus] = useState<string>("submitted");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Autofill on navigation for /quotes/create
   useEffect(() => {
@@ -98,6 +104,100 @@ const QuoteDetail = () => {
     setRecommendedDeposit(recommendedDepositValue);
   }, [incoterm, paymentTerm]);
 
+  // New: handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!customerName) {
+      toast({
+        title: "Error",
+        description: "Customer name is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (totalAmount <= 0) {
+      toast({
+        title: "Error",
+        description: "Total amount must be greater than 0",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare the products data
+      const productsData = rfqProducts || 
+        (products ? products.split(',').map(p => ({ 
+          name: p.trim(),
+          quantity: 1
+        })) : []);
+
+      // Generate a quote number with timestamp
+      const quoteNumber = `Q-${Date.now()}`;
+
+      const quoteData = {
+        quote_number: quoteNumber,
+        rfq_id: fromRFQ?.rfqId,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        company_name: companyName,
+        products: productsData,
+        total: totalAmount,
+        currency,
+        payment_terms: paymentTerm,
+        shipping_method: shippingMethod,
+        incoterms: incoterm,
+        risk_level: risk,
+        deposit_percentage: depositPercentage,
+        status
+      };
+
+      // Insert the new quote into the database
+      const { data, error } = await supabase
+        .from('quotes')
+        .insert(quoteData)
+        .select('id')
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      // If there's an RFQ, update its status to 'quoted'
+      if (fromRFQ?.rfqId) {
+        const { error: rfqError } = await supabase
+          .from('rfqs')
+          .update({ status: 'quoted' })
+          .eq('id', fromRFQ.rfqId);
+
+        if (rfqError) {
+          console.error("Error updating RFQ status:", rfqError);
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: "Quote saved successfully",
+      });
+
+      // Navigate to the quotes list
+      navigate('/quotes');
+    } catch (error: any) {
+      console.error("Error saving quote:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save quote",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <MainLayout title={`Quote Detail${id ? ` - ${id}` : ""}`}>
       <div className="max-w-2xl mx-auto mt-8">
@@ -114,7 +214,7 @@ const QuoteDetail = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* Customer/Company/Email/Phone/Location/Notes */}
               <QuoteCustomerFields
                 customerName={customerName}
@@ -140,7 +240,14 @@ const QuoteDetail = () => {
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">Total Amount</label>
-                  <input type="number" className="w-full rounded border p-2" placeholder="Total" />
+                  <input 
+                    type="number" 
+                    className="w-full rounded border p-2" 
+                    placeholder="Total" 
+                    value={totalAmount || ''} 
+                    onChange={(e) => setTotalAmount(Number(e.target.value))}
+                    required
+                  />
                 </div>
                 <div className="w-32">
                   <label className="block text-sm font-medium mb-1">Currency</label>
@@ -244,7 +351,7 @@ const QuoteDetail = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Status</label>
-                <Select>
+                <Select value={status} onValueChange={setStatus}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -258,7 +365,14 @@ const QuoteDetail = () => {
             </form>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="ml-auto">Save Quote</Button>
+            <Button 
+              type="button" 
+              className="ml-auto" 
+              onClick={handleSubmit} 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save Quote"}
+            </Button>
           </CardFooter>
         </Card>
       </div>
