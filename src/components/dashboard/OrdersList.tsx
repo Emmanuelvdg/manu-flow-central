@@ -1,17 +1,38 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Download, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { OrdersFilters } from "./OrdersFilters";
 import { OrdersTable } from "./OrdersTable";
-import { mockOrders, columnHeaders } from "@/data/mockOrders";
+import { columnHeaders } from "@/data/mockOrders";
 import { Order } from "@/types/order";
+import { supabase } from "@/integrations/supabase/client";
+
+const parseOrderRow = (row: any): Order => ({
+  number: row.order_number || "-",
+  groupName: "-", // Placeholder since groupName is not in 'orders' table
+  partNo: "-",    // Placeholder
+  partDescription: "-", // Placeholder
+  quantity: row.products && Array.isArray(row.products) && row.products.length > 0 && typeof row.products[0].quantity === 'string'
+    ? row.products[0].quantity
+    : row.products && Array.isArray(row.products) && row.products.length > 0
+      ? String(row.products[0].quantity)
+      : "-",
+  status: row.status || "-",
+  partsStatus: row.parts_status || "-",
+  partsStatusColor: "", // You can fill this in based on the status if needed
+  statusColor: "",      // You can fill this in based on the status if needed
+  editable: true,
+  checked: false,
+});
 
 export const OrdersList = () => {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Filter/search state
@@ -19,6 +40,28 @@ export const OrdersList = () => {
   const [quantityRange, setQuantityRange] = useState({ min: "", max: "" });
   const [statusFilter, setStatusFilter] = useState("");
   const [partsStatusFilter, setPartsStatusFilter] = useState("");
+
+  // Fetch orders from Supabase
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .then((result) => {
+        if (result.error) {
+          setError(result.error.message);
+          setOrders([]);
+        } else if (result.data) {
+          const parsed = result.data.map(parseOrderRow);
+          setOrders(parsed);
+        } else {
+          setOrders([]);
+        }
+        setLoading(false);
+      });
+  }, []);
 
   const isChecked = (idx: number) => selected.includes(idx);
 
@@ -94,13 +137,31 @@ export const OrdersList = () => {
                 setPartsStatusFilter={setPartsStatusFilter}
               />
             </thead>
-            <OrdersTable
-              filteredOrders={filteredOrders}
-              selected={selected}
-              isChecked={isChecked}
-              toggleCheck={toggleCheck}
-              handleOrderClick={handleOrderClick}
-            />
+            {loading ? (
+              <tbody>
+                <tr>
+                  <td colSpan={9} className="text-center py-12 text-blue-600">
+                    Loading orders...
+                  </td>
+                </tr>
+              </tbody>
+            ) : error ? (
+              <tbody>
+                <tr>
+                  <td colSpan={9} className="text-center py-12 text-red-600">
+                    Error loading orders: {error}
+                  </td>
+                </tr>
+              </tbody>
+            ) : (
+              <OrdersTable
+                filteredOrders={filteredOrders}
+                selected={selected}
+                isChecked={isChecked}
+                toggleCheck={toggleCheck}
+                handleOrderClick={handleOrderClick}
+              />
+            )}
           </table>
           <div className="flex justify-center items-center mt-4 pb-4">
             <Button variant="link" size="sm" className="text-blue-700">
