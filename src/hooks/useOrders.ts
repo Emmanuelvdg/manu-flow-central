@@ -36,7 +36,7 @@ const parseOrderRow = (row: any): Order => {
     : null;
   
   const totalQuantity = row.products && Array.isArray(row.products) 
-    ? row.products.reduce((sum: number, prod: any) => sum + (parseInt(prod.quantity) || 0), 0)
+    ? row.products.reduce((sum: number, prod: any) => sum + (parseInt(String(prod.quantity)) || 0), 0)
     : 0;
     
   return {

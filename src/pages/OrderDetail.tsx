@@ -25,7 +25,6 @@ type OrderProductRow = {
   machines_progress: number | null;
   notes: string | null;
   recipe_id: string | null;
-  // for UI
   product_name: string | null;
   product_description: string | null;
   group: string | null;
@@ -36,16 +35,35 @@ const OrderDetail = () => {
   const { toast } = useToast();
 
   // Fetch order data (still needed for metadata)
-  const { data: order, isLoading, error } = useQuery({
+  const { data: order, isLoading, error, refetch } = useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
       if (!id) return null;
+      
+      // First try to find by order_number
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .eq('order_number', id)
-        .single();
-      if (error) throw error;
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error loading order by order_number:", error);
+        throw error;
+      }
+      
+      // If no order found by order_number, try with UUID format
+      if (!data && id.includes('-')) {
+        const { data: dataById, error: errorById } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (errorById) throw errorById;
+        return dataById;
+      }
+      
       return data;
     },
     enabled: !!id,
@@ -63,28 +81,11 @@ const OrderDetail = () => {
 
   // Fetch normalized order products, joined with product info
   const { data: orderProducts = [], isLoading: productsLoading } = useQuery({
-    queryKey: ['orderProducts', id],
+    queryKey: ['orderProducts', order?.id],
     queryFn: async () => {
-      if (!id) return [];
+      if (!order?.id) return [];
       
       try {
-        // Must first query order to get internal order.id
-        const { data: orderRow, error: orderError } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('order_number', id)
-          .single();
-          
-        if (orderError) {
-          console.error("Error fetching order ID:", orderError);
-          throw orderError;
-        }
-        
-        if (!orderRow) {
-          console.error("Order not found:", id);
-          return [];
-        }
-        
         // Query order_products joined with products
         const { data, error } = await supabase
           .from('order_products')
@@ -96,13 +97,13 @@ const OrderDetail = () => {
               category
             )
           `)
-          .eq('order_id', orderRow.id);
+          .eq('order_id', order.id);
           
         if (error) {
           console.error("Error fetching order products:", error);
           throw error;
         }
-
+        
         console.log("Fetched order products:", data);
         
         return (data || []).map((row: any) => ({
@@ -116,7 +117,7 @@ const OrderDetail = () => {
         return [];
       }
     },
-    enabled: !!id,
+    enabled: !!order?.id,
   });
 
   // Define state for order metadata form
@@ -152,12 +153,16 @@ const OrderDetail = () => {
           status: formData.status,
           shipping_address: formData.shippingAddress,
         })
-        .eq('order_number', id);
+        .eq('id', order.id);
       if (error) throw error;
+      
       toast({
         title: "Order updated",
         description: `Order #${id} has been successfully updated.`,
       });
+      
+      // Refresh data
+      refetch();
     } catch (err) {
       console.error("Error updating order:", err);
       toast({
@@ -189,6 +194,8 @@ const OrderDetail = () => {
               <div className="py-4 text-center">Loading order details...</div>
             ) : error ? (
               <div className="text-red-500 py-4 text-center">Error loading order: {error.toString()}</div>
+            ) : !order ? (
+              <div className="text-red-500 py-4 text-center">Order not found</div>
             ) : (
               <>
                 <OrderMetaForm 

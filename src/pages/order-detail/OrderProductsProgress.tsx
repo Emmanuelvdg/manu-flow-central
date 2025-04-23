@@ -36,7 +36,7 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
     {productsLoading ? (
       <div className="text-muted-foreground italic text-center py-2">Loading products...</div>
     ) : orderProducts.length === 0 ? (
-      <div className="text-gray-500 italic text-center py-2">No products found</div>
+      <div className="text-gray-500 italic text-center py-2">No products found for this order</div>
     ) : (
       orderProducts.map((product, idx: number) => (
         <div key={product.id} className="border-b last:border-0 pb-4 last:pb-0 pt-2">
@@ -48,6 +48,9 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
               </p>
               {product.product_description && (
                 <p className="text-xs text-muted-foreground mt-1">{product.product_description}</p>
+              )}
+              {product.notes && (
+                <p className="text-xs text-muted-foreground mt-1 italic">Notes: {product.notes}</p>
               )}
               <div className="mt-2">
                 <Badge variant="outline" className={
@@ -70,7 +73,7 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
                 View Recipe
               </Link>
             ) : (
-              <span className="text-sm text-gray-400 cursor-not-allowed">No Recipe</span>
+              <span className="text-sm text-gray-400">No Recipe</span>
             )}
           </div>
           <div className="space-y-3 mt-4">
