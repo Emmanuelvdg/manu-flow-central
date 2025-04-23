@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { createRFQ, RFQInsert } from "@/integrations/supabase/rfq";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const RFQCreate = () => {
   const { toast } = useToast();
@@ -114,8 +114,8 @@ const RFQCreate = () => {
                 <Button variant="outline" type="button" onClick={() => navigate("/rfqs")}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={loading.toString()}>
-                  Create RFQ
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Creating..." : "Create RFQ"}
                 </Button>
               </div>
             </form>
