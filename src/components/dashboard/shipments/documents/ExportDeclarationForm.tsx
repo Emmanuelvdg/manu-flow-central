@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -14,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
-// Define the form schema
 const exportDeclarationSchema = z.object({
   exporterName: z.string().min(1, "Exporter name is required"),
   exporterAddress: z.string().min(1, "Exporter address is required"),
@@ -48,7 +46,6 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [existingData, setExistingData] = useState<any>(null);
   
-  // Initialize form
   const form = useForm<z.infer<typeof exportDeclarationSchema>>({
     resolver: zodResolver(exportDeclarationSchema),
     defaultValues: {
@@ -76,16 +73,14 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
   
   const hasBroker = form.watch("hasBroker");
 
-  // Fetch existing export declaration data if available
   useEffect(() => {
     const fetchExportDeclaration = async () => {
       try {
-        const { data, error } = await supabase
-          .from("shipping_documents")
+        const { data, error } = await (supabase.from('shipping_documents' as any)
           .select("*")
           .eq("shipment_id", shipmentId)
           .eq("document_type", "export-declaration")
-          .single();
+          .single());
           
         if (error) {
           console.error("Error fetching export declaration:", error);
@@ -96,10 +91,9 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
           setExistingData(data);
           const content = data.content;
           
-          // Populate form with existing data
           form.reset({
             ...content,
-            declarationDate: content.declarationDate || new Date().toISOString().split('T')[0],
+            declarationDate: content?.declarationDate || new Date().toISOString().split('T')[0],
           });
         }
       } catch (error) {
@@ -110,29 +104,25 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
     fetchExportDeclaration();
   }, [shipmentId]);
 
-  // Handle form submission
   const onSubmit = async (values: z.infer<typeof exportDeclarationSchema>) => {
     try {
       setIsLoading(true);
-      
-      // Save to database
+
       const { error } = existingData 
-        ? await supabase
-            .from("shipping_documents")
+        ? await (supabase.from('shipping_documents' as any)
             .update({ 
               content: values,
               updated_at: new Date().toISOString()
             })
-            .eq("id", existingData.id)
-        : await supabase
-            .from("shipping_documents")
+            .eq("id", existingData.id))
+        : await (supabase.from('shipping_documents' as any)
             .insert({
               shipment_id: shipmentId,
               document_type: "export-declaration",
               content: values,
               status: "completed"
-            });
-      
+            }));
+
       if (error) {
         throw error;
       }
@@ -164,7 +154,6 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Exporter Information */}
           <Card>
             <CardContent className="pt-6">
               <h3 className="font-medium mb-4">Exporter Information</h3>
@@ -214,7 +203,6 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
             </CardContent>
           </Card>
 
-          {/* Buyer Information */}
           <Card>
             <CardContent className="pt-6">
               <h3 className="font-medium mb-4">Buyer Information</h3>
@@ -264,7 +252,6 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
             </CardContent>
           </Card>
 
-          {/* Customs Broker Information */}
           <Card>
             <CardContent className="pt-6">
               <h3 className="font-medium mb-4">Customs Broker</h3>
@@ -330,7 +317,6 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
             </CardContent>
           </Card>
 
-          {/* Shipment Details */}
           <Card>
             <CardContent className="pt-6">
               <h3 className="font-medium mb-4">Shipment Details</h3>
@@ -409,7 +395,6 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
             </CardContent>
           </Card>
 
-          {/* Goods Information */}
           <Card>
             <CardContent className="pt-6">
               <h3 className="font-medium mb-4">Goods Information</h3>
@@ -492,7 +477,6 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
             </CardContent>
           </Card>
 
-          {/* Related Documents */}
           <Card>
             <CardContent className="pt-6">
               <FormField

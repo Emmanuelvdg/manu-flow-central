@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,12 +33,11 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   useEffect(() => {
     const fetchDocument = async () => {
       try {
-        const { data, error } = await supabase
-          .from("shipping_documents")
+        const { data, error } = await (supabase.from('shipping_documents' as any)
           .select("*")
           .eq("shipment_id", shipmentId)
           .eq("document_type", documentType)
-          .single();
+          .single());
           
         if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
           console.error("Error fetching document:", error);
@@ -89,8 +87,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       };
       
       const { error: dbError } = existingDocument 
-        ? await supabase
-            .from("shipping_documents")
+        ? await (supabase.from('shipping_documents' as any)
             .update({
               file_path: fileName,
               file_name: file.name,
@@ -99,20 +96,18 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
               status: "uploaded",
               updated_at: new Date().toISOString()
             })
-            .eq("id", existingDocument.id)
-        : await supabase
-            .from("shipping_documents")
-            .insert(documentData);
+            .eq("id", existingDocument.id))
+        : await (supabase.from('shipping_documents' as any)
+            .insert(documentData));
       
       if (dbError) throw dbError;
       
       // Refresh document data
-      const { data: newDoc } = await supabase
-        .from("shipping_documents")
+      const { data: newDoc } = await (supabase.from('shipping_documents' as any)
         .select("*")
         .eq("shipment_id", shipmentId)
         .eq("document_type", documentType)
-        .single();
+        .single());
       
       setExistingDocument(newDoc);
       setFile(null);
@@ -183,10 +178,9 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       }
       
       // 2. Delete record from database
-      const { error: dbError } = await supabase
-        .from("shipping_documents")
+      const { error: dbError } = await (supabase.from('shipping_documents' as any)
         .delete()
-        .eq("id", existingDocument.id);
+        .eq("id", existingDocument.id));
         
       if (dbError) throw dbError;
       
