@@ -35,12 +35,14 @@ const OrderDetail = () => {
       return data;
     },
     enabled: !!id,
-    onError: (error) => {
-      toast({
-        title: "Error loading order",
-        description: `Could not load order #${id}. Please try again later.`,
-        variant: "destructive",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          title: "Error loading order",
+          description: `Could not load order #${id}. Please try again later.`,
+          variant: "destructive",
+        });
+      }
     }
   });
 
