@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Eye, FileCheck, FileX } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
-import { Quote, fetchQuote } from './quoteUtils';
+import { Quote, fetchQuote, createOrderFromQuote } from './quoteUtils';
 
 interface QuoteActionsProps {
   quoteId: string;
@@ -21,50 +21,15 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const createOrderFromQuote = async (quote: Quote) => {
-    const orderNumber = `ORD-${Date.now()}`;
-    
-    const orderPayload = {
-      quote_id: quote.id,
-      order_number: orderNumber,
-      customer_name: quote.customer_name,
-      products: quote.products,
-      total: quote.total,
-      status: 'created',
-      parts_status: 'Not booked'
-    };
-
-    const { data, error: orderError } = await supabase
-      .from('orders')
-      .insert(orderPayload)
-      .select()
-      .single();
-
-    if (orderError) throw orderError;
-    
-    if (data && data.id) {
-      await updateShipmentWithOrder(quote.id, data.id);
-    }
-    return data.id;
-  };
-
-  const updateShipmentWithOrder = async (quoteId: string, orderId: string) => {
-    const { data: shipments } = await supabase
-      .from('shipments')
-      .select('id')
-      .eq('quote_id', quoteId)
-      .order('created_at', { ascending: true });
-    if (shipments && shipments.length > 0) {
-      const shipmentId = shipments[0].id;
-      await supabase.from('shipments').update({ order_id: orderId }).eq('id', shipmentId);
-    }
-  };
-
   const acceptQuote = async () => {
     try {
+      console.log("Accepting quote:", quoteId);
+      
+      // Fetch the quote data first
       const quote = await fetchQuote(quoteId);
       if (!quote) throw new Error("Quote not found");
       
+      // Update the quote status to accepted
       const { error } = await supabase
         .from('quotes')
         .update({ status: 'accepted' })
@@ -72,11 +37,12 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
       
       if (error) throw error;
       
-      const orderId = await createOrderFromQuote(quote);
+      // Create an order from the accepted quote
+      const order = await createOrderFromQuote(quote);
       
       toast({
         title: "Quote Accepted",
-        description: `Quote has been accepted and manufacturing order created.`,
+        description: `Quote has been accepted and manufacturing order ${order.order_number} created.`,
       });
       
       onStatusChange();

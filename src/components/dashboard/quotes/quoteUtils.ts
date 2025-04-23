@@ -73,3 +73,62 @@ export const fetchQuote = async (quoteId: string): Promise<Quote | null> => {
 
   return data;
 };
+
+// Create an order from a quote
+export const createOrderFromQuote = async (quote: Quote) => {
+  console.log("Creating order from quote:", quote);
+  
+  const orderNumber = `ORD-${Date.now()}`;
+  
+  const orderPayload = {
+    quote_id: quote.id,
+    order_number: orderNumber,
+    customer_name: quote.customer_name,
+    products: quote.products,
+    total: quote.total,
+    status: 'created',
+    parts_status: 'Not booked'
+  };
+
+  try {
+    const { data, error: orderError } = await supabase
+      .from('orders')
+      .insert(orderPayload)
+      .select()
+      .single();
+
+    if (orderError) throw orderError;
+    
+    if (data && data.id) {
+      await updateShipmentWithOrder(quote.id, data.id);
+    }
+    
+    console.log("Order created successfully:", data);
+    return data;
+  } catch (error) {
+    console.error("Error creating order:", error);
+    throw error;
+  }
+};
+
+// Update shipment with order ID
+export const updateShipmentWithOrder = async (quoteId: string, orderId: string) => {
+  console.log("Updating shipment with order ID:", { quoteId, orderId });
+  try {
+    const { data: shipments } = await supabase
+      .from('shipments')
+      .select('id')
+      .eq('quote_id', quoteId)
+      .order('created_at', { ascending: true });
+      
+    if (shipments && shipments.length > 0) {
+      const shipmentId = shipments[0].id;
+      await supabase.from('shipments').update({ order_id: orderId }).eq('id', shipmentId);
+      console.log("Shipment updated with order ID");
+    } else {
+      console.log("No shipment found for quote ID:", quoteId);
+    }
+  } catch (error) {
+    console.error("Error updating shipment:", error);
+  }
+};

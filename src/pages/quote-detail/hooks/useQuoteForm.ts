@@ -152,6 +152,40 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
     }
   };
 
+  const handleSubmitQuote = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      // Update status to submitted
+      const { error } = await supabase
+        .from("quotes")
+        .update({ status: "submitted" })
+        .eq("id", id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Quote submitted successfully",
+        description: `Quote ${quoteNumber} has been submitted and is ready for acceptance.`,
+      });
+      
+      // Refresh the status locally
+      setStatus("submitted");
+      
+      // Navigate back to the quotes list
+      navigate("/quotes");
+    } catch (error: any) {
+      console.error("Error submitting quote:", error);
+      toast({
+        title: "Failed to submit quote",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const isFormValid = customerName.trim() !== '' && products.length > 0;
 
   return {
@@ -191,6 +225,7 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
       setRiskLevel,
       setDepositPercentage
     },
-    handleSave
+    handleSave,
+    handleSubmitQuote
   };
 };

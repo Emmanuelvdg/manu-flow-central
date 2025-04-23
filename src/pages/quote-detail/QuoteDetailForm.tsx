@@ -23,7 +23,8 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
   const {
     formState,
     setters,
-    handleSave
+    handleSave,
+    handleSubmitQuote
   } = useQuoteForm({ initialData, id, rfqData, rfqIdForShipment });
 
   return (
@@ -85,6 +86,17 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
           >
             {formState.isSubmitting ? "Saving..." : (formState.isNew ? "Create Quote" : "Save Changes")}
           </Button>
+          {formState.status === 'draft' && !formState.isNew && (
+            <Button 
+              type="button" 
+              variant="default"
+              onClick={handleSubmitQuote}
+              disabled={!formState.isFormValid || formState.isSubmitting}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Submit Quote
+            </Button>
+          )}
         </div>
       </CardFooter>
     </div>
