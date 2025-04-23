@@ -79,7 +79,7 @@ export function RecipePersonnelSection({
             <div className="flex gap-2 items-end">
               <Select
                 value={editingPersonnel.role || ""}
-                onValueChange={v => setEditingPersonnel(p => ({ ...p!, role: v }))}
+                onValueChange={v => setEditingPersonnel({ ...editingPersonnel, role: v })}
               >
                 <SelectTrigger className="w-48 text-xs">
                   <SelectValue placeholder="Personnel role" />
@@ -96,7 +96,7 @@ export function RecipePersonnelSection({
                 min={1}
                 className="w-16 text-xs"
                 value={editingPersonnel.hours ?? 1}
-                onChange={e => setEditingPersonnel(p => ({ ...p!, hours: Number(e.target.value) }))}
+                onChange={e => setEditingPersonnel({ ...editingPersonnel, hours: Number(e.target.value) })}
               />
               <Button variant="outline" size="sm" type="button" onClick={handleSavePersonnel}>
                 Save

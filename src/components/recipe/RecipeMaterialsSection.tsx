@@ -99,11 +99,11 @@ export function RecipeMaterialsSection({
                 value={editingMaterial.name || ""}
                 onValueChange={v => {
                   const mat = materialList.find(m => m.name === v);
-                  setEditingMaterial(m => ({
-                    ...m!,
+                  setEditingMaterial({
+                    ...editingMaterial,
                     name: v,
-                    unit: mat?.unit ?? (m?.unit ?? "")
-                  }));
+                    unit: mat?.unit ?? (editingMaterial?.unit ?? "")
+                  });
                 }}
               >
                 <SelectTrigger className="w-48 text-xs">
@@ -121,7 +121,7 @@ export function RecipeMaterialsSection({
                 min={1}
                 className="w-16 text-xs"
                 value={editingMaterial.quantity ?? 1}
-                onChange={e => setEditingMaterial(m => ({ ...m!, quantity: Number(e.target.value) }))}
+                onChange={e => setEditingMaterial({ ...editingMaterial, quantity: Number(e.target.value) })}
               />
               <Input
                 placeholder="Unit"

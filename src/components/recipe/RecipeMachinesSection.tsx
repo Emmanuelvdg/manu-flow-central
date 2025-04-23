@@ -74,7 +74,7 @@ export function RecipeMachinesSection({
                 placeholder="Machine Name"
                 value={editingMachine.machine ?? ""}
                 className="text-xs"
-                onChange={e => setEditingMachine(m => ({ ...m!, machine: e.target.value }))}
+                onChange={e => setEditingMachine({ ...editingMachine, machine: e.target.value })}
                 autoFocus
               />
               <Input
@@ -83,7 +83,7 @@ export function RecipeMachinesSection({
                 min={1}
                 className="w-16 text-xs"
                 value={editingMachine.hours ?? 1}
-                onChange={e => setEditingMachine(m => ({ ...m!, hours: Number(e.target.value) }))}
+                onChange={e => setEditingMachine({ ...editingMachine, hours: Number(e.target.value) })}
               />
               <Button variant="outline" size="sm" type="button" onClick={handleSaveMachine}>
                 Save
