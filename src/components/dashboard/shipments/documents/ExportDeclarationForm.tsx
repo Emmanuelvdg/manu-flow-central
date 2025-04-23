@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -35,6 +36,24 @@ const exportDeclarationSchema = z.object({
   relatedDocuments: z.string().optional(),
 });
 
+// Define a type for the document content 
+type ExportDeclarationContent = z.infer<typeof exportDeclarationSchema>;
+
+// Define type for shipping document
+interface ShippingDocument {
+  id: string;
+  shipment_id: string;
+  document_type: string;
+  content?: ExportDeclarationContent;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  file_path?: string;
+  file_name?: string;
+  file_type?: string;
+  file_size?: number;
+}
+
 interface ExportDeclarationFormProps {
   shipmentId: string;
 }
@@ -44,7 +63,7 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [existingData, setExistingData] = useState<any>(null);
+  const [existingData, setExistingData] = useState<ShippingDocument | null>(null);
   
   const form = useForm<z.infer<typeof exportDeclarationSchema>>({
     resolver: zodResolver(exportDeclarationSchema),
@@ -76,11 +95,12 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
   useEffect(() => {
     const fetchExportDeclaration = async () => {
       try {
-        const { data, error } = await (supabase.from('shipping_documents' as any)
+        const { data, error } = await supabase
+          .from('shipping_documents')
           .select("*")
           .eq("shipment_id", shipmentId)
           .eq("document_type", "export-declaration")
-          .single());
+          .single();
           
         if (error) {
           console.error("Error fetching export declaration:", error);
@@ -88,13 +108,15 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
         }
         
         if (data) {
-          setExistingData(data);
-          const content = data.content;
+          setExistingData(data as ShippingDocument);
           
-          form.reset({
-            ...content,
-            declarationDate: content?.declarationDate || new Date().toISOString().split('T')[0],
-          });
+          if (data.content) {
+            const content = data.content as ExportDeclarationContent;
+            form.reset({
+              ...content,
+              declarationDate: content?.declarationDate || new Date().toISOString().split('T')[0],
+            });
+          }
         }
       } catch (error) {
         console.error("Error in fetching export declaration:", error);
@@ -102,26 +124,28 @@ export const ExportDeclarationForm: React.FC<ExportDeclarationFormProps> = ({
     };
     
     fetchExportDeclaration();
-  }, [shipmentId]);
+  }, [shipmentId, form]);
 
   const onSubmit = async (values: z.infer<typeof exportDeclarationSchema>) => {
     try {
       setIsLoading(true);
 
       const { error } = existingData 
-        ? await (supabase.from('shipping_documents' as any)
+        ? await supabase
+            .from('shipping_documents')
             .update({ 
               content: values,
               updated_at: new Date().toISOString()
             })
-            .eq("id", existingData.id))
-        : await (supabase.from('shipping_documents' as any)
+            .eq("id", existingData.id)
+        : await supabase
+            .from('shipping_documents')
             .insert({
               shipment_id: shipmentId,
               document_type: "export-declaration",
               content: values,
               status: "completed"
-            }));
+            });
 
       if (error) {
         throw error;

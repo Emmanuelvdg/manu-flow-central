@@ -12,7 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2 } from "lucide-react";
 
-// Define the form schema
+// Define the form schema with proper type conversions
 const packingListSchema = z.object({
   packingListNumber: z.string().min(1, "Packing List Number is required"),
   invoiceNumber: z.string().min(1, "Invoice Number is required"),
@@ -22,18 +22,40 @@ const packingListSchema = z.object({
   consigneeInfo: z.string().min(1, "Consignee Contact Information is required"),
   originAddress: z.string().min(1, "Origin Address is required"),
   deliveryAddress: z.string().min(1, "Delivery Address is required"),
-  numberOfPackages: z.string().transform(val => parseInt(val)).refine(val => !isNaN(val) && val > 0, "Must be a positive number"),
-  totalVolume: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val >= 0, "Must be a valid number"),
-  totalWeight: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val >= 0, "Must be a valid number"),
+  numberOfPackages: z.coerce.number().min(1, "Must be a positive number"),
+  totalVolume: z.coerce.number().min(0, "Must be a valid number"),
+  totalWeight: z.coerce.number().min(0, "Must be a valid number"),
 });
 
-// Define the package item schema separately
+// Define the schema for package items
 const packageItemSchema = z.object({
   description: z.string().min(1, "Description is required"),
   numberOfItems: z.number().min(1, "Must be at least 1"),
   volume: z.number().min(0, "Must be a valid number"),
   weight: z.number().min(0, "Must be a valid number"),
 });
+
+// Define types for the package items and form data
+type PackageItem = z.infer<typeof packageItemSchema>;
+type PackingListFormData = z.infer<typeof packingListSchema> & {
+  packageItems?: PackageItem[];
+};
+
+// Define type for shipping document
+interface ShippingDocument {
+  id: string;
+  shipment_id: string;
+  document_type: string;
+  content?: PackingListFormData;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  file_path?: string;
+  file_name?: string;
+  file_type?: string;
+  file_size?: number;
+  invoice_id?: string;
+}
 
 interface PackingListFormProps {
   shipmentId: string;
@@ -48,13 +70,8 @@ export const PackingListForm: React.FC<PackingListFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [packageItems, setPackageItems] = useState<Array<{
-    description: string;
-    numberOfItems: number;
-    volume: number;
-    weight: number;
-  }>>([]);
-  const [existingData, setExistingData] = useState<any>(null);
+  const [packageItems, setPackageItems] = useState<PackageItem[]>([]);
+  const [existingData, setExistingData] = useState<ShippingDocument | null>(null);
   
   // Initialize form
   const form = useForm<z.infer<typeof packingListSchema>>({
@@ -68,9 +85,9 @@ export const PackingListForm: React.FC<PackingListFormProps> = ({
       consigneeInfo: "",
       originAddress: "",
       deliveryAddress: "",
-      numberOfPackages: "1",
-      totalVolume: "0",
-      totalWeight: "0",
+      numberOfPackages: 1,
+      totalVolume: 0,
+      totalWeight: 0,
     },
   });
 
@@ -91,27 +108,29 @@ export const PackingListForm: React.FC<PackingListFormProps> = ({
         }
         
         if (data) {
-          setExistingData(data);
-          const content = data.content;
-          
-          // Populate form with existing data
-          form.reset({
-            packingListNumber: content.packingListNumber || "",
-            invoiceNumber: content.invoiceNumber || invoiceNumber || "",
-            exportDate: content.exportDate || new Date().toISOString().split('T')[0],
-            shipperInfo: content.shipperInfo || "",
-            exporterInfo: content.exporterInfo || "",
-            consigneeInfo: content.consigneeInfo || "",
-            originAddress: content.originAddress || "",
-            deliveryAddress: content.deliveryAddress || "",
-            numberOfPackages: content.numberOfPackages?.toString() || "1",
-            totalVolume: content.totalVolume?.toString() || "0",
-            totalWeight: content.totalWeight?.toString() || "0",
-          });
-          
-          // Set package items if they exist
-          if (content.packageItems && Array.isArray(content.packageItems)) {
-            setPackageItems(content.packageItems);
+          setExistingData(data as ShippingDocument);
+          if (data.content) {
+            const content = data.content as PackingListFormData;
+            
+            // Populate form with existing data
+            form.reset({
+              packingListNumber: content.packingListNumber || "",
+              invoiceNumber: content.invoiceNumber || invoiceNumber || "",
+              exportDate: content.exportDate || new Date().toISOString().split('T')[0],
+              shipperInfo: content.shipperInfo || "",
+              exporterInfo: content.exporterInfo || "",
+              consigneeInfo: content.consigneeInfo || "",
+              originAddress: content.originAddress || "",
+              deliveryAddress: content.deliveryAddress || "",
+              numberOfPackages: content.numberOfPackages || 1,
+              totalVolume: content.totalVolume || 0,
+              totalWeight: content.totalWeight || 0,
+            });
+            
+            // Set package items if they exist
+            if (content.packageItems && Array.isArray(content.packageItems)) {
+              setPackageItems(content.packageItems);
+            }
           }
         }
       } catch (error) {
@@ -120,7 +139,7 @@ export const PackingListForm: React.FC<PackingListFormProps> = ({
     };
     
     fetchPackingList();
-  }, [shipmentId, invoiceNumber]);
+  }, [shipmentId, invoiceNumber, form]);
 
   // Add a new empty package item
   const addPackageItem = () => {
@@ -141,9 +160,13 @@ export const PackingListForm: React.FC<PackingListFormProps> = ({
   };
 
   // Update a package item at the given index
-  const updatePackageItem = (index: number, key: string, value: any) => {
+  const updatePackageItem = (index: number, key: keyof PackageItem, value: any) => {
     const newItems = [...packageItems];
-    (newItems[index] as any)[key] = key === 'description' ? value : parseFloat(value);
+    if (key === 'description') {
+      newItems[index][key] = value;
+    } else {
+      newItems[index][key] = parseFloat(value) || 0;
+    }
     setPackageItems(newItems);
     
     // Recalculate totals whenever an item changes
@@ -151,12 +174,12 @@ export const PackingListForm: React.FC<PackingListFormProps> = ({
   };
 
   // Calculate total volume and weight
-  const calculateTotals = (items: typeof packageItems) => {
+  const calculateTotals = (items: PackageItem[]) => {
     const totalVol = items.reduce((sum, item) => sum + item.volume, 0);
     const totalWt = items.reduce((sum, item) => sum + item.weight, 0);
     
-    form.setValue("totalVolume", totalVol.toFixed(2));
-    form.setValue("totalWeight", totalWt.toFixed(2));
+    form.setValue("totalVolume", totalVol);
+    form.setValue("totalWeight", totalWt);
   };
 
   // Handle form submission
@@ -184,13 +207,13 @@ export const PackingListForm: React.FC<PackingListFormProps> = ({
         return;
       }
       
-      // Prepare data for saving
+      // Prepare data for saving with proper number conversions
       const packingListData = {
         ...values,
         packageItems,
-        numberOfPackages: parseInt(values.numberOfPackages.toString()),
-        totalVolume: parseFloat(values.totalVolume.toString()),
-        totalWeight: parseFloat(values.totalWeight.toString()),
+        numberOfPackages: Number(values.numberOfPackages),
+        totalVolume: Number(values.totalVolume),
+        totalWeight: Number(values.totalWeight),
       };
       
       // Save to database
