@@ -17,13 +17,18 @@ export const getStatusColor = (status: string): string => {
 };
 
 export const parseOrderRow = (row: any): Order => {
-  const productInfo = row.products && Array.isArray(row.products) && row.products.length > 0
-    ? row.products[0]
-    : null;
+  // Ensure we have valid data to work with
+  if (!row) return {} as Order;
   
-  const totalQuantity = row.products && Array.isArray(row.products) 
-    ? row.products.reduce((sum: number, prod: any) => sum + (parseInt(String(prod.quantity)) || 0), 0)
-    : 0;
+  // Fix for missing or empty products array
+  const products = Array.isArray(row.products) ? row.products : [];
+  const productInfo = products.length > 0 ? products[0] : null;
+  
+  // Calculate total quantity across all products
+  const totalQuantity = products.reduce((sum: number, prod: any) => {
+    const quantity = prod?.quantity ? parseInt(String(prod.quantity)) : 0;
+    return sum + quantity;
+  }, 0);
     
   return {
     number: row.order_number || "-",
@@ -39,6 +44,6 @@ export const parseOrderRow = (row: any): Order => {
     checked: false,
     customerName: row.customer_name,
     total: row.total,
-    products: row.products || []
+    products: products
   };
 };

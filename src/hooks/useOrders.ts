@@ -26,6 +26,8 @@ export const useOrders = () => {
         .order("created_at", { ascending: false });
         
       if (fetchError) throw fetchError;
+      
+      console.log("Fetched orders:", data);
       return data ? data.map(parseOrderRow) : [];
     }
   });
@@ -55,18 +57,19 @@ export const useOrders = () => {
       let newOrdersCount = 0;
       
       for (const quote of acceptedQuotes) {
-        const { data: existingOrder, error: orderCheckError } = await supabase
+        // Use select() instead of maybeSingle() to get all existing orders for the quote
+        const { data: existingOrders, error: orderCheckError } = await supabase
           .from("orders")
           .select("id")
-          .eq("quote_id", quote.id)
-          .maybeSingle();
+          .eq("quote_id", quote.id);
           
         if (orderCheckError) {
-          console.error(`Error checking order for quote ${quote.quote_number}:`, orderCheckError);
+          console.error(`Error checking orders for quote ${quote.quote_number}:`, orderCheckError);
           continue;
         }
         
-        if (!existingOrder) {
+        // Only create a new order if no orders exist for this quote
+        if (!existingOrders || existingOrders.length === 0) {
           const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
           
           const orderPayload = {
