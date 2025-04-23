@@ -1,8 +1,13 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { CartItem } from "../ProductCatalog";
-import { Minus, Plus } from "lucide-react";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { createRFQ } from '@/integrations/supabase/rfq';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { CartItem } from '../ProductCatalog';
 
 interface CartSectionProps {
   cartItems: CartItem[];
@@ -15,72 +20,185 @@ export const CartSection: React.FC<CartSectionProps> = ({
   cartItems,
   onRemoveItem,
   onClearCart,
-  onUpdateQuantity,
+  onUpdateQuantity
 }) => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [rfqFields, setRFQFields] = useState({
+    customer_name: '',
+    customer_email: '',
+    customer_phone: '',
+    company_name: '',
+    location: '',
+    notes: '',
+  });
+
+  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setRFQFields(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const handleSubmitRFQ = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cartItems.length === 0) {
+      toast({
+        title: "Empty RFQ",
+        description: "Please add products to your quote request.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Generate a unique RFQ number (you might want to implement a more robust method)
+      const rfq_number = `RFQ-${Date.now()}`;
+      
+      await createRFQ({
+        ...rfqFields,
+        rfq_number,
+        products: cartItems.map(item => ({
+          id: item.product.id,
+          name: item.product.name,
+          quantity: item.quantity
+        })),
+        status: 'new'
+      });
+
+      toast({
+        title: "RFQ Created",
+        description: `RFQ ${rfq_number} created successfully.`,
+      });
+
+      // Clear cart and navigate to RFQ list
+      onClearCart();
+      navigate('/rfqs');
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (cartItems.length === 0) return null;
 
   return (
-    <div className="bg-white rounded shadow p-4 border mt-6">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-lg">RFQ Cart</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onClearCart}
-          className="ml-2"
-        >
-          Clear Cart
-        </Button>
-      </div>
-      <div className="space-y-3">
-        {cartItems.map(({ product, quantity }) => (
-          <div
-            key={product.id}
-            className="flex items-center gap-4 border-b pb-2 last:border-b-0"
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-14 h-14 object-cover rounded"
+    <Card>
+      <CardHeader>
+        <CardTitle>Request for Quotation (RFQ)</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmitRFQ} className="space-y-4">
+          {/* RFQ Form Fields */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Input
+              name="customer_name"
+              placeholder="Customer Name"
+              value={rfqFields.customer_name}
+              onChange={handleFieldChange}
+              required
             />
-            <div className="flex-1">
-              <div className="font-medium">{product.name}</div>
-              <div className="text-xs text-gray-500">{product.category}</div>
-              <div className="text-sm text-gray-800">${product.price.toLocaleString()}</div>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="secondary"
-                size="icon"
-                className="w-7 h-7"
-                aria-label="Decrease quantity"
-                onClick={() => onUpdateQuantity(product.id, quantity - 1)}
-                disabled={quantity <= 1}
+            <Input
+              name="customer_email"
+              placeholder="Customer Email"
+              type="email"
+              value={rfqFields.customer_email}
+              onChange={handleFieldChange}
+            />
+            <Input
+              name="customer_phone"
+              placeholder="Customer Phone"
+              value={rfqFields.customer_phone}
+              onChange={handleFieldChange}
+            />
+            <Input
+              name="company_name"
+              placeholder="Company Name"
+              value={rfqFields.company_name}
+              onChange={handleFieldChange}
+            />
+            <Input
+              name="location"
+              placeholder="Location"
+              value={rfqFields.location}
+              onChange={handleFieldChange}
+            />
+          </div>
+          
+          <Textarea
+            name="notes"
+            placeholder="Additional Notes"
+            value={rfqFields.notes}
+            onChange={handleFieldChange}
+          />
+
+          {/* Cart Items Display */}
+          <div className="border rounded p-4 mt-4">
+            <h3 className="font-semibold mb-2">Products in RFQ</h3>
+            {cartItems.map(item => (
+              <div 
+                key={item.product.id} 
+                className="flex justify-between items-center border-b py-2 last:border-b-0"
               >
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="min-w-[24px] text-center font-mono">{quantity}</span>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="w-7 h-7"
-                aria-label="Increase quantity"
-                onClick={() => onUpdateQuantity(product.id, quantity + 1)}
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Remove item"
-              onClick={() => onRemoveItem(product.id)}
+                <div>
+                  <span className="font-medium">{item.product.name}</span>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      type="button"
+                      onClick={() => onUpdateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
+                    >
+                      -
+                    </Button>
+                    <span>{item.quantity}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      type="button"
+                      onClick={() => onUpdateQuantity(item.product.id, item.quantity + 1)}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  type="button"
+                  onClick={() => onRemoveItem(item.product.id)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end gap-2 mt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClearCart}
             >
-              Remove
+              Clear Cart
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading}
+            >
+              {loading ? "Submitting..." : "Submit RFQ"}
             </Button>
           </div>
-        ))}
-      </div>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
