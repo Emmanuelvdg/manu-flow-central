@@ -44,7 +44,7 @@ export const MaterialsSection = () => {
         id: m.id,
         name: m.name,
         unit: m.unit,
-        // Since MaterialOption doesn't have these properties, we provide default values
+        // The MaterialOption type doesn't have these properties, so we provide default values
         category: m.category || "",
         status: m.status || "Active",
         vendor: m.vendor || "",
