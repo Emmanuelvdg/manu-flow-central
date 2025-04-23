@@ -7,6 +7,8 @@ import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/componen
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { calculateRisk, getRecommendedDeposit } from "@/utils/riskCalculator";
+import { QuoteCustomerFields } from "./QuoteCustomerFields";
+import { QuoteProductsSection, RFQProductItem } from "./QuoteProductsSection";
 
 interface FromRFQ {
   rfqId: string;
@@ -14,12 +16,10 @@ interface FromRFQ {
   products?: any;
   contact?: string;
   location?: string;
-}
-
-interface RFQProductItem {
-  id?: number | string;
-  name: string;
-  quantity?: number;
+  customerEmail?: string;
+  customerPhone?: string;
+  companyName?: string;
+  notes?: string;
 }
 
 const QuoteDetail = () => {
@@ -27,8 +27,13 @@ const QuoteDetail = () => {
   const location = useLocation();
   const fromRFQ: FromRFQ | undefined = location.state?.fromRFQ;
 
-  // Track parsed products if coming from RFQ
+  // New: fields for customer/contact/company/email/phone/notes if present
   const [customerName, setCustomerName] = useState<string>(fromRFQ?.customerName ?? "");
+  const [customerEmail, setCustomerEmail] = useState<string>(fromRFQ?.customerEmail ?? "");
+  const [customerPhone, setCustomerPhone] = useState<string>(fromRFQ?.customerPhone ?? "");
+  const [companyName, setCompanyName] = useState<string>(fromRFQ?.companyName ?? "");
+  const [notes, setNotes] = useState<string>(fromRFQ?.notes ?? "");
+
   const [rfqProducts, setRFQProducts] = useState<RFQProductItem[] | undefined>(
     fromRFQ?.products && Array.isArray(fromRFQ.products)
       ? fromRFQ.products.map((p: any) => ({
@@ -38,7 +43,6 @@ const QuoteDetail = () => {
         }))
       : undefined
   );
-  // Fallback to plain products text for generic case
   const [products, setProducts] = useState<string>(
     !fromRFQ?.products
       ? ""
@@ -56,20 +60,14 @@ const QuoteDetail = () => {
   const [depositPercentage, setDepositPercentage] = useState<number | undefined>(undefined);
   const [locationField, setLocationField] = useState<string>(fromRFQ?.location ?? "");
 
-  useEffect(() => {
-    const calculatedRisk = calculateRisk(
-      incoterm as 'cif' | 'ddp' | 'fob' | 'exw' | '', 
-      paymentTerm as 'advance' | 'lc' | 'open' | ''
-    );
-    setRisk(calculatedRisk);
-    const recommendedDepositValue = getRecommendedDeposit(calculatedRisk);
-    setRecommendedDeposit(recommendedDepositValue);
-  }, [incoterm, paymentTerm]);
-
   // Autofill on navigation for /quotes/create
   useEffect(() => {
     if (fromRFQ) {
       setCustomerName(fromRFQ.customerName ?? "");
+      setCustomerEmail(fromRFQ.customerEmail ?? "");
+      setCustomerPhone(fromRFQ.customerPhone ?? "");
+      setCompanyName(fromRFQ.companyName ?? "");
+      setNotes(fromRFQ.notes ?? "");
       setRFQProducts(
         fromRFQ.products && Array.isArray(fromRFQ.products)
           ? fromRFQ.products.map((p: any) => ({
@@ -90,6 +88,16 @@ const QuoteDetail = () => {
     }
   }, [fromRFQ]);
 
+  useEffect(() => {
+    const calculatedRisk = calculateRisk(
+      incoterm as 'cif' | 'ddp' | 'fob' | 'exw' | '', 
+      paymentTerm as 'advance' | 'lc' | 'open' | ''
+    );
+    setRisk(calculatedRisk);
+    const recommendedDepositValue = getRecommendedDeposit(calculatedRisk);
+    setRecommendedDeposit(recommendedDepositValue);
+  }, [incoterm, paymentTerm]);
+
   return (
     <MainLayout title={`Quote Detail${id ? ` - ${id}` : ""}`}>
       <div className="max-w-2xl mx-auto mt-8">
@@ -107,49 +115,28 @@ const QuoteDetail = () => {
           </CardHeader>
           <CardContent>
             <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Customer Name</label>
-                <input
-                  type="text"
-                  className="w-full rounded border p-2"
-                  placeholder="Customer Name"
-                  value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                />
-              </div>
-              {/* Location field */}
-              <div>
-                <label className="block text-sm font-medium mb-1">Location</label>
-                <input
-                  type="text"
-                  className="w-full rounded border p-2"
-                  placeholder="Location"
-                  value={locationField}
-                  onChange={e => setLocationField(e.target.value)}
-                />
-              </div>
-              {/* Display RFQ products as list if present, otherwise fallback to input */}
-              <div>
-                <label className="block text-sm font-medium mb-1">Products Requested</label>
-                {rfqProducts && rfqProducts.length > 0 ? (
-                  <ul className="border rounded p-2 bg-gray-50">
-                    {rfqProducts.map((prod, idx) => (
-                      <li key={prod.id ?? prod.name ?? idx} className="flex justify-between">
-                        <span className="font-medium">{prod.name}</span>
-                        <span className="text-xs text-gray-600">Qty: {prod.quantity ?? 1}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <input
-                    type="text"
-                    className="w-full rounded border p-2"
-                    placeholder="Products"
-                    value={products}
-                    onChange={e => setProducts(e.target.value)}
-                  />
-                )}
-              </div>
+              {/* Customer/Company/Email/Phone/Location/Notes */}
+              <QuoteCustomerFields
+                customerName={customerName}
+                setCustomerName={setCustomerName}
+                customerEmail={customerEmail}
+                setCustomerEmail={setCustomerEmail}
+                customerPhone={customerPhone}
+                setCustomerPhone={setCustomerPhone}
+                companyName={companyName}
+                setCompanyName={setCompanyName}
+                locationField={locationField}
+                setLocationField={setLocationField}
+                notes={notes}
+                setNotes={setNotes}
+              />
+              {/* Products Section - supports list mode with quantities or fallback to free text */}
+              <QuoteProductsSection
+                rfqProducts={rfqProducts}
+                setRFQProducts={setRFQProducts}
+                products={products}
+                setProducts={setProducts}
+              />
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">Total Amount</label>
@@ -280,4 +267,3 @@ const QuoteDetail = () => {
 };
 
 export default QuoteDetail;
-
