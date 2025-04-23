@@ -4,58 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Order } from "@/types/order";
-
-// Define interfaces for product data in JSON
-interface ProductData {
-  id?: string;
-  name?: string;
-  quantity?: string | number;
-  unit?: string;
-  category?: string;
-}
-
-// Helper function to get status color
-const getStatusColor = (status: string): string => {
-  switch (status?.toLowerCase()) {
-    case 'processing':
-    case 'created':
-      return 'bg-blue-100 text-blue-800';
-    case 'completed':
-      return 'bg-green-100 text-green-800';
-    case 'scheduled':
-      return 'bg-orange-100 text-orange-800';
-    default:
-      return '';
-  }
-};
-
-// Improved parser that better extracts and normalizes data from order rows
-const parseOrderRow = (row: any): Order => {
-  const productInfo = row.products && Array.isArray(row.products) && row.products.length > 0
-    ? row.products[0]
-    : null;
-  
-  const totalQuantity = row.products && Array.isArray(row.products) 
-    ? row.products.reduce((sum: number, prod: any) => sum + (parseInt(String(prod.quantity)) || 0), 0)
-    : 0;
-    
-  return {
-    number: row.order_number || "-",
-    groupName: productInfo?.category || "-",
-    partNo: productInfo?.id || "-",
-    partDescription: productInfo?.name || "-",
-    quantity: String(totalQuantity) || "0",
-    status: row.status || "-",
-    partsStatus: row.parts_status || "-",
-    partsStatusColor: getStatusColor(row.parts_status),
-    statusColor: getStatusColor(row.status),      
-    editable: true,
-    checked: false,
-    customerName: row.customer_name,
-    total: row.total,
-    products: row.products || []
-  };
-};
+import { ProductData } from "@/types/orderTypes";
+import { parseOrderRow } from "@/utils/orderUtils";
 
 export const useOrders = () => {
   const [selected, setSelected] = useState<number[]>([]);
@@ -139,12 +89,10 @@ export const useOrders = () => {
             continue;
           }
           
-          // Create order_products entries for better data normalization
           if (newOrder && newOrder[0] && quote.products && Array.isArray(quote.products)) {
             for (const product of quote.products as ProductData[]) {
               if (!product.name && !product.id) continue;
               
-              // Find recipe for this product if exists
               let recipeId = null;
               
               if (product.id) {
@@ -184,7 +132,6 @@ export const useOrders = () => {
         description: `Created ${newOrdersCount} new orders from accepted quotes.`,
       });
       
-      // Refresh the orders list
       refetch();
       
     } catch (err: any) {
