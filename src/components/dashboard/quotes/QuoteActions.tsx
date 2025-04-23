@@ -27,18 +27,28 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
       
       // Fetch the quote data first
       const quote = await fetchQuote(quoteId);
-      if (!quote) throw new Error("Quote not found");
+      if (!quote) {
+        throw new Error("Quote not found");
+      }
       
-      // Update the quote status to accepted
+      // Create an order from the accepted quote
+      const order = await createOrderFromQuote(quote);
+      if (!order) {
+        throw new Error("Failed to create order from quote");
+      }
+      
+      console.log("Order created successfully:", order);
+      
+      // Update the quote status to accepted AFTER order creation succeeds
       const { error } = await supabase
         .from('quotes')
         .update({ status: 'accepted' })
         .eq('id', quoteId);
       
-      if (error) throw error;
-      
-      // Create an order from the accepted quote
-      const order = await createOrderFromQuote(quote);
+      if (error) {
+        console.error("Error updating quote status:", error);
+        throw error;
+      }
       
       toast({
         title: "Quote Accepted",
