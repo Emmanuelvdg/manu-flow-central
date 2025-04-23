@@ -159,10 +159,47 @@ export const useOrderDetail = (orderId: string | undefined) => {
         }
       }
       
-      // Create a new order_product entry
+      // First, check if the product exists in the products table
+      const productName = product.name || productId;
+      let actualProductId = productId;
+      
+      const { data: existingProduct } = await supabase
+        .from('products')
+        .select('id')
+        .eq('name', productName)
+        .maybeSingle();
+        
+      if (existingProduct) {
+        // If the product exists, use its ID
+        actualProductId = existingProduct.id;
+        console.log(`Found existing product ${actualProductId} for "${productName}"`);
+      } else {
+        // If not, create a stub product record so we can reference it
+        console.log(`Product "${productName}" doesn't exist in products table, creating a stub product`);
+        const { data: newProduct, error: createProductError } = await supabase
+          .from('products')
+          .insert({
+            id: productId || `prod-${Date.now()}`,
+            name: productName,
+            description: `Auto-generated from order ${orderId}`,
+            category: product.category || 'General'
+          })
+          .select()
+          .single();
+          
+        if (createProductError) {
+          console.error(`Failed to create product for "${productName}":`, createProductError);
+          continue;
+        }
+        
+        actualProductId = newProduct.id;
+        console.log(`Created stub product with ID ${actualProductId}`);
+      }
+      
+      // Now create the order product with a valid product ID reference
       const productEntry = {
         order_id: orderId,
-        product_id: productId,
+        product_id: actualProductId,
         quantity: parseInt(String(product.quantity)) || 1,
         unit: product.unit || 'pcs',
         status: 'pending',
