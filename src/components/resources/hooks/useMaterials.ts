@@ -77,6 +77,7 @@ export const useMaterials = () => {
           ? totalCost / totalRemainingStock 
           : 0;
         
+        // Make sure we include all properties from the material record
         return {
           id: m.id,
           name: m.name,
@@ -89,6 +90,9 @@ export const useMaterials = () => {
           costPerUnit: avgCostPerUnit
         };
       });
+      
+      // Debugging to verify data
+      console.log("Formatted materials with categories and vendors:", formattedMaterials);
       
       setMaterials(formattedMaterials);
     }

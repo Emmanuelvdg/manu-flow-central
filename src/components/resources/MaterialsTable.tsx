@@ -25,6 +25,10 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
     {
       header: "Category",
       accessorKey: "category",
+      cell: (props: ColumnCellProps<Material>) => {
+        const material = props.row.original;
+        return material.category || "-";
+      },
     },
     {
       header: "Stock",
@@ -46,6 +50,10 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
     {
       header: "Vendor",
       accessorKey: "vendor",
+      cell: (props: ColumnCellProps<Material>) => {
+        const material = props.row.original;
+        return material.vendor || "-";
+      },
     },
     {
       header: "Actions",
