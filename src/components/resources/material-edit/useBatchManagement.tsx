@@ -40,18 +40,28 @@ export const useBatchManagement = (material: Material) => {
 
   const handleBatchChange = (id: string, field: keyof MaterialBatch, value: any) => {
     if (!id) {
-      setPendingBatch(prev => ({
-        ...prev,
-        [field]: value,
-        ...(field === 'initialStock' ? { remainingStock: Number(value) } : {})
-      }));
+      // This is the pending batch
+      setPendingBatch(prev => {
+        const updatedBatch = { ...prev, [field]: value };
+        
+        // If initial stock is updated, update remaining stock too
+        if (field === 'initialStock') {
+          updatedBatch.remainingStock = Number(value);
+        }
+        
+        return updatedBatch;
+      });
     } else {
+      // This is an existing batch
       setBatches(batches.map(batch => {
         if (batch.id === id) {
           const updatedBatch = { ...batch, [field]: value };
+          
+          // If initial stock is updated, update remaining stock too
           if (field === 'initialStock') {
             updatedBatch.remainingStock = Number(value);
           }
+          
           return updatedBatch;
         }
         return batch;

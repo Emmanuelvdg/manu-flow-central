@@ -30,7 +30,7 @@ export const useBatchOperations = () => {
       
       console.log("Successfully deleted existing batches:", deletedData);
       
-      if (material.batches.length > 0) {
+      if (material.batches && material.batches.length > 0) {
         const validBatches = material.batches.filter(batch => 
           batch.batchNumber && batch.batchNumber.trim() !== ''
         );
