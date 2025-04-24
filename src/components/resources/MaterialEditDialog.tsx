@@ -106,17 +106,30 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Prepare batches for submission, filtering out empty pending batch
+    const validBatches = batches.filter(batch => 
+      batch.batchNumber && batch.batchNumber.trim() !== ''
+    );
+    
     // Calculate total remaining stock and average cost per unit
-    const totalRemainingStock = batches.reduce((sum, batch) => sum + batch.remainingStock, 0);
-    const totalCost = batches.reduce((sum, batch) => sum + (batch.remainingStock * batch.costPerUnit), 0);
+    const totalRemainingStock = validBatches.reduce(
+      (sum, batch) => sum + Number(batch.remainingStock), 0
+    );
+    
+    const totalCost = validBatches.reduce(
+      (sum, batch) => sum + (Number(batch.remainingStock) * Number(batch.costPerUnit)), 0
+    );
+    
     const avgCostPerUnit = totalRemainingStock > 0 ? totalCost / totalRemainingStock : 0;
     
     const updatedMaterial = { 
       ...formData, 
-      batches,
+      batches: validBatches,
       costPerUnit: avgCostPerUnit,
       stock: totalRemainingStock
     };
+    
+    console.log("Submitting material with batches:", updatedMaterial);
     
     // Pass the updated material to the parent component
     await onSave(updatedMaterial);
@@ -125,10 +138,10 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     onClose();
   };
 
-  // Combine existing batches with pending batch for display
+  // Only show valid batches (with batch numbers) and the pending batch for display
   const displayBatches = showEmptyBatches 
-    ? [...batches, pendingBatch]
-    : [...batches.filter(b => b.remainingStock > 0), pendingBatch];
+    ? [...batches, pendingBatch] 
+    : [...batches.filter(b => b.remainingStock > 0 || !b.batchNumber), pendingBatch];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

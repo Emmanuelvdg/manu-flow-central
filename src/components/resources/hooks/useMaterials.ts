@@ -113,12 +113,22 @@ export const useMaterials = () => {
       
       // Then insert new batches
       if (material.batches.length > 0) {
-        const batchesToInsert = material.batches.map(batch => ({
+        // Filter out pending batches (empty ID and batchNumber)
+        const validBatches = material.batches.filter(batch => 
+          batch.batchNumber && batch.batchNumber.trim() !== ''
+        );
+        
+        if (validBatches.length === 0) {
+          console.log("No valid batches to insert");
+          return;
+        }
+        
+        const batchesToInsert = validBatches.map(batch => ({
           material_id: material.id,
           batch_number: batch.batchNumber,
-          initial_stock: batch.initialStock,
-          remaining_stock: batch.remainingStock,
-          cost_per_unit: batch.costPerUnit,
+          initial_stock: Number(batch.initialStock),
+          remaining_stock: Number(batch.remainingStock),
+          cost_per_unit: Number(batch.costPerUnit),
           purchase_date: batch.purchaseDate
         }));
         
