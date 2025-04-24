@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Material } from "@/types/material";
+import { Material, PurchaseOrder, MaterialBatch } from "@/types/material";
 import { MaterialsTable } from "./MaterialsTable";
 import { MaterialsHeader } from "./MaterialsHeader";
 import { MaterialDialogs } from "./MaterialDialogs";
@@ -95,7 +96,7 @@ export const MaterialsSection = () => {
     }
   };
 
-  const handleCreatePurchaseOrder = async (order: PurchaseOrder, newBatch: MaterialBatch) => {
+  const handleProcessPurchaseOrder = async (order: PurchaseOrder, newBatch: MaterialBatch) => {
     try {
       // Add the new batch to the selected material's batches
       const updatedMaterial = selectedMaterial ? {
@@ -181,7 +182,7 @@ export const MaterialsSection = () => {
             setSelectedMaterial(null);
           }}
           onSaveMaterial={handleSaveMaterial}
-          onCreateOrder={handleCreatePurchaseOrder}
+          onCreateOrder={handleProcessPurchaseOrder}
         />
       </>
     </ErrorBoundary>
