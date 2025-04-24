@@ -94,27 +94,29 @@ export function MaterialEditDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Material</DialogTitle>
         </DialogHeader>
         
-        <MaterialEditForm
-          material={formData}
-          onClose={onClose}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-        />
+        <div className="space-y-6">
+          <MaterialEditForm
+            material={formData}
+            onClose={onClose}
+            onChange={handleChange}
+            onSubmit={handleSubmit}
+          />
 
-        <BatchManager
-          batches={batches}
-          pendingBatch={pendingBatch}
-          showEmptyBatches={showEmptyBatches}
-          onShowEmptyBatchesChange={setShowEmptyBatches}
-          onBatchChange={handleBatchChange}
-          onDeleteBatch={handleDeleteBatch}
-          onAddBatch={handleAddBatch}
-        />
+          <BatchManager
+            batches={batches}
+            pendingBatch={pendingBatch}
+            showEmptyBatches={showEmptyBatches}
+            onShowEmptyBatchesChange={setShowEmptyBatches}
+            onBatchChange={handleBatchChange}
+            onDeleteBatch={handleDeleteBatch}
+            onAddBatch={handleAddBatch}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

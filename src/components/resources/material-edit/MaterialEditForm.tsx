@@ -19,9 +19,9 @@ export const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
   onSubmit,
 }) => {
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit}>
       <MaterialForm formData={material} handleChange={onChange} />
-      <DialogFooter>
+      <DialogFooter className="mt-6">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         <Button type="submit">Save Changes</Button>
       </DialogFooter>
