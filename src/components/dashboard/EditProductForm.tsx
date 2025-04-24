@@ -46,6 +46,8 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
   });
 
   const onSubmit = async (data: ProductFormData) => {
+    console.log('Submitting with image URL:', data.image);
+    
     const { error } = await supabase
       .from('products')
       .update({
@@ -53,7 +55,8 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         category: data.category,
         price: Number(data.price),
         lead_time: data.lead_time,
-        image: data.image || null,
+        image: data.image || null, // Make sure to use the actual image value, not null if it exists
+        updated_at: new Date().toISOString(),
       })
       .eq('id', product.id);
 
@@ -142,10 +145,6 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
                 <Input 
                   placeholder="https://example.com/image.jpg" 
                   {...field} 
-                  onChange={(e) => {
-                    const value = e.target.value.trim();
-                    field.onChange(value);
-                  }}
                 />
               </FormControl>
               <FormMessage />

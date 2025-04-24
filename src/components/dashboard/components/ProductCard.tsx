@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ShoppingCart, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { EditProductForm } from '../EditProductForm';
 
@@ -72,6 +74,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>
+              Make changes to your product. The image URL will be saved with your changes.
+            </DialogDescription>
           </DialogHeader>
           <EditProductForm 
             product={product} 
