@@ -11,7 +11,7 @@ interface MaterialFormProps {
 
 export const MaterialForm: React.FC<MaterialFormProps> = ({ formData, handleChange }) => {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
         <Input
@@ -19,8 +19,10 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({ formData, handleChan
           name="name"
           value={formData.name}
           onChange={handleChange}
+          className="w-full"
         />
       </div>
+      
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
         <Input
@@ -28,8 +30,10 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({ formData, handleChan
           name="category"
           value={formData.category}
           onChange={handleChange}
+          className="w-full"
         />
       </div>
+      
       <div className="space-y-2">
         <Label htmlFor="unit">Unit</Label>
         <Input
@@ -37,8 +41,10 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({ formData, handleChan
           name="unit"
           value={formData.unit}
           onChange={handleChange}
+          className="w-full"
         />
       </div>
+      
       <div className="space-y-2">
         <Label htmlFor="vendor">Vendor</Label>
         <Input
@@ -46,6 +52,7 @@ export const MaterialForm: React.FC<MaterialFormProps> = ({ formData, handleChan
           name="vendor"
           value={formData.vendor}
           onChange={handleChange}
+          className="w-full"
         />
       </div>
     </div>
