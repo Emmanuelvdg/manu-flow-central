@@ -2,7 +2,7 @@
 import React from "react";
 import { MaterialEditDialog } from "./MaterialEditDialog";
 import { PurchaseOrderDialog } from "./PurchaseOrderDialog";
-import { Material, PurchaseOrder } from "@/types/material";
+import { Material, PurchaseOrder, MaterialBatch } from "@/types/material";
 
 interface MaterialDialogsProps {
   selectedMaterial: Material | null;
@@ -11,7 +11,7 @@ interface MaterialDialogsProps {
   onCloseEditDialog: () => void;
   onClosePurchaseDialog: () => void;
   onSaveMaterial: (material: Material) => void;
-  onCreateOrder: (order: PurchaseOrder) => void;
+  onCreateOrder: (order: PurchaseOrder, newBatch: MaterialBatch) => void;
 }
 
 export const MaterialDialogs: React.FC<MaterialDialogsProps> = ({

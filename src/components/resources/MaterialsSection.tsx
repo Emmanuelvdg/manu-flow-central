@@ -28,7 +28,7 @@ export const MaterialsSection = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleCreateOrder = (material: Material) => {
+  const handleCreateOrder = async (material: Material) => {
     const materialCopy = JSON.parse(JSON.stringify(material));
     setSelectedMaterial(materialCopy);
     setIsPurchaseDialogOpen(true);
@@ -90,6 +90,30 @@ export const MaterialsSection = () => {
       toast({
         title: "Error",
         description: `Failed to save material: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreatePurchaseOrder = async (order: PurchaseOrder, newBatch: MaterialBatch) => {
+    try {
+      // Add the new batch to the selected material's batches
+      const updatedMaterial = selectedMaterial ? {
+        ...selectedMaterial,
+        batches: [...(selectedMaterial.batches || []), newBatch]
+      } : null;
+
+      if (updatedMaterial) {
+        await handleSaveMaterial(updatedMaterial);
+      }
+
+      handleCreatePurchaseOrder(order);
+      
+    } catch (error) {
+      console.error("Error creating purchase order and batch:", error);
+      toast({
+        title: "Error",
+        description: `Failed to create purchase order and batch: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
     }

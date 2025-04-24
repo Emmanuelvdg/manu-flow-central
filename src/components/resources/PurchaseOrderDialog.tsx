@@ -17,7 +17,7 @@ interface PurchaseOrderDialogProps {
   material: Material;
   isOpen: boolean;
   onClose: () => void;
-  onCreateOrder: (order: PurchaseOrder) => void;
+  onCreateOrder: (order: PurchaseOrder, newBatch: MaterialBatch) => void;
 }
 
 export function PurchaseOrderDialog({ 
@@ -57,15 +57,15 @@ export function PurchaseOrderDialog({
       initialStock: quantity,
       remainingStock: quantity,
       costPerUnit: costPerUnit,
-      purchaseDate: new Date().toISOString().split('T')[0],
-      status: batchStatus
+      purchaseDate: newOrder.orderDate,
+      status: 'requested'
     };
 
-    onCreateOrder(newOrder);
+    onCreateOrder(newOrder, newBatch);
     
     toast({
       title: "Purchase Order Created",
-      description: `Order ${newOrder.id} for ${material.name} has been created with batch status: ${batchStatus}.`,
+      description: `Order ${newOrder.id} for ${material.name} has been created with a new batch.`,
     });
     
     onClose();
