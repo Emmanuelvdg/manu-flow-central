@@ -14,7 +14,8 @@ export const useBatchManagement = (material: Material) => {
     initialStock: 0,
     remainingStock: 0,
     costPerUnit: 0,
-    purchaseDate: new Date().toISOString().split('T')[0]
+    purchaseDate: new Date().toISOString().split('T')[0],
+    status: 'received' // Default status
   });
 
   useEffect(() => {
@@ -34,7 +35,8 @@ export const useBatchManagement = (material: Material) => {
       initialStock: 0,
       remainingStock: 0,
       costPerUnit: 0,
-      purchaseDate: new Date().toISOString().split('T')[0]
+      purchaseDate: new Date().toISOString().split('T')[0],
+      status: 'received' // Default status
     });
   }, [material]);
 
@@ -117,7 +119,8 @@ export const useBatchManagement = (material: Material) => {
       initialStock: 0,
       remainingStock: 0,
       costPerUnit: 0,
-      purchaseDate: new Date().toISOString().split('T')[0]
+      purchaseDate: new Date().toISOString().split('T')[0],
+      status: 'received' // Default status
     });
 
     toast({

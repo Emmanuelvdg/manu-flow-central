@@ -9,3 +9,26 @@ export interface MaterialBatch {
   purchaseDate: string;
   status: 'requested' | 'expected' | 'delayed' | 'received';
 }
+
+export interface Material {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  status: string;
+  vendor: string;
+  stock: number;
+  costPerUnit: number;
+  batches?: MaterialBatch[];
+}
+
+export interface PurchaseOrder {
+  id: string;
+  materialId: string;
+  quantity: number;
+  status: string;
+  orderDate: string;
+  expectedDelivery: string;
+  vendor: string;
+  totalCost: number;
+}
