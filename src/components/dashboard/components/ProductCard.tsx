@@ -13,6 +13,7 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import { EditProductForm } from '../EditProductForm';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProductCardProps {
   product: Product;
@@ -27,12 +28,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
 
   // Handle dialog closing and product updates
   const handleCloseDialog = () => {
-    // Refresh the product data when dialog closes
+    // Refresh the product data when dialog closes using Supabase directly
     const refreshProduct = async () => {
       try {
-        const { data, error } = await fetch(`/api/products/${product.id}`).then(res => res.json());
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', product.id)
+          .single();
+          
         if (!error && data) {
           setCurrentProduct(data);
+          console.log('Product refreshed successfully:', data);
+        } else {
+          console.error('Error refreshing product:', error);
         }
       } catch (err) {
         console.error('Failed to refresh product:', err);
