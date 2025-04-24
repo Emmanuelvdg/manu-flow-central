@@ -1,19 +1,19 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Material } from "@/types/material";
 import { MaterialsTable } from "./MaterialsTable";
-import { supabase } from "@/integrations/supabase/client";
 import { MaterialsHeader } from "./MaterialsHeader";
 import { MaterialDialogs } from "./MaterialDialogs";
 import { useMaterials } from "./hooks/useMaterials";
 import { PurchaseOrdersSection } from "./PurchaseOrdersSection";
 import { usePurchaseOrders } from "./hooks/usePurchaseOrders";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { MaterialsLoadingState } from "./MaterialsLoadingState";
 
 export const MaterialsSection = () => {
   const { toast } = useToast();
-  const { materials, setMaterials, isLoading, error, queryClient, saveMaterialBatches } = useMaterials();
+  const { materials, isLoading, error, queryClient, saveMaterialBatches } = useMaterials();
   const { purchaseOrders, handleCreatePurchaseOrder } = usePurchaseOrders();
   
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
@@ -21,14 +21,12 @@ export const MaterialsSection = () => {
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
 
   const handleEditMaterial = (material: Material) => {
-    // Create a deep copy to ensure we don't have reference issues
     const materialCopy = JSON.parse(JSON.stringify(material));
     setSelectedMaterial(materialCopy);
     setIsEditDialogOpen(true);
   };
 
   const handleCreateOrder = (material: Material) => {
-    // Create a deep copy to ensure we don't have reference issues
     const materialCopy = JSON.parse(JSON.stringify(material));
     setSelectedMaterial(materialCopy);
     setIsPurchaseDialogOpen(true);
@@ -54,7 +52,6 @@ export const MaterialsSection = () => {
       console.log("Saving material:", updatedMaterial);
       const isNewMaterial = !materials.some((m) => m.id === updatedMaterial.id);
       
-      // Only save fields that exist in the database table
       const materialData = {
         id: updatedMaterial.id,
         name: updatedMaterial.name,
@@ -62,7 +59,6 @@ export const MaterialsSection = () => {
         unit: updatedMaterial.unit,
         status: updatedMaterial.status,
         vendor: updatedMaterial.vendor
-        // Remove costPerUnit and stock as they don't exist in the materials table
       };
       
       if (isNewMaterial) {
@@ -78,10 +74,8 @@ export const MaterialsSection = () => {
       
       console.log("Material saved successfully, now saving batches...");
       
-      // Save material batches
       await saveMaterialBatches(updatedMaterial);
       
-      // Invalidate queries to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: ["materials"] });
       await queryClient.invalidateQueries({ queryKey: ["material-batches"] });
       
@@ -89,8 +83,6 @@ export const MaterialsSection = () => {
         title: `Material ${isNewMaterial ? "Added" : "Updated"}`,
         description: `${updatedMaterial.name} has been ${isNewMaterial ? "added" : "updated"} successfully.`,
       });
-      
-      // Don't update local state here - let the query invalidation handle it
     } catch (error) {
       console.error("Error saving material:", error);
       toast({
@@ -116,51 +108,56 @@ export const MaterialsSection = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Error loading materials</AlertTitle>
+        <AlertDescription>{String(error)}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (isLoading) {
+    return <MaterialsLoadingState />;
+  }
+
   return (
-    <>
-      <Card>
-        <MaterialsHeader 
-          onNewMaterial={handleNewMaterial}
-        />
-        <CardContent>
-          {isLoading ? (
-            <div className="text-muted-foreground py-8 text-center">Loading materials...</div>
-          ) : error ? (
-            <div className="text-destructive py-8 text-center">Could not load materials. {String(error)}</div>
-          ) : (
+    <ErrorBoundary>
+      <>
+        <Card>
+          <MaterialsHeader onNewMaterial={handleNewMaterial} />
+          <CardContent>
             <MaterialsTable
               materials={materials}
               onEditMaterial={handleEditMaterial}
               onCreateOrder={handleCreateOrder}
               formatCurrency={formatCurrency}
             />
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <PurchaseOrdersSection 
-        purchaseOrders={purchaseOrders}
-        materials={materials}
-        formatDate={formatDate}
-      />
+        <PurchaseOrdersSection 
+          purchaseOrders={purchaseOrders}
+          materials={materials}
+          formatDate={formatDate}
+        />
 
-      <MaterialDialogs
-        selectedMaterial={selectedMaterial}
-        isEditDialogOpen={isEditDialogOpen}
-        isPurchaseDialogOpen={isPurchaseDialogOpen}
-        onCloseEditDialog={() => {
-          setIsEditDialogOpen(false);
-          // Clear the selected material when closing the dialog
-          setSelectedMaterial(null);
-        }}
-        onClosePurchaseDialog={() => {
-          setIsPurchaseDialogOpen(false);
-          // Clear the selected material when closing the dialog
-          setSelectedMaterial(null);
-        }}
-        onSaveMaterial={handleSaveMaterial}
-        onCreateOrder={handleCreatePurchaseOrder}
-      />
-    </>
+        <MaterialDialogs
+          selectedMaterial={selectedMaterial}
+          isEditDialogOpen={isEditDialogOpen}
+          isPurchaseDialogOpen={isPurchaseDialogOpen}
+          onCloseEditDialog={() => {
+            setIsEditDialogOpen(false);
+            setSelectedMaterial(null);
+          }}
+          onClosePurchaseDialog={() => {
+            setIsPurchaseDialogOpen(false);
+            setSelectedMaterial(null);
+          }}
+          onSaveMaterial={handleSaveMaterial}
+          onCreateOrder={handleCreatePurchaseOrder}
+        />
+      </>
+    </ErrorBoundary>
   );
 };
