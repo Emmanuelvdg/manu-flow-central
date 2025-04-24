@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -46,11 +45,7 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
   });
 
   const onSubmit = async (data: ProductFormData) => {
-    console.log('Submitting with image URL:', data.image);
-    
-    // Ensure currentTimestamp is included to force an update
-    const currentTimestamp = new Date().toISOString();
-    console.log('Updating product with timestamp:', currentTimestamp);
+    console.log('Submitting product update with image URL:', data.image);
     
     try {
       const { data: updatedData, error } = await supabase
@@ -60,8 +55,8 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
           category: data.category,
           price: Number(data.price),
           lead_time: data.lead_time,
-          image: data.image, // Ensure we're updating the image field
-          updated_at: currentTimestamp,
+          image: data.image || null,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', product.id)
         .select();
@@ -81,17 +76,16 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         title: 'Success',
         description: `${data.name} has been updated.`,
       });
+      
+      onClose();
     } catch (err) {
-      console.error('Exception during product update:', err);
+      console.error('Unexpected error during product update:', err);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
         variant: 'destructive',
       });
     }
-    
-    // Close the dialog and refresh product data
-    onClose();
   };
 
   return (
