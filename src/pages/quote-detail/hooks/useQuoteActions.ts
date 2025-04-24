@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +6,7 @@ import type { QuoteFormState } from "../types/quoteTypes";
 interface UseQuoteActionsProps {
   id?: string;
   formState: QuoteFormState;
-  setIsSubmitting: (value: boolean) => void;
+  setIsSubmitting: (value: string) => void;
   setStatus: (value: string) => void;
 }
 

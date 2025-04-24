@@ -1,6 +1,7 @@
 
 import { useQuoteState } from './useQuoteState';
 import { useQuoteActions } from './useQuoteActions';
+import type { RFQProductItem } from '../types/quoteTypes';
 
 export interface UseQuoteFormProps {
   initialData?: any;
