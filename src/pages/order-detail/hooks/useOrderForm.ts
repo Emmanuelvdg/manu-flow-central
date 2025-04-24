@@ -36,6 +36,7 @@ export const useOrderForm = (order: any, orderId: string, refetch: () => void) =
   const handleSaveOrder = async () => {
     if (!order) return;
     try {
+      // Use the order's internal UUID (order.id) rather than the displayed orderId
       const { error } = await supabase
         .from('orders')
         .update({

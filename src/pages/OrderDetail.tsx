@@ -34,7 +34,7 @@ const OrderDetail = () => {
   const { materials } = useMaterials();
 
   React.useEffect(() => {
-    if (!orderProducts || !batches || orderProducts.length === 0) return;
+    if (!orderProducts || !batches || orderProducts.length === 0 || !order) return;
 
     // Group batches by material ID
     const materialBatches = batches.reduce((acc: any, batch) => {
@@ -51,10 +51,11 @@ const OrderDetail = () => {
       
       if (order?.parts_status !== newStatus) {
         try {
+          // Use the actual UUID of the order, not the order_number
           const { error } = await supabase
             .from('orders')
             .update({ parts_status: newStatus })
-            .eq('id', orderId);
+            .eq('id', order.id);
 
           if (error) throw error;
 
