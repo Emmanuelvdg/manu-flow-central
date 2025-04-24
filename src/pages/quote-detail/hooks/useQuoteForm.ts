@@ -21,7 +21,7 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
   const { handleSave, handleSubmitQuote } = useQuoteActions({ 
     id, 
     formState,
-    setIsSubmitting: setters.setStatus,
+    setIsSubmitting: setters.setIsSubmitting,
     setStatus: setters.setStatus
   });
 

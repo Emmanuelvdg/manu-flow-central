@@ -49,6 +49,7 @@ export interface QuoteFormSetters {
   setEstimatedDelivery: (value: string) => void;
   setRiskLevel: (value: string) => void;
   setDepositPercentage: (value: number) => void;
+  setIsSubmitting: (value: boolean) => void;
   setPerformanceGuarantees: (value: string) => void;
   setShowPerformanceGuarantees: (value: boolean) => void;
   setLatePaymentPenalties: (value: string) => void;

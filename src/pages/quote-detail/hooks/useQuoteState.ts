@@ -127,6 +127,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
     setEstimatedDelivery,
     setRiskLevel,
     setDepositPercentage,
+    setIsSubmitting,
     setPerformanceGuarantees,
     setShowPerformanceGuarantees,
     setLatePaymentPenalties,
