@@ -24,11 +24,12 @@ export const BatchManager: React.FC<BatchManagerProps> = ({
   onDeleteBatch,
   onAddBatch,
 }) => {
-  // Filter out empty batches when displaying if showEmptyBatches is false
+  // Use all existing batches
   const displayBatches = [...batches];
   
-  // Always include the pending batch in the display as it's being edited
-  const allBatches = pendingBatch.batchNumber ? [...displayBatches, pendingBatch] : displayBatches;
+  // Always include the pending batch in the display regardless of its content
+  // This ensures the batch form is always shown when adding a new batch
+  const allBatches = [...displayBatches, pendingBatch];
 
   return (
     <div className="space-y-4">

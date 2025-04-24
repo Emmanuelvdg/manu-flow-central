@@ -32,7 +32,7 @@ export const useBatchOperations = () => {
       
       if (material.batches && material.batches.length > 0) {
         const validBatches = material.batches.filter(batch => 
-          batch.batchNumber && batch.batchNumber.trim() !== ''
+          batch.initialStock > 0 && batch.costPerUnit > 0
         );
         
         console.log(`Found ${validBatches.length} valid batches out of ${material.batches.length} total`);

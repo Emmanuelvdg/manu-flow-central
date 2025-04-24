@@ -26,7 +26,7 @@ export const useBatchManagement = (material: Material) => {
       setBatches([]);
     }
     
-    // Reset the pending batch
+    // Reset the pending batch when material changes
     setPendingBatch({
       id: '',
       materialId: material.id,

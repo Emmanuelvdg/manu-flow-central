@@ -45,12 +45,28 @@ export function MaterialEditDialog({
     
     console.log("Submit button clicked. Current batches:", batches);
     
-    // Prepare batches for submission, filtering out empty pending batch
-    const validBatches = batches.filter(batch => 
-      batch.batchNumber && batch.batchNumber.trim() !== ''
+    // Collect all valid batches, including the pending batch if it has data
+    const allBatches = [...batches];
+    
+    // Add pending batch if it has valid data
+    if (pendingBatch.initialStock > 0 && pendingBatch.costPerUnit > 0) {
+      // Create a batch number if it doesn't exist
+      const batchNumber = pendingBatch.batchNumber || 
+        `B${(batches.length + 1).toString().padStart(3, '0')}`;
+      
+      allBatches.push({
+        ...pendingBatch,
+        id: pendingBatch.id || `pending-${Date.now()}`,
+        batchNumber
+      });
+    }
+    
+    // Filter out any invalid batches
+    const validBatches = allBatches.filter(batch => 
+      batch.initialStock > 0 && batch.costPerUnit > 0
     );
     
-    console.log(`Found ${validBatches.length} valid batches out of ${batches.length} total`);
+    console.log(`Found ${validBatches.length} valid batches out of ${allBatches.length} total`);
     
     // Calculate total remaining stock and average cost per unit
     const totalRemainingStock = validBatches.reduce(
