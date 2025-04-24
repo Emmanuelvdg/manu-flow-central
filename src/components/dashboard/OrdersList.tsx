@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +6,6 @@ import { OrdersTable } from "./OrdersTable";
 import { OrdersHeader } from "./orders/OrdersHeader";
 import { useOrders } from "@/hooks/useOrders";
 import { Button } from "@/components/ui/button";
-import { columnHeaders } from "@/data/mockOrders";
 import { Table, RefreshCw } from "lucide-react";
 
 export const OrdersList = () => {
@@ -43,19 +41,19 @@ export const OrdersList = () => {
   };
 
   return (
-    <Card className="overflow-visible">
+    <Card className="bg-white shadow-sm">
       <OrdersHeader />
       <CardContent className="!p-0">
         <div className="overflow-x-auto">
-          <table className="w-full table-auto border-separate border-spacing-0">
+          <table className="w-full table-fixed border-separate border-spacing-0">
             <thead>
-              <tr className="bg-white">
-                {columnHeaders.map((col) => (
+              <tr className="bg-white border-b">
+                {["Number", "Group name", "Part No.", "Part description", "Quantity", "Status", "Parts status", "Actions", "Select"].map((header) => (
                   <th
-                    key={col.key}
-                    className={`text-xs font-semibold px-4 py-2 border-b border-gray-100 ${col.className || ""}`}
+                    key={header}
+                    className="text-left text-xs font-semibold px-4 py-3 text-gray-600"
                   >
-                    {col.label}
+                    {header}
                   </th>
                 ))}
               </tr>
@@ -73,7 +71,7 @@ export const OrdersList = () => {
             {isLoading ? (
               <tbody>
                 <tr>
-                  <td colSpan={9} className="text-center py-12 text-blue-600">
+                  <td colSpan={9} className="text-center py-12 text-primary">
                     Loading orders...
                   </td>
                 </tr>
@@ -81,7 +79,7 @@ export const OrdersList = () => {
             ) : error ? (
               <tbody>
                 <tr>
-                  <td colSpan={9} className="text-center py-12 text-red-600">
+                  <td colSpan={9} className="text-center py-12 text-destructive">
                     Error loading orders: {error.toString()}
                   </td>
                 </tr>
@@ -96,11 +94,11 @@ export const OrdersList = () => {
               />
             )}
           </table>
-          <div className="flex justify-center items-center gap-4 mt-4 pb-4">
+          <div className="flex justify-center items-center gap-4 mt-6 pb-6">
             <Button 
               variant="link" 
               size="sm" 
-              className="text-blue-700" 
+              className="text-primary"
               onClick={syncAcceptedQuotes}
             >
               Sync Orders
@@ -108,7 +106,6 @@ export const OrdersList = () => {
             <Button
               variant="destructive"
               size="sm"
-              className="text-white"
               onClick={resetAndRecreatAllOrders}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
@@ -116,8 +113,7 @@ export const OrdersList = () => {
             </Button>
             <Button 
               variant="outline" 
-              size="sm" 
-              className="text-blue-700"
+              size="sm"
               onClick={() => navigate('/orders/quote-order-mapping')}
             >
               <Table className="w-4 h-4 mr-2" />
