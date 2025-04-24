@@ -6,6 +6,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
+// Define an interface for the raw material data coming from the database
+interface RawMaterialFromDB {
+  id: string;
+  name: string;
+  category: string | null;
+  unit: string;
+  status: string | null;
+  vendor: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useMaterials = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -27,7 +39,7 @@ export const useMaterials = () => {
       }
       
       console.log("Raw materials data from database:", data);
-      return data;
+      return data as RawMaterialFromDB[];
     },
   });
 
@@ -58,12 +70,9 @@ export const useMaterials = () => {
   // Sync 'materials' state when DB loads or batches change
   useEffect(() => {
     if (dbMaterials && dbMaterials.length > 0 && batches) {
-      // Explicitly cast dbMaterials to Material[] to ensure TypeScript knows what type we're working with
-      const typedMaterials = dbMaterials as Material[];
+      console.log("Processing materials with their original properties:", dbMaterials);
       
-      console.log("Processing materials with their original properties:", typedMaterials);
-      
-      const formattedMaterials: Material[] = typedMaterials.map((m) => {
+      const formattedMaterials: Material[] = dbMaterials.map((m) => {
         // Find all batches for this material
         const materialBatches = batches
           .filter((b) => b.materialId === m.id)
@@ -93,15 +102,14 @@ export const useMaterials = () => {
           ? totalCost / totalRemainingStock 
           : 0;
         
-        // Make sure we preserve the original category and vendor values from the database
-        // without applying empty string fallbacks that could cause issues
-        const material = {
+        // Create a Material object from the raw database material
+        const material: Material = {
           id: m.id,
           name: m.name,
           unit: m.unit,
-          category: m.category, // Keep as is from database, don't use fallback here
+          category: m.category || "",
           status: m.status || "Active",
-          vendor: m.vendor, // Keep as is from database, don't use fallback here
+          vendor: m.vendor || "",
           batches: materialBatches,
           stock: totalRemainingStock,
           costPerUnit: avgCostPerUnit
