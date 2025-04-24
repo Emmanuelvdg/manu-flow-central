@@ -1,7 +1,6 @@
 
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Material, MaterialBatch } from "@/types/material";
-import { fetchMaterials } from "@/components/recipe/recipeDataUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +17,19 @@ interface RawMaterialFromDB {
   updated_at: string;
 }
 
+// Interface for raw batch data from the database
+interface RawBatchFromDB {
+  id: string;
+  material_id: string;
+  batch_number: string;
+  initial_stock: number;
+  remaining_stock: number;
+  cost_per_unit: number;
+  purchase_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useMaterials = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -27,7 +39,6 @@ export const useMaterials = () => {
   const { data: dbMaterials = [], isLoading, error } = useQuery({
     queryKey: ["materials"],
     queryFn: async () => {
-      // We'll implement our own fetch function here to ensure we're getting all fields
       console.log("Fetching materials directly from database");
       const { data, error } = await supabase
         .from("materials")
@@ -75,69 +86,71 @@ export const useMaterials = () => {
 
   // Sync 'materials' state when DB loads or batches change
   useEffect(() => {
-    if (dbMaterials && dbMaterials.length > 0 && batches) {
-      console.log("Processing materials with their original properties:", dbMaterials);
-      
-      const formattedMaterials: Material[] = dbMaterials.map((m) => {
-        // Find all batches for this material
-        const materialBatches = batches
-          .filter((b) => b.materialId === m.id)
-          .map((b) => ({
-            id: b.id,
-            materialId: b.materialId,
-            batchNumber: b.batchNumber,
-            initialStock: b.initialStock,
-            remainingStock: b.remainingStock,
-            costPerUnit: b.costPerUnit,
-            purchaseDate: b.purchaseDate
-          }));
-        
-        // Calculate total stock and average cost
-        const totalRemainingStock = materialBatches.reduce(
-          (sum, batch) => sum + Number(batch.remainingStock), 
-          0
-        );
-        
-        const totalCost = materialBatches.reduce(
-          (sum, batch) => 
-            sum + (Number(batch.remainingStock) * Number(batch.costPerUnit)), 
-          0
-        );
-        
-        const avgCostPerUnit = totalRemainingStock > 0 
-          ? totalCost / totalRemainingStock 
-          : 0;
-        
-        // Create a Material object from the raw database material
-        const material: Material = {
-          id: m.id,
-          name: m.name,
-          unit: m.unit,
-          category: m.category || "",
-          status: m.status || "Active",
-          vendor: m.vendor || "",
-          batches: materialBatches,
-          stock: totalRemainingStock,
-          costPerUnit: avgCostPerUnit
-        };
-        
-        // Log each material's category and vendor for debugging
-        console.log(`Material ${m.name} - Category: "${m.category}", Vendor: "${m.vendor}"`);
-        
-        return material;
-      });
-      
-      // Debugging to verify data
-      console.log("Formatted materials with categories and vendors:", formattedMaterials);
-      
-      setMaterials(formattedMaterials);
+    if (!dbMaterials || dbMaterials.length === 0) {
+      return;
     }
+    
+    console.log("Processing materials with their original properties:", dbMaterials);
+    
+    const formattedMaterials: Material[] = dbMaterials.map((m) => {
+      // Find all batches for this material
+      const materialBatches = batches
+        .filter((b) => b.materialId === m.id)
+        .map((b) => ({
+          id: b.id,
+          materialId: b.materialId,
+          batchNumber: b.batchNumber,
+          initialStock: b.initialStock,
+          remainingStock: b.remainingStock,
+          costPerUnit: b.costPerUnit,
+          purchaseDate: b.purchaseDate
+        }));
+      
+      // Calculate total stock and average cost
+      const totalRemainingStock = materialBatches.reduce(
+        (sum, batch) => sum + Number(batch.remainingStock), 
+        0
+      );
+      
+      const totalCost = materialBatches.reduce(
+        (sum, batch) => 
+          sum + (Number(batch.remainingStock) * Number(batch.costPerUnit)), 
+        0
+      );
+      
+      const avgCostPerUnit = totalRemainingStock > 0 
+        ? totalCost / totalRemainingStock 
+        : 0;
+      
+      // Create a Material object from the raw database material
+      const material: Material = {
+        id: m.id,
+        name: m.name,
+        unit: m.unit,
+        category: m.category || "",
+        status: m.status || "Active",
+        vendor: m.vendor || "",
+        batches: materialBatches,
+        stock: totalRemainingStock,
+        costPerUnit: avgCostPerUnit
+      };
+      
+      // Log each material's category and vendor for debugging
+      console.log(`Material ${m.name} - Category: "${m.category}", Vendor: "${m.vendor}"`);
+      
+      return material;
+    });
+    
+    // Debugging to verify data
+    console.log("Formatted materials with categories and vendors:", formattedMaterials);
+    
+    setMaterials(formattedMaterials);
   }, [dbMaterials, batches]);
 
   const saveMaterialBatches = async (material: Material) => {
     if (!material.batches) {
-      console.error("No batches array found on material:", material);
-      return;
+      console.log("No batches array found on material:", material);
+      material.batches = []; // Ensure batches is an array even if empty
     }
     
     try {

@@ -21,14 +21,16 @@ export const MaterialsSection = () => {
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
 
   const handleEditMaterial = (material: Material) => {
-    // Create a new object to ensure we don't have reference issues
-    setSelectedMaterial({...material});
+    // Create a deep copy to ensure we don't have reference issues
+    const materialCopy = JSON.parse(JSON.stringify(material));
+    setSelectedMaterial(materialCopy);
     setIsEditDialogOpen(true);
   };
 
   const handleCreateOrder = (material: Material) => {
-    // Create a new object to ensure we don't have reference issues
-    setSelectedMaterial({...material});
+    // Create a deep copy to ensure we don't have reference issues
+    const materialCopy = JSON.parse(JSON.stringify(material));
+    setSelectedMaterial(materialCopy);
     setIsPurchaseDialogOpen(true);
   };
 
@@ -83,40 +85,12 @@ export const MaterialsSection = () => {
       await queryClient.invalidateQueries({ queryKey: ["materials"] });
       await queryClient.invalidateQueries({ queryKey: ["material-batches"] });
       
-      // Calculate the updated stock and cost from the batches
-      const totalRemainingStock = updatedMaterial.batches?.reduce(
-        (sum, batch) => sum + Number(batch.remainingStock), 
-        0
-      ) || 0;
-      
-      const totalCost = updatedMaterial.batches?.reduce(
-        (sum, batch) => 
-          sum + (Number(batch.remainingStock) * Number(batch.costPerUnit)), 
-        0
-      ) || 0;
-      
-      const avgCostPerUnit = totalRemainingStock > 0 
-        ? totalCost / totalRemainingStock 
-        : 0;
-      
-      // Update the local state with the updated material including the calculated values
-      const updatedMaterialWithCalculations = {
-        ...updatedMaterial,
-        stock: totalRemainingStock,
-        costPerUnit: avgCostPerUnit
-      };
-      
-      console.log("Updating local state with:", updatedMaterialWithCalculations);
-      
-      setMaterials(prev => {
-        const filtered = prev.filter((m) => m.id !== updatedMaterial.id);
-        return [...filtered, updatedMaterialWithCalculations];
-      });
-      
       toast({
         title: `Material ${isNewMaterial ? "Added" : "Updated"}`,
         description: `${updatedMaterial.name} has been ${isNewMaterial ? "added" : "updated"} successfully.`,
       });
+      
+      // Don't update local state here - let the query invalidation handle it
     } catch (error) {
       console.error("Error saving material:", error);
       toast({

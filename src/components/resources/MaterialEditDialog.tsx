@@ -39,6 +39,10 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
       console.log("No batches found for material:", material.id);
       setBatches([]);
     }
+    
+    // Reset the form data
+    setFormData({ ...material });
+    
     // Reset the pending batch
     setPendingBatch({
       id: '',
@@ -49,7 +53,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
       costPerUnit: 0,
       purchaseDate: new Date().toISOString().split('T')[0]
     });
-  }, [material]);
+  }, [material, isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -167,10 +171,8 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     onClose();
   };
 
-  // Only show valid batches (with batch numbers) and the pending batch for display
-  const displayBatches = showEmptyBatches 
-    ? [...batches, pendingBatch] 
-    : [...batches.filter(b => b.remainingStock > 0 || !b.batchNumber), pendingBatch];
+  // Display all batches and the pending batch for editing
+  const displayBatches = [...batches];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -206,7 +208,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
             </div>
 
             <BatchesTable
-              batches={displayBatches}
+              batches={[...displayBatches, pendingBatch]}
               showEmptyBatches={true}
               onBatchChange={(id, field, value) => {
                 // If it's the pending batch (empty id), update pending state
