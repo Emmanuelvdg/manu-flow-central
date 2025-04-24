@@ -21,12 +21,14 @@ export const MaterialsSection = () => {
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
 
   const handleEditMaterial = (material: Material) => {
-    setSelectedMaterial(material);
+    // Create a new object to ensure we don't have reference issues
+    setSelectedMaterial({...material});
     setIsEditDialogOpen(true);
   };
 
   const handleCreateOrder = (material: Material) => {
-    setSelectedMaterial(material);
+    // Create a new object to ensure we don't have reference issues
+    setSelectedMaterial({...material});
     setIsPurchaseDialogOpen(true);
   };
 
@@ -145,8 +147,16 @@ export const MaterialsSection = () => {
         selectedMaterial={selectedMaterial}
         isEditDialogOpen={isEditDialogOpen}
         isPurchaseDialogOpen={isPurchaseDialogOpen}
-        onCloseEditDialog={() => setIsEditDialogOpen(false)}
-        onClosePurchaseDialog={() => setIsPurchaseDialogOpen(false)}
+        onCloseEditDialog={() => {
+          setIsEditDialogOpen(false);
+          // Clear the selected material when closing the dialog
+          setSelectedMaterial(null);
+        }}
+        onClosePurchaseDialog={() => {
+          setIsPurchaseDialogOpen(false);
+          // Clear the selected material when closing the dialog
+          setSelectedMaterial(null);
+        }}
         onSaveMaterial={handleSaveMaterial}
         onCreateOrder={handleCreatePurchaseOrder}
       />
