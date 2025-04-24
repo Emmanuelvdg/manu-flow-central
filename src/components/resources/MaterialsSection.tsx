@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Material } from "@/types/material";
 import { MaterialsTable } from "./MaterialsTable";
 import { MaterialsHeader } from "./MaterialsHeader";
