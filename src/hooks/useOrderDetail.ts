@@ -26,9 +26,14 @@ export const useOrderDetail = (orderId: string | undefined) => {
     productsLoading,
     error,
     refetch,
-    syncOrderProducts: () => {
+    syncOrderProducts: async () => {
       if (order?.products) {
-        syncOrderProducts(order.products);
+        // Make sure we're handling products as an array
+        const productsArray = Array.isArray(order.products) 
+          ? order.products 
+          : [order.products];
+        
+        await syncOrderProducts(productsArray);
       }
     }
   };

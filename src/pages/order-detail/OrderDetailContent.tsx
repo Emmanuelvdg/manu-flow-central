@@ -30,6 +30,7 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
   syncOrderProducts
 }) => {
   const { formData, handleChange, handleSaveOrder } = useOrderForm(order, orderId, refetch);
+  const [syncing, setSyncing] = React.useState(false);
 
   // If we're on the root orders page with no specific order ID, show mappings
   const showMappings = orderId === "quote-order-mapping";
@@ -39,6 +40,17 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
   }
 
   const hasNoProducts = !productsLoading && orderProducts.length === 0;
+
+  const handleSyncProducts = async () => {
+    if (!syncOrderProducts) return;
+    
+    try {
+      setSyncing(true);
+      await syncOrderProducts();
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   return (
     <Card>
@@ -59,8 +71,13 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
               <CircleAlert className="h-5 w-5 text-amber-500" />
               <span>No product entries found for this order. Sync to create them from order data.</span>
             </div>
-            <Button onClick={syncOrderProducts} variant="outline" className="bg-amber-100 hover:bg-amber-200">
-              Sync Products
+            <Button 
+              onClick={handleSyncProducts} 
+              variant="outline" 
+              className="bg-amber-100 hover:bg-amber-200"
+              disabled={syncing}
+            >
+              {syncing ? "Syncing..." : "Sync Products"}
             </Button>
           </div>
         )}
