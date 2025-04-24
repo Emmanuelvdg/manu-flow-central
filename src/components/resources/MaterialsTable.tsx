@@ -27,7 +27,8 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       accessorKey: "category",
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
-        return material.category || "-";
+        // Only show dash if category is null, undefined, or truly empty
+        return (material.category && material.category.trim() !== '') ? material.category : "-";
       },
     },
     {
@@ -52,7 +53,8 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       accessorKey: "vendor",
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
-        return material.vendor || "-";
+        // Only show dash if vendor is null, undefined, or truly empty
+        return (material.vendor && material.vendor.trim() !== '') ? material.vendor : "-";
       },
     },
     {

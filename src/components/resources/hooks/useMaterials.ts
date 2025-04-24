@@ -14,7 +14,21 @@ export const useMaterials = () => {
   // Fetch materials from Supabase
   const { data: dbMaterials = [], isLoading, error } = useQuery({
     queryKey: ["materials"],
-    queryFn: fetchMaterials,
+    queryFn: async () => {
+      // We'll implement our own fetch function here to ensure we're getting all fields
+      console.log("Fetching materials directly from database");
+      const { data, error } = await supabase
+        .from("materials")
+        .select("*");
+      
+      if (error) {
+        console.error("Error fetching materials:", error);
+        throw error;
+      }
+      
+      console.log("Raw materials data from database:", data);
+      return data;
+    },
   });
 
   // Fetch batches for all materials
@@ -47,6 +61,8 @@ export const useMaterials = () => {
       // Explicitly cast dbMaterials to Material[] to ensure TypeScript knows what type we're working with
       const typedMaterials = dbMaterials as Material[];
       
+      console.log("Processing materials with their original properties:", typedMaterials);
+      
       const formattedMaterials: Material[] = typedMaterials.map((m) => {
         // Find all batches for this material
         const materialBatches = batches
@@ -77,18 +93,24 @@ export const useMaterials = () => {
           ? totalCost / totalRemainingStock 
           : 0;
         
-        // Make sure we include all properties from the material record
-        return {
+        // Make sure we preserve the original category and vendor values from the database
+        // without applying empty string fallbacks that could cause issues
+        const material = {
           id: m.id,
           name: m.name,
           unit: m.unit,
-          category: m.category || "",
+          category: m.category, // Keep as is from database, don't use fallback here
           status: m.status || "Active",
-          vendor: m.vendor || "",
+          vendor: m.vendor, // Keep as is from database, don't use fallback here
           batches: materialBatches,
           stock: totalRemainingStock,
           costPerUnit: avgCostPerUnit
         };
+        
+        // Log each material's category and vendor for debugging
+        console.log(`Material ${m.name} - Category: "${m.category}", Vendor: "${m.vendor}"`);
+        
+        return material;
       });
       
       // Debugging to verify data
