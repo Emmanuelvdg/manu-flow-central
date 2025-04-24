@@ -74,8 +74,11 @@ export const MaterialsSection = () => {
       // Save material batches
       await saveMaterialBatches(updatedMaterial);
       
+      // Invalidate queries to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: ["materials"] });
+      await queryClient.invalidateQueries({ queryKey: ["material-batches"] });
       
+      // Update the local state with the updated material
       setMaterials(prev => {
         const filtered = prev.filter((m) => m.id !== updatedMaterial.id);
         return [...filtered, updatedMaterial];
