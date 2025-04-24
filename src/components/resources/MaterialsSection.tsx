@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -48,15 +49,15 @@ export const MaterialsSection = () => {
     try {
       const isNewMaterial = !materials.some((m) => m.id === updatedMaterial.id);
       
+      // Only save fields that exist in the database table
       const materialData = {
         id: updatedMaterial.id,
         name: updatedMaterial.name,
         category: updatedMaterial.category,
         unit: updatedMaterial.unit,
         status: updatedMaterial.status,
-        vendor: updatedMaterial.vendor,
-        costPerUnit: updatedMaterial.costPerUnit,
-        stock: updatedMaterial.stock
+        vendor: updatedMaterial.vendor
+        // Remove costPerUnit and stock as they don't exist in the materials table
       };
       
       if (isNewMaterial) {
