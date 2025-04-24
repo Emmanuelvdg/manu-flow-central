@@ -98,13 +98,18 @@ export const useMaterials = () => {
     if (!material.batches) return;
     
     try {
+      console.log(`Saving batches for material: ${material.id}`, material.batches);
+      
       // First delete existing batches
       const { error: deleteError } = await supabase
         .from("material_batches")
         .delete()
         .eq("material_id", material.id);
       
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error("Error deleting existing batches:", deleteError);
+        throw deleteError;
+      }
       
       // Then insert new batches
       if (material.batches.length > 0) {
@@ -117,11 +122,19 @@ export const useMaterials = () => {
           purchase_date: batch.purchaseDate
         }));
         
-        const { error: insertError } = await supabase
-          .from("material_batches")
-          .insert(batchesToInsert);
+        console.log("Inserting batches:", batchesToInsert);
         
-        if (insertError) throw insertError;
+        const { data, error: insertError } = await supabase
+          .from("material_batches")
+          .insert(batchesToInsert)
+          .select();
+        
+        if (insertError) {
+          console.error("Error inserting batches:", insertError);
+          throw insertError;
+        }
+        
+        console.log("Successfully inserted batches:", data);
       }
       
       // Invalidate queries to refresh data
@@ -131,7 +144,7 @@ export const useMaterials = () => {
       console.error("Error saving material batches:", error);
       toast({
         title: "Error",
-        description: "Failed to save material batches",
+        description: `Failed to save material batches: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
       throw error;

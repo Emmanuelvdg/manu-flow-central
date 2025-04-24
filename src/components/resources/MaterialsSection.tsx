@@ -49,6 +49,7 @@ export const MaterialsSection = () => {
 
   const handleSaveMaterial = async (updatedMaterial: Material) => {
     try {
+      console.log("Saving material:", updatedMaterial);
       const isNewMaterial = !materials.some((m) => m.id === updatedMaterial.id);
       
       // Only save fields that exist in the database table
@@ -72,6 +73,8 @@ export const MaterialsSection = () => {
           .eq("id", updatedMaterial.id);
         if (updateError) throw updateError;
       }
+      
+      console.log("Material saved successfully, now saving batches...");
       
       // Save material batches
       await saveMaterialBatches(updatedMaterial);
@@ -102,6 +105,8 @@ export const MaterialsSection = () => {
         stock: totalRemainingStock,
         costPerUnit: avgCostPerUnit
       };
+      
+      console.log("Updating local state with:", updatedMaterialWithCalculations);
       
       setMaterials(prev => {
         const filtered = prev.filter((m) => m.id !== updatedMaterial.id);
