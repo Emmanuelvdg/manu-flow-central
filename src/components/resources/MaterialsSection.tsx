@@ -80,10 +80,32 @@ export const MaterialsSection = () => {
       await queryClient.invalidateQueries({ queryKey: ["materials"] });
       await queryClient.invalidateQueries({ queryKey: ["material-batches"] });
       
-      // Update the local state with the updated material
+      // Calculate the updated stock and cost from the batches
+      const totalRemainingStock = updatedMaterial.batches?.reduce(
+        (sum, batch) => sum + Number(batch.remainingStock), 
+        0
+      ) || 0;
+      
+      const totalCost = updatedMaterial.batches?.reduce(
+        (sum, batch) => 
+          sum + (Number(batch.remainingStock) * Number(batch.costPerUnit)), 
+        0
+      ) || 0;
+      
+      const avgCostPerUnit = totalRemainingStock > 0 
+        ? totalCost / totalRemainingStock 
+        : 0;
+      
+      // Update the local state with the updated material including the calculated values
+      const updatedMaterialWithCalculations = {
+        ...updatedMaterial,
+        stock: totalRemainingStock,
+        costPerUnit: avgCostPerUnit
+      };
+      
       setMaterials(prev => {
         const filtered = prev.filter((m) => m.id !== updatedMaterial.id);
-        return [...filtered, updatedMaterial];
+        return [...filtered, updatedMaterialWithCalculations];
       });
       
       toast({

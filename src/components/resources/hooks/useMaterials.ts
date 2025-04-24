@@ -41,9 +41,9 @@ export const useMaterials = () => {
     }
   });
 
-  // Sync 'materials' state when DB loads
+  // Sync 'materials' state when DB loads or batches change
   useEffect(() => {
-    if (dbMaterials && dbMaterials.length > 0) {
+    if (dbMaterials && dbMaterials.length > 0 && batches) {
       // Explicitly cast dbMaterials to Material[] to ensure TypeScript knows what type we're working with
       const typedMaterials = dbMaterials as Material[];
       
