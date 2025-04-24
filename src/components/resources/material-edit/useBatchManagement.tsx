@@ -15,6 +15,7 @@ export const useBatchManagement = (material: Material) => {
     remainingStock: 0,
     costPerUnit: 0,
     purchaseDate: new Date().toISOString().split('T')[0],
+    deliveredDate: null, // Add the deliveredDate field
     status: 'received' // Default status
   });
 
@@ -36,6 +37,7 @@ export const useBatchManagement = (material: Material) => {
       remainingStock: 0,
       costPerUnit: 0,
       purchaseDate: new Date().toISOString().split('T')[0],
+      deliveredDate: null, // Add the deliveredDate field
       status: 'received' // Default status
     });
   }, [material]);
@@ -120,6 +122,7 @@ export const useBatchManagement = (material: Material) => {
       remainingStock: 0,
       costPerUnit: 0,
       purchaseDate: new Date().toISOString().split('T')[0],
+      deliveredDate: null, // Add the deliveredDate field
       status: 'received' // Default status
     });
 

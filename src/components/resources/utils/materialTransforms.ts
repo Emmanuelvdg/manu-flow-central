@@ -16,6 +16,7 @@ export const transformMaterialWithBatches = (
       remainingStock: b.remainingStock,
       costPerUnit: b.costPerUnit,
       purchaseDate: b.purchaseDate,
+      deliveredDate: b.deliveredDate || null, // Include the deliveredDate field
       status: b.status || 'received' // Include the status field
     }));
     
