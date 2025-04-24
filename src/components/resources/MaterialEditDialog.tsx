@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +18,7 @@ interface MaterialEditDialogProps {
 export function MaterialEditDialog({ material, isOpen, onClose, onSave }: MaterialEditDialogProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<Material>({ ...material });
-  const [batches, setBatches] = useState<MaterialBatch[]>(material.batches || []);
+  const [batches, setBatches] = useState<MaterialBatch[]>([]);
   const [showEmptyBatches, setShowEmptyBatches] = useState(false);
   const [pendingBatch, setPendingBatch] = useState<MaterialBatch>({
     id: '',
@@ -29,6 +29,27 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     costPerUnit: 0,
     purchaseDate: new Date().toISOString().split('T')[0]
   });
+
+  // Load material batches when the dialog opens or material changes
+  useEffect(() => {
+    if (material && material.batches) {
+      console.log("Loading material batches:", material.batches);
+      setBatches(material.batches);
+    } else {
+      console.log("No batches found for material:", material.id);
+      setBatches([]);
+    }
+    // Reset the pending batch
+    setPendingBatch({
+      id: '',
+      materialId: material.id,
+      batchNumber: '',
+      initialStock: 0,
+      remainingStock: 0,
+      costPerUnit: 0,
+      purchaseDate: new Date().toISOString().split('T')[0]
+    });
+  }, [material]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -69,7 +90,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
     console.log("Adding new batch:", newBatch);
     
     // Add the new batch to the list
-    setBatches([...batches, newBatch]);
+    setBatches(prevBatches => [...prevBatches, newBatch]);
     
     // Reset pending batch
     setPendingBatch({
