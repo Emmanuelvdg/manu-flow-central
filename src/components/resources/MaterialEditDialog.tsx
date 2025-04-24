@@ -66,6 +66,8 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
       batchNumber
     };
     
+    console.log("Adding new batch:", newBatch);
+    
     // Add the new batch to the list
     setBatches([...batches, newBatch]);
     
@@ -87,6 +89,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
   };
 
   const handleBatchChange = (id: string, field: keyof MaterialBatch, value: any) => {
+    console.log(`Updating batch ${id}, field ${field} to value:`, value);
     setBatches(batches.map(batch => {
       if (batch.id === id) {
         const updatedBatch = { ...batch, [field]: value };
@@ -100,16 +103,21 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
   };
 
   const handleDeleteBatch = (id: string) => {
+    console.log(`Deleting batch with ID: ${id}`);
     setBatches(batches.filter(batch => batch.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log("Submit button clicked. Current batches:", batches);
+    
     // Prepare batches for submission, filtering out empty pending batch
     const validBatches = batches.filter(batch => 
       batch.batchNumber && batch.batchNumber.trim() !== ''
     );
+    
+    console.log(`Found ${validBatches.length} valid batches out of ${batches.length} total`);
     
     // Calculate total remaining stock and average cost per unit
     const totalRemainingStock = validBatches.reduce(
@@ -129,7 +137,7 @@ export function MaterialEditDialog({ material, isOpen, onClose, onSave }: Materi
       stock: totalRemainingStock
     };
     
-    console.log("Submitting material with batches:", updatedMaterial);
+    console.log("Submitting material with batches:", JSON.stringify(updatedMaterial, null, 2));
     
     // Pass the updated material to the parent component
     await onSave(updatedMaterial);

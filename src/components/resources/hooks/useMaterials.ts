@@ -47,12 +47,18 @@ export const useMaterials = () => {
   const { data: batches = [] } = useQuery({
     queryKey: ["material-batches"],
     queryFn: async () => {
+      console.log("Fetching material batches from database");
       const { data, error } = await supabase
         .from("material_batches")
         .select("*")
         .order('purchase_date', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching material batches:", error);
+        throw error;
+      }
+      
+      console.log("Raw batch data from database:", data);
       
       // Transform Supabase column names to match our TypeScript interface
       return data.map(batch => ({
@@ -129,21 +135,28 @@ export const useMaterials = () => {
   }, [dbMaterials, batches]);
 
   const saveMaterialBatches = async (material: Material) => {
-    if (!material.batches) return;
+    if (!material.batches) {
+      console.error("No batches array found on material:", material);
+      return;
+    }
     
     try {
       console.log(`Saving batches for material: ${material.id}`, material.batches);
       
       // First delete existing batches
-      const { error: deleteError } = await supabase
+      console.log(`Deleting existing batches for material ID: ${material.id}`);
+      const { data: deletedData, error: deleteError } = await supabase
         .from("material_batches")
         .delete()
-        .eq("material_id", material.id);
+        .eq("material_id", material.id)
+        .select();
       
       if (deleteError) {
         console.error("Error deleting existing batches:", deleteError);
         throw deleteError;
       }
+      
+      console.log("Successfully deleted existing batches:", deletedData);
       
       // Then insert new batches
       if (material.batches.length > 0) {
@@ -151,6 +164,8 @@ export const useMaterials = () => {
         const validBatches = material.batches.filter(batch => 
           batch.batchNumber && batch.batchNumber.trim() !== ''
         );
+        
+        console.log(`Found ${validBatches.length} valid batches out of ${material.batches.length} total`);
         
         if (validBatches.length === 0) {
           console.log("No valid batches to insert");
@@ -166,7 +181,7 @@ export const useMaterials = () => {
           purchase_date: batch.purchaseDate
         }));
         
-        console.log("Inserting batches:", batchesToInsert);
+        console.log("Inserting batches:", JSON.stringify(batchesToInsert, null, 2));
         
         const { data, error: insertError } = await supabase
           .from("material_batches")
@@ -179,9 +194,12 @@ export const useMaterials = () => {
         }
         
         console.log("Successfully inserted batches:", data);
+      } else {
+        console.log("No batches to insert for this material");
       }
       
       // Invalidate queries to refresh data
+      console.log("Invalidating material-batches query to refresh data");
       await queryClient.invalidateQueries({ queryKey: ["material-batches"] });
       
     } catch (error) {
