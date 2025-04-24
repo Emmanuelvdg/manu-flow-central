@@ -1,11 +1,17 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { Material, PurchaseOrder } from "@/types/material";
+import { useToast } from "@/hooks/use-toast";
+import { Material, PurchaseOrder, MaterialBatch } from "@/types/material";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface PurchaseOrderDialogProps {
   material: Material;
@@ -14,11 +20,17 @@ interface PurchaseOrderDialogProps {
   onCreateOrder: (order: PurchaseOrder) => void;
 }
 
-export function PurchaseOrderDialog({ material, isOpen, onClose, onCreateOrder }: PurchaseOrderDialogProps) {
+export function PurchaseOrderDialog({ 
+  material, 
+  isOpen, 
+  onClose, 
+  onCreateOrder 
+}: PurchaseOrderDialogProps) {
   const { toast } = useToast();
   const [quantity, setQuantity] = useState<number>(1);
   const [expectedDelivery, setExpectedDelivery] = useState<string>("");
   const [costPerUnit, setCostPerUnit] = useState<number>(material.costPerUnit || 0);
+  const [batchStatus, setBatchStatus] = useState<MaterialBatch['status']>('requested');
   
   const calculateTotalCost = (): number => {
     return quantity * costPerUnit;
@@ -38,11 +50,22 @@ export function PurchaseOrderDialog({ material, isOpen, onClose, onCreateOrder }
       totalCost: calculateTotalCost()
     };
     
+    const newBatch: MaterialBatch = {
+      id: `batch-${Date.now()}`,
+      materialId: material.id,
+      batchNumber: `B${Date.now().toString().slice(-6)}`,
+      initialStock: quantity,
+      remainingStock: quantity,
+      costPerUnit: costPerUnit,
+      purchaseDate: new Date().toISOString().split('T')[0],
+      status: batchStatus
+    };
+
     onCreateOrder(newOrder);
     
     toast({
       title: "Purchase Order Created",
-      description: `Order ${newOrder.id} for ${material.name} has been created.`,
+      description: `Order ${newOrder.id} for ${material.name} has been created with batch status: ${batchStatus}.`,
     });
     
     onClose();
@@ -104,6 +127,23 @@ export function PurchaseOrderDialog({ material, isOpen, onClose, onCreateOrder }
                 onChange={(e) => setExpectedDelivery(e.target.value)}
                 className="col-span-3"
               />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="batchStatus" className="text-right">Batch Status</Label>
+              <Select 
+                value={batchStatus} 
+                onValueChange={(value: MaterialBatch['status']) => setBatchStatus(value)}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select batch status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="requested">Requested</SelectItem>
+                  <SelectItem value="expected">Expected</SelectItem>
+                  <SelectItem value="delayed">Delayed</SelectItem>
+                  <SelectItem value="received">Received</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

@@ -48,7 +48,8 @@ export const useBatchOperations = () => {
           initial_stock: Number(batch.initialStock),
           remaining_stock: Number(batch.remainingStock),
           cost_per_unit: Number(batch.costPerUnit),
-          purchase_date: batch.purchaseDate
+          purchase_date: batch.purchaseDate,
+          status: batch.status  // Include the new status field
         }));
         
         console.log("Inserting batches:", JSON.stringify(batchesToInsert, null, 2));

@@ -182,6 +182,7 @@ export type Database = {
           material_id: string
           purchase_date: string
           remaining_stock: number
+          status: string
           updated_at: string
         }
         Insert: {
@@ -193,6 +194,7 @@ export type Database = {
           material_id: string
           purchase_date: string
           remaining_stock: number
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -204,6 +206,7 @@ export type Database = {
           material_id?: string
           purchase_date?: string
           remaining_stock?: number
+          status?: string
           updated_at?: string
         }
         Relationships: [

@@ -7,27 +7,5 @@ export interface MaterialBatch {
   remainingStock: number;
   costPerUnit: number;
   purchaseDate: string;
-}
-
-export interface Material {
-  id: string;
-  name: string;
-  category: string;
-  unit: string;
-  status: string;
-  vendor: string;
-  costPerUnit: number;
-  stock: number;
-  batches?: MaterialBatch[];
-}
-
-export interface PurchaseOrder {
-  id: string;
-  materialId: string;
-  quantity: number;
-  status: string;
-  orderDate: string;
-  expectedDelivery?: string;
-  vendor: string;
-  totalCost: number;
+  status: 'requested' | 'expected' | 'delayed' | 'received';
 }
