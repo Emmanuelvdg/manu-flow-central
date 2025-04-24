@@ -106,8 +106,10 @@ export const useBatchManagement = (material: Material) => {
       batchNumber
     };
     
+    // Add the new batch to the batches array
     setBatches(prev => [...prev, newBatch]);
     
+    // Reset the pending batch
     setPendingBatch({
       id: '',
       materialId: material.id,

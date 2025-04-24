@@ -20,10 +20,12 @@ export const BatchesTable: React.FC<BatchesTableProps> = ({
   // Create batch columns with the handlers
   const columns = createBatchColumns(onBatchChange, onDeleteBatch);
 
-  // Filter batches based on preferences - don't filter out pending batch (without id)
+  // Filter batches based on preferences but always include pending batch (without id or with empty id)
   const displayBatches = showEmptyBatches
     ? batches
-    : batches.filter(batch => batch.remainingStock > 0 || !batch.id);
+    : batches.filter(batch => 
+        batch.remainingStock > 0 || !batch.id || batch.id === ''
+      );
 
   if (displayBatches.length === 0) {
     return (
