@@ -44,7 +44,10 @@ export const useMaterials = () => {
   // Sync 'materials' state when DB loads
   useEffect(() => {
     if (dbMaterials && dbMaterials.length > 0) {
-      const formattedMaterials: Material[] = dbMaterials.map((m) => {
+      // Explicitly cast dbMaterials to Material[] to ensure TypeScript knows what type we're working with
+      const typedMaterials = dbMaterials as Material[];
+      
+      const formattedMaterials: Material[] = typedMaterials.map((m) => {
         // Find all batches for this material
         const materialBatches = batches
           .filter((b) => b.materialId === m.id)
