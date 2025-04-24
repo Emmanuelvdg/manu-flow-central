@@ -22,7 +22,7 @@ const formSchema = z.object({
   category: z.string().min(2, 'Category must be at least 2 characters'),
   price: z.string().refine((val) => !isNaN(Number(val)), 'Must be a valid number'),
   lead_time: z.string().min(2, 'Lead time is required'),
-  image: z.string().url('Must be a valid URL').or(z.literal('')).default('https://via.placeholder.com/150x100?text=Product'),
+  image: z.string().url('Must be a valid URL').or(z.literal('')).default(''),
 });
 
 type ProductFormData = z.infer<typeof formSchema>;
@@ -37,7 +37,7 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
       category: '',
       price: '',
       lead_time: '',
-      image: 'https://via.placeholder.com/150x100?text=Product',
+      image: '',
     },
   });
 
@@ -50,7 +50,7 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
         category: data.category,
         price: Number(data.price),
         lead_time: data.lead_time,
-        image: data.image,
+        image: data.image || null,
       });
 
     if (error) {
@@ -147,9 +147,16 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
           name="image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL</FormLabel>
+              <FormLabel>Product Image URL</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com/image.jpg" {...field} />
+                <Input 
+                  placeholder="https://example.com/image.jpg" 
+                  {...field} 
+                  onChange={(e) => {
+                    const value = e.target.value.trim();
+                    field.onChange(value);
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
