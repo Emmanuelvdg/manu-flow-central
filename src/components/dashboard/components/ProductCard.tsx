@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { EditProductForm } from '../EditProductForm';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductCardProps {
   product: Product;
@@ -24,6 +25,7 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, quantity }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product>(product);
+  const { toast } = useToast();
   
   // Use the product image or default if not available
   const imageUrl = currentProduct.image || getDefaultProductImage(currentProduct.category);
@@ -33,6 +35,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
     // Refresh the product data when dialog closes using Supabase directly
     const refreshProduct = async () => {
       try {
+        console.log('Refreshing product with ID:', product.id);
         const { data, error } = await supabase
           .from('products')
           .select('*')
@@ -40,13 +43,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
           .single();
           
         if (!error && data) {
+          console.log('Product data from database:', data);
           setCurrentProduct(data);
           console.log('Product refreshed successfully:', data);
         } else {
           console.error('Error refreshing product:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to refresh product data',
+            variant: 'destructive',
+          });
         }
       } catch (err) {
         console.error('Failed to refresh product:', err);
+        toast({
+          title: 'Error',
+          description: 'An unexpected error occurred',
+          variant: 'destructive',
+        });
       }
     };
     

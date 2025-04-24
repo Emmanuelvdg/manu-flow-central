@@ -48,33 +48,47 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
   const onSubmit = async (data: ProductFormData) => {
     console.log('Submitting with image URL:', data.image);
     
-    // Use Supabase to update the product
-    const { error } = await supabase
-      .from('products')
-      .update({
-        name: data.name,
-        category: data.category,
-        price: Number(data.price),
-        lead_time: data.lead_time,
-        image: data.image, // Ensure we're updating the image field
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', product.id);
+    // Ensure currentTimestamp is included to force an update
+    const currentTimestamp = new Date().toISOString();
+    console.log('Updating product with timestamp:', currentTimestamp);
+    
+    try {
+      const { data: updatedData, error } = await supabase
+        .from('products')
+        .update({
+          name: data.name,
+          category: data.category,
+          price: Number(data.price),
+          lead_time: data.lead_time,
+          image: data.image, // Ensure we're updating the image field
+          updated_at: currentTimestamp,
+        })
+        .eq('id', product.id)
+        .select();
 
-    if (error) {
-      console.error('Error updating product:', error);
+      if (error) {
+        console.error('Error updating product:', error);
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      console.log('Product updated successfully:', updatedData);
+      toast({
+        title: 'Success',
+        description: `${data.name} has been updated.`,
+      });
+    } catch (err) {
+      console.error('Exception during product update:', err);
       toast({
         title: 'Error',
-        description: error.message,
+        description: 'An unexpected error occurred',
         variant: 'destructive',
       });
-      return;
     }
-
-    toast({
-      title: 'Success',
-      description: `${data.name} has been updated.`,
-    });
     
     // Close the dialog and refresh product data
     onClose();
