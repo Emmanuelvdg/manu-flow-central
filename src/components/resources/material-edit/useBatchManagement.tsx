@@ -59,8 +59,26 @@ export const useBatchManagement = (material: Material) => {
     }
   };
 
+  const validateBatchData = (batch: MaterialBatch): boolean => {
+    // Check required fields
+    if (!batch.purchaseDate) {
+      return false;
+    }
+    
+    // Check numeric fields are valid
+    if (isNaN(Number(batch.initialStock)) || Number(batch.initialStock) <= 0) {
+      return false;
+    }
+    
+    if (isNaN(Number(batch.costPerUnit)) || Number(batch.costPerUnit) <= 0) {
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleAddBatch = () => {
-    if (!pendingBatch.purchaseDate || pendingBatch.initialStock <= 0 || pendingBatch.costPerUnit <= 0) {
+    if (!validateBatchData(pendingBatch)) {
       toast({
         title: "Invalid Batch Data",
         description: "Please fill in all required fields with valid values.",

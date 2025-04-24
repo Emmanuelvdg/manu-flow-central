@@ -24,6 +24,12 @@ export const BatchManager: React.FC<BatchManagerProps> = ({
   onDeleteBatch,
   onAddBatch,
 }) => {
+  // Filter out the empty pending batch when displaying
+  const displayBatches = [...batches];
+  
+  // Only add the pending batch if we're actively adding a new one
+  const allBatches = pendingBatch.id ? [...displayBatches] : [...displayBatches, pendingBatch];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -50,7 +56,7 @@ export const BatchManager: React.FC<BatchManagerProps> = ({
       </div>
 
       <BatchesTable
-        batches={[...batches, pendingBatch]}
+        batches={allBatches}
         showEmptyBatches={showEmptyBatches}
         onBatchChange={onBatchChange}
         onDeleteBatch={onDeleteBatch}
