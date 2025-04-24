@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PackingListForm } from "./documents/PackingListForm";
 import { DocumentUpload } from "./documents/DocumentUpload";
 import { ExportDeclarationForm } from "./documents/ExportDeclarationForm";
+import { FileText } from "lucide-react";
 
 interface ShippingDocumentsDialogProps {
   open: boolean;
@@ -30,40 +31,50 @@ export const ShippingDocumentsDialog: React.FC<ShippingDocumentsDialogProps> = (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Shipping Documents - Shipment {shipment.id}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold tracking-tight">
+            Shipping Documents - Shipment {shipment.id}
+          </DialogTitle>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-8">
-            <TabsTrigger value="overview" className="col-span-1">Overview</TabsTrigger>
-            <TabsTrigger value="purchase-order" className="col-span-1">Purchase Order</TabsTrigger>
-            <TabsTrigger value="packing-list" className="col-span-1">Packing List</TabsTrigger>
-            <TabsTrigger value="certificate" className="col-span-1">Certificate</TabsTrigger>
-            <TabsTrigger value="export-declaration" className="col-span-1">Export Declaration</TabsTrigger>
-            <TabsTrigger value="license" className="col-span-1">License/Permits</TabsTrigger>
-            <TabsTrigger value="insurance" className="col-span-1">Insurance</TabsTrigger>
-            <TabsTrigger value="delivery" className="col-span-1">Delivery</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-8 h-12 items-center">
+            <TabsTrigger value="overview" className="text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="purchase-order" className="text-sm">Purchase Order</TabsTrigger>
+            <TabsTrigger value="packing-list" className="text-sm">Packing List</TabsTrigger>
+            <TabsTrigger value="certificate" className="text-sm">Certificate</TabsTrigger>
+            <TabsTrigger value="export-declaration" className="text-sm">Export Declaration</TabsTrigger>
+            <TabsTrigger value="license" className="text-sm">License/Permits</TabsTrigger>
+            <TabsTrigger value="insurance" className="text-sm">Insurance</TabsTrigger>
+            <TabsTrigger value="delivery" className="text-sm">Delivery</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview">
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Required Documents</h3>
-              <ul className="list-disc pl-5 space-y-2">
-                <li>Purchase Order</li>
-                <li>Packing List</li>
-                <li>Certificate of Origin</li>
-                {requiresExportDeclaration && <li>Export Declaration</li>}
-                <li>Export License/Permits (if applicable)</li>
-                {requiresInsuranceCertificate && <li>Insurance Certificate</li>}
-                {requiresBillOfLading && <li>Bill of Lading (B/L)</li>}
-                <li>Delivery Order</li>
-              </ul>
+          <TabsContent value="overview" className="mt-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Required Documents</h3>
+                <ul className="space-y-3">
+                  {[
+                    { title: "Purchase Order", icon: FileText },
+                    { title: "Packing List", icon: FileText },
+                    { title: "Certificate of Origin", icon: FileText },
+                    ...(requiresExportDeclaration ? [{ title: "Export Declaration", icon: FileText }] : []),
+                    { title: "Export License/Permits (if applicable)", icon: FileText },
+                    ...(requiresInsuranceCertificate ? [{ title: "Insurance Certificate", icon: FileText }] : []),
+                    ...(requiresBillOfLading ? [{ title: "Bill of Lading (B/L)", icon: FileText }] : []),
+                    { title: "Delivery Order", icon: FileText },
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-center gap-2 text-sm">
+                      <item.icon className="h-4 w-4 text-primary" />
+                      <span>{item.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               
-              <div className="bg-muted p-4 rounded-md">
-                <h4 className="font-medium mb-2">Document Status</h4>
+              <div className="bg-muted/50 rounded-lg p-4 border">
+                <h4 className="font-medium mb-2 text-sm">Document Status</h4>
                 <p className="text-sm text-muted-foreground">
-                  Based on the incoterms {quoteIncoterms ? quoteIncoterms.toUpperCase() : 'N/A'}, 
+                  Based on the incoterms {quoteIncoterms.toUpperCase()}, 
                   please complete all required documents.
                 </p>
               </div>
