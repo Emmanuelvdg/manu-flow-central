@@ -55,7 +55,7 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         category: data.category,
         price: Number(data.price),
         lead_time: data.lead_time,
-        image: data.image || null, // Make sure to use the actual image value, not null if it exists
+        image: data.image, // Store the image URL properly
         updated_at: new Date().toISOString(),
       })
       .eq('id', product.id);
@@ -73,6 +73,8 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
       title: 'Success',
       description: `${data.name} has been updated.`,
     });
+    
+    // This ensures the parent component gets the updated product
     onClose();
   };
 
