@@ -7,6 +7,7 @@ import { QuoteDetailCustomerFields } from "./QuoteDetailCustomerFields";
 import { QuoteDetailProductsSection } from "./QuoteDetailProductsSection";
 import { QuoteShippingSection } from "./components/QuoteShippingSection";
 import { QuotePaymentSection } from "./components/QuotePaymentSection";
+import { QuoteLegalSection } from "./components/QuoteLegalSection";
 import { useQuoteForm } from "./hooks/useQuoteForm";
 
 export interface QuoteDetailFormProps {
@@ -69,6 +70,25 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
           setStatus={setters.setStatus}
         />
       </div>
+
+      <QuoteLegalSection
+        performanceGuarantees={formState.performanceGuarantees}
+        setPerformanceGuarantees={setters.setPerformanceGuarantees}
+        showPerformanceGuarantees={formState.showPerformanceGuarantees}
+        setShowPerformanceGuarantees={setters.setShowPerformanceGuarantees}
+        latePaymentPenalties={formState.latePaymentPenalties}
+        setLatePaymentPenalties={setters.setLatePaymentPenalties}
+        showLatePaymentPenalties={formState.showLatePaymentPenalties}
+        setShowLatePaymentPenalties={setters.setShowLatePaymentPenalties}
+        disputeResolutionMethod={formState.disputeResolutionMethod}
+        setDisputeResolutionMethod={setters.setDisputeResolutionMethod}
+        governingLaw={formState.governingLaw}
+        setGoverningLaw={setters.setGoverningLaw}
+        forceMajeureTerms={formState.forceMajeureTerms}
+        setForceMajeureTerms={setters.setForceMajeureTerms}
+        showForceMajeureTerms={formState.showForceMajeureTerms}
+        setShowForceMajeureTerms={setters.setShowForceMajeureTerms}
+      />
 
       <CardFooter className="px-0 pb-0">
         <div className="w-full flex justify-end gap-2">

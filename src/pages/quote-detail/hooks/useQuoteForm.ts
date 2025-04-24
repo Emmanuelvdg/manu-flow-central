@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { migrateProducts } from "../quoteDetailUtils";
-import { RFQProductItem } from "../quoteDetailUtils";
 
 export interface UseQuoteFormProps {
   initialData?: any;
@@ -18,7 +16,6 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
   const { toast } = useToast();
   const isNew = !id || id === "create";
 
-  // Form state
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -35,8 +32,15 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
   const [depositPercentage, setDepositPercentage] = useState(30);
   const [quoteNumber, setQuoteNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [performanceGuarantees, setPerformanceGuarantees] = useState("");
+  const [showPerformanceGuarantees, setShowPerformanceGuarantees] = useState(false);
+  const [latePaymentPenalties, setLatePaymentPenalties] = useState("");
+  const [showLatePaymentPenalties, setShowLatePaymentPenalties] = useState(false);
+  const [disputeResolutionMethod, setDisputeResolutionMethod] = useState("arbitration");
+  const [governingLaw, setGoverningLaw] = useState("");
+  const [forceMajeureTerms, setForceMajeureTerms] = useState("");
+  const [showForceMajeureTerms, setShowForceMajeureTerms] = useState(false);
 
-  // Initialize form with data if editing or coming from RFQ
   useEffect(() => {
     if (initialData) {
       setCustomerName(initialData.customer_name || "");
@@ -54,6 +58,14 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
       setRiskLevel(initialData.risk_level || "Low");
       setDepositPercentage(initialData.deposit_percentage || 30);
       setQuoteNumber(initialData.quote_number || "");
+      setPerformanceGuarantees(initialData.performance_guarantees || "");
+      setShowPerformanceGuarantees(!!initialData.performance_guarantees);
+      setLatePaymentPenalties(initialData.late_payment_penalties || "");
+      setShowLatePaymentPenalties(!!initialData.late_payment_penalties);
+      setDisputeResolutionMethod(initialData.dispute_resolution_method || "arbitration");
+      setGoverningLaw(initialData.governing_law || "");
+      setForceMajeureTerms(initialData.force_majeure_terms || "");
+      setShowForceMajeureTerms(!!initialData.force_majeure_terms);
     } else if (rfqData) {
       setCustomerName(rfqData.customerName || "");
       setCustomerEmail(rfqData.customerEmail || "");
@@ -69,7 +81,6 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
     }
   }, [initialData, rfqData]);
 
-  // Generate quote number for new quotes
   useEffect(() => {
     if (isNew && !quoteNumber) {
       setQuoteNumber(`Q-${Date.now()}`);
@@ -101,6 +112,11 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
         risk_level: riskLevel,
         deposit_percentage: depositPercentage,
         quote_number: quoteNumber,
+        performance_guarantees: showPerformanceGuarantees ? performanceGuarantees : null,
+        late_payment_penalties: showLatePaymentPenalties ? latePaymentPenalties : null,
+        dispute_resolution_method: disputeResolutionMethod,
+        governing_law: governingLaw,
+        force_majeure_terms: showForceMajeureTerms ? forceMajeureTerms : null,
       };
       
       let result;
@@ -156,7 +172,6 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
     try {
       setIsSubmitting(true);
       
-      // Update status to submitted
       const { error } = await supabase
         .from("quotes")
         .update({ status: "submitted" })
@@ -169,10 +184,8 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
         description: `Quote ${quoteNumber} has been submitted and is ready for acceptance.`,
       });
       
-      // Refresh the status locally
       setStatus("submitted");
       
-      // Navigate back to the quotes list
       navigate("/quotes");
     } catch (error: any) {
       console.error("Error submitting quote:", error);
@@ -207,7 +220,15 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
       quoteNumber,
       isSubmitting,
       isNew,
-      isFormValid
+      isFormValid,
+      performanceGuarantees,
+      showPerformanceGuarantees,
+      latePaymentPenalties,
+      showLatePaymentPenalties,
+      disputeResolutionMethod,
+      governingLaw,
+      forceMajeureTerms,
+      showForceMajeureTerms
     },
     setters: {
       setCustomerName,
@@ -223,7 +244,15 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: Use
       setShippingMethod,
       setEstimatedDelivery,
       setRiskLevel,
-      setDepositPercentage
+      setDepositPercentage,
+      setPerformanceGuarantees,
+      setShowPerformanceGuarantees,
+      setLatePaymentPenalties,
+      setShowLatePaymentPenalties,
+      setDisputeResolutionMethod,
+      setGoverningLaw,
+      setForceMajeureTerms,
+      setShowForceMajeureTerms
     },
     handleSave,
     handleSubmitQuote
