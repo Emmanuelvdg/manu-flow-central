@@ -48,6 +48,7 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
   const onSubmit = async (data: ProductFormData) => {
     console.log('Submitting with image URL:', data.image);
     
+    // Use Supabase to update the product
     const { error } = await supabase
       .from('products')
       .update({
@@ -55,12 +56,13 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         category: data.category,
         price: Number(data.price),
         lead_time: data.lead_time,
-        image: data.image, // Store the image URL properly
+        image: data.image, // Ensure we're updating the image field
         updated_at: new Date().toISOString(),
       })
       .eq('id', product.id);
 
     if (error) {
+      console.error('Error updating product:', error);
       toast({
         title: 'Error',
         description: error.message,
@@ -74,7 +76,7 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
       description: `${data.name} has been updated.`,
     });
     
-    // This ensures the parent component gets the updated product
+    // Close the dialog and refresh product data
     onClose();
   };
 

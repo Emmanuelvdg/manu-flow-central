@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,7 +23,9 @@ interface ProductCardProps {
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, quantity }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(product);
+  const [currentProduct, setCurrentProduct] = useState<Product>(product);
+  
+  // Use the product image or default if not available
   const imageUrl = currentProduct.image || getDefaultProductImage(currentProduct.category);
 
   // Handle dialog closing and product updates
@@ -51,6 +53,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
     refreshProduct();
     setIsEditDialogOpen(false);
   };
+
+  // When the product prop changes, update the currentProduct state
+  useEffect(() => {
+    setCurrentProduct(product);
+  }, [product]);
 
   return (
     <>
