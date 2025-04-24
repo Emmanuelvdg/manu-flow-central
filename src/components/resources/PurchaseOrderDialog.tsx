@@ -58,7 +58,8 @@ export function PurchaseOrderDialog({
       remainingStock: quantity,
       costPerUnit: costPerUnit,
       purchaseDate: newOrder.orderDate,
-      status: 'requested'
+      deliveredDate: expectedDelivery,
+      status: batchStatus
     };
 
     onCreateOrder(newOrder, newBatch);

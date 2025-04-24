@@ -7,6 +7,7 @@ export interface MaterialBatch {
   remainingStock: number;
   costPerUnit: number;
   purchaseDate: string;
+  deliveredDate: string | null;
   status: 'requested' | 'expected' | 'delayed' | 'received';
 }
 
