@@ -483,6 +483,50 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variants: {
+        Row: {
+          attributes: Json
+          created_at: string
+          id: string
+          image: string | null
+          inventory: number | null
+          price: number | null
+          product_id: string
+          sku: string
+          updated_at: string
+        }
+        Insert: {
+          attributes?: Json
+          created_at?: string
+          id?: string
+          image?: string | null
+          inventory?: number | null
+          price?: number | null
+          product_id: string
+          sku: string
+          updated_at?: string
+        }
+        Update: {
+          attributes?: Json
+          created_at?: string
+          id?: string
+          image?: string | null
+          inventory?: number | null
+          price?: number | null
+          product_id?: string
+          sku?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       productions: {
         Row: {
           created_at: string
@@ -532,34 +576,40 @@ export type Database = {
           category: string | null
           created_at: string
           description: string | null
+          hasvariants: boolean | null
           id: string
           image: string | null
           lead_time: string | null
           name: string
           price: number | null
           updated_at: string
+          varianttypes: Json | null
         }
         Insert: {
           category?: string | null
           created_at?: string
           description?: string | null
+          hasvariants?: boolean | null
           id: string
           image?: string | null
           lead_time?: string | null
           name: string
           price?: number | null
           updated_at?: string
+          varianttypes?: Json | null
         }
         Update: {
           category?: string | null
           created_at?: string
           description?: string | null
+          hasvariants?: boolean | null
           id?: string
           image?: string | null
           lead_time?: string | null
           name?: string
           price?: number | null
           updated_at?: string
+          varianttypes?: Json | null
         }
         Relationships: []
       }
