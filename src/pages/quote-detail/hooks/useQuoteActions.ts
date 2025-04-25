@@ -1,11 +1,10 @@
-
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { QuoteFormState } from "../types/quoteTypes";
 
 interface UseQuoteActionsProps {
-  id?: string;
+  id?: string; 
   formState: QuoteFormState;
   setIsSubmitting: (value: boolean) => void;
   setStatus: (value: string) => void;
@@ -46,10 +45,10 @@ export const useQuoteActions = ({
         risk_level: formState.riskLevel,
         deposit_percentage: formState.depositPercentage,
         quote_number: formState.quoteNumber,
-        performance_guarantees: formState.showPerformanceGuarantees ? formState.performanceGuarantees : null,
-        late_payment_penalties: formState.showLatePaymentPenalties ? formState.latePaymentPenalties : null,
         dispute_resolution_method: formState.disputeResolutionMethod,
         governing_law: formState.governingLaw,
+        performance_guarantees: formState.showPerformanceGuarantees ? formState.performanceGuarantees : null,
+        late_payment_penalties: formState.showLatePaymentPenalties ? formState.latePaymentPenalties : null,
         force_majeure_terms: formState.showForceMajeureTerms ? formState.forceMajeureTerms : null,
       };
       

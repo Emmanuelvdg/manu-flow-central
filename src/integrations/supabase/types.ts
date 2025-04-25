@@ -571,10 +571,15 @@ export type Database = {
           customer_email: string | null
           customer_name: string
           deposit_percentage: number | null
+          dispute_resolution_method: string | null
           estimated_delivery: string | null
+          force_majeure_terms: string | null
+          governing_law: string | null
           id: string
           incoterms: string | null
+          late_payment_penalties: string | null
           payment_terms: string | null
+          performance_guarantees: string | null
           products: Json
           quote_number: string
           rfq_id: string | null
@@ -591,10 +596,15 @@ export type Database = {
           customer_email?: string | null
           customer_name: string
           deposit_percentage?: number | null
+          dispute_resolution_method?: string | null
           estimated_delivery?: string | null
+          force_majeure_terms?: string | null
+          governing_law?: string | null
           id?: string
           incoterms?: string | null
+          late_payment_penalties?: string | null
           payment_terms?: string | null
+          performance_guarantees?: string | null
           products: Json
           quote_number: string
           rfq_id?: string | null
@@ -611,10 +621,15 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string
           deposit_percentage?: number | null
+          dispute_resolution_method?: string | null
           estimated_delivery?: string | null
+          force_majeure_terms?: string | null
+          governing_law?: string | null
           id?: string
           incoterms?: string | null
+          late_payment_penalties?: string | null
           payment_terms?: string | null
+          performance_guarantees?: string | null
           products?: Json
           quote_number?: string
           rfq_id?: string | null
