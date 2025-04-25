@@ -1,63 +1,71 @@
 
-import React from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-interface OrderFormData {
-  customerName: string;
-  status: string;
-  shippingAddress: string;
-}
-
-export const useOrderForm = (order: any, orderId: string, refetch: () => void) => {
+export const useOrderForm = (order: any, orderId: string, refetch: () => Promise<void>) => {
   const { toast } = useToast();
-  const [formData, setFormData] = React.useState<OrderFormData>({
-    customerName: "",
-    status: "Processing",
-    shippingAddress: "",
-  });
+  const [formData, setFormData] = useState(order || {});
 
-  React.useEffect(() => {
-    if (order) {
-      console.log("Setting form data from order:", order);
-      setFormData({
-        customerName: order.customer_name || "",
-        status: order.status || "Processing",
-        shippingAddress: order.shipping_address || "",
-      });
+  const updateMaterialAllocations = async (
+    orderId: string,
+    status: string,
+    materials: any[]
+  ) => {
+    if (!['booked', 'requested', 'expected'].includes(status)) {
+      // Delete existing allocations if status is not one of these
+      await supabase
+        .from('material_allocations')
+        .delete()
+        .eq('order_id', orderId);
+      return;
     }
-  }, [order]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Create or update allocations
+    const allocations = materials.map(material => ({
+      order_id: orderId,
+      material_id: material.materialId,
+      quantity: material.quantity,
+      allocation_type: status
+    }));
+
+    await supabase
+      .from('material_allocations')
+      .upsert(allocations, { onConflict: 'order_id,material_id' });
+  };
+
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSaveOrder = async () => {
-    if (!order) return;
     try {
-      // Use the order's internal UUID (order.id) rather than the displayed orderId
       const { error } = await supabase
         .from('orders')
-        .update({
-          customer_name: formData.customerName,
-          status: formData.status,
-          shipping_address: formData.shippingAddress,
-        })
-        .eq('id', order.id);
+        .update(formData)
+        .eq('id', orderId);
+
       if (error) throw error;
+
+      // Update material allocations based on order status
+      if (order?.products) {
+        const materials = order.products.flatMap((product: any) => 
+          product.materials || []
+        );
+        await updateMaterialAllocations(orderId, formData.status, materials);
+      }
+
+      await refetch();
       
       toast({
-        title: "Order updated",
-        description: `Order #${orderId} has been successfully updated.`,
+        title: "Success",
+        description: "Order updated successfully",
       });
-      
-      refetch();
-    } catch (err) {
-      console.error("Error updating order:", err);
+    } catch (error) {
+      console.error("Error updating order:", error);
       toast({
-        title: "Update failed",
-        description: "Could not update the order. Please try again.",
+        title: "Error",
+        description: "Failed to update order",
         variant: "destructive",
       });
     }

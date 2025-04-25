@@ -1,8 +1,9 @@
-
 import React from "react";
 import { DataTable, Column, ColumnCellProps } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/button";
 import { Material } from "@/types/material";
+import { useMaterialAllocations, calculateAvailableStock } from "./hooks/useMaterialAllocations";
+import { Badge } from "@/components/ui/badge";
 
 interface MaterialsTableProps {
   materials: Material[];
@@ -17,6 +18,8 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
   onCreateOrder,
   formatCurrency,
 }) => {
+  const { data: allocations = [] } = useMaterialAllocations();
+
   const materialColumns: Column<Material>[] = [
     {
       header: "Name",
@@ -27,7 +30,6 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       accessorKey: "category",
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
-        // Only show dash if category is null, undefined, or truly empty
         return (material.category && material.category.trim() !== '') ? material.category : "-";
       },
     },
@@ -36,8 +38,27 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       accessorKey: "stock",
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
-        const stock = material.stock || 0;
-        return `${stock} ${material.unit}`;
+        const materialAllocations = allocations.filter(a => a.material_id === material.id);
+        const { totalStock, allocatedStock, availableStock } = calculateAvailableStock(
+          material.batches || [],
+          materialAllocations
+        );
+
+        return (
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span>{availableStock} {material.unit}</span>
+              <Badge variant="outline" className="text-xs">
+                Available
+              </Badge>
+            </div>
+            {allocatedStock > 0 && (
+              <div className="text-sm text-muted-foreground">
+                ({allocatedStock} {material.unit} allocated)
+              </div>
+            )}
+          </div>
+        );
       },
     },
     {
@@ -53,7 +74,6 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       accessorKey: "vendor",
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
-        // Only show dash if vendor is null, undefined, or truly empty
         return (material.vendor && material.vendor.trim() !== '') ? material.vendor : "-";
       },
     },

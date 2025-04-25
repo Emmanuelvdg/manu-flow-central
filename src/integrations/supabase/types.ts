@@ -172,6 +172,36 @@ export type Database = {
         }
         Relationships: []
       }
+      material_allocations: {
+        Row: {
+          allocation_type: string
+          created_at: string
+          id: string
+          material_id: string
+          order_id: string
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          allocation_type: string
+          created_at?: string
+          id?: string
+          material_id: string
+          order_id: string
+          quantity: number
+          updated_at?: string
+        }
+        Update: {
+          allocation_type?: string
+          created_at?: string
+          id?: string
+          material_id?: string
+          order_id?: string
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       material_batches: {
         Row: {
           batch_number: string
