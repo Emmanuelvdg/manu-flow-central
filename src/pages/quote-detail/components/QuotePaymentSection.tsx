@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { calculateRisk, getRecommendedDeposit } from '@/utils/riskCalculator';
 
 interface QuotePaymentSectionProps {
   paymentTerms: string;
@@ -10,6 +11,7 @@ interface QuotePaymentSectionProps {
   setRiskLevel: (level: string) => void;
   status: string;
   setStatus: (status: string) => void;
+  incoterms: string;
 }
 
 export const QuotePaymentSection: React.FC<QuotePaymentSectionProps> = ({
@@ -20,7 +22,8 @@ export const QuotePaymentSection: React.FC<QuotePaymentSectionProps> = ({
   riskLevel,
   setRiskLevel,
   status,
-  setStatus
+  setStatus,
+  incoterms
 }) => {
   const STATUS_OPTIONS = [
     { label: "Draft", value: "draft" },
@@ -28,6 +31,24 @@ export const QuotePaymentSection: React.FC<QuotePaymentSectionProps> = ({
     { label: "Accepted", value: "accepted" },
     { label: "Rejected", value: "rejected" },
   ];
+
+  // Calculate risk level and deposit whenever incoterms or payment terms change
+  useEffect(() => {
+    const mappedPaymentTerm = paymentTerms === 'open' ? 'open' : 
+                             paymentTerms === 'advance' ? 'advance' : 
+                             paymentTerms === 'lc' ? 'lc' : '';
+
+    const mappedIncoterm = incoterms === 'cif' ? 'cif' :
+                          incoterms === 'ddp' ? 'ddp' :
+                          incoterms === 'exw' ? 'exw' :
+                          incoterms === 'fob' ? 'fob' : '';
+
+    const calculatedRisk = calculateRisk(mappedIncoterm as any, mappedPaymentTerm as any);
+    setRiskLevel(calculatedRisk);
+    
+    const recommendedDeposit = getRecommendedDeposit(calculatedRisk);
+    setDepositPercentage(recommendedDeposit);
+  }, [incoterms, paymentTerms, setRiskLevel, setDepositPercentage]);
 
   return (
     <div className="space-y-4">
@@ -41,7 +62,6 @@ export const QuotePaymentSection: React.FC<QuotePaymentSectionProps> = ({
             onChange={(e) => setPaymentTerms(e.target.value)}
           >
             <option value="open">Open Account (Net 30)</option>
-            <option value="cod">Cash on Delivery</option>
             <option value="advance">Advance Payment</option>
             <option value="lc">Letter of Credit</option>
           </select>
@@ -52,25 +72,21 @@ export const QuotePaymentSection: React.FC<QuotePaymentSectionProps> = ({
             type="number" 
             min="0" 
             max="100"
-            className="w-full rounded border p-2"
+            className="w-full rounded border p-2 bg-gray-50"
             value={depositPercentage}
-            onChange={(e) => setDepositPercentage(parseInt(e.target.value || "0"))}
+            readOnly
           />
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">Risk Level</label>
-          <select 
-            className="w-full rounded border p-2"
-            value={riskLevel}
-            onChange={(e) => setRiskLevel(e.target.value)}
-          >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-            <option value="Very High">Very High</option>
-          </select>
+          <input
+            type="text"
+            className="w-full rounded border p-2 bg-gray-50"
+            value={riskLevel || 'Not calculated'}
+            readOnly
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Status</label>

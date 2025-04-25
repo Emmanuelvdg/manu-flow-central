@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ export interface QuoteDetailFormProps {
 export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData }) => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const navigate = useNavigate(); // Added useNavigate hook
+  const navigate = useNavigate();
   const rfqData = location.state?.fromRFQ;
   const rfqIdForShipment = location.state?.rfqIdForShipment;
 
@@ -68,6 +67,7 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
           setRiskLevel={setters.setRiskLevel}
           status={formState.status}
           setStatus={setters.setStatus}
+          incoterms={formState.incoterms}
         />
       </div>
 

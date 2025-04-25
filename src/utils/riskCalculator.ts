@@ -1,6 +1,6 @@
 
 type PaymentTerm = 'advance' | 'lc' | 'open';
-type Incoterm = 'cif' | 'ddp' | 'fob' | 'exw';
+type Incoterm = 'cif' | 'ddp' | 'exw' | 'fob';
 type RiskLevel = 'Very Low' | 'Low' | 'Medium' | 'High' | 'Very High';
 
 const riskMatrix: Record<Incoterm, Record<PaymentTerm, RiskLevel>> = {
@@ -37,7 +37,7 @@ export const getRecommendedDeposit = (riskLevel: RiskLevel | ''): number => {
     case 'Very High':
       return 50;
     case 'Medium':
-      return 20;
+      return 25;
     case 'Low':
     case 'Very Low':
       return 10;
