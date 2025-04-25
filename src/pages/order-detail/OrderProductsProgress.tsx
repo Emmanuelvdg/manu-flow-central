@@ -1,8 +1,12 @@
-
 import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CheckCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { checkMaterialAvailability, updateOrderMaterialStatus } from "@/services/materialReservationService";
+import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatches";
 
 // Types for normalized order product
 type OrderProductRow = {
@@ -30,17 +34,85 @@ type OrderProductRow = {
 interface OrderProductsProgressProps {
   productsLoading: boolean;
   orderProducts: OrderProductRow[];
+  orderId: string;
 }
 
 export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
   productsLoading,
   orderProducts,
+  orderId
 }) => {
-  console.log("OrderProductsProgress rendering with:", orderProducts);
-  
+  const { toast } = useToast();
+  const { data: batches = [] } = useMaterialBatches();
+  const [checking, setChecking] = React.useState(false);
+
+  // Group batches by material ID
+  const materialBatches = React.useMemo(() => {
+    return batches.reduce((acc: any, batch) => {
+      if (!acc[batch.materialId]) {
+        acc[batch.materialId] = [];
+      }
+      acc[batch.materialId].push(batch);
+      return acc;
+    }, {});
+  }, [batches]);
+
+  const handleCheckMaterials = async () => {
+    try {
+      setChecking(true);
+      const status = await checkMaterialAvailability(orderProducts, materialBatches);
+      await updateOrderMaterialStatus(orderId, status);
+      
+      toast({
+        title: "Materials Checked",
+        description: `Reservation status: ${status}`,
+      });
+    } catch (error) {
+      console.error('Error checking materials:', error);
+      toast({
+        title: "Error",
+        description: "Failed to check materials",
+        variant: "destructive",
+      });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  // Helper function to get status badge color
+  const getStatusBadgeColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'booked': return 'bg-green-100 text-green-800';
+      case 'expected': return 'bg-blue-100 text-blue-800';
+      case 'requested': return 'bg-yellow-100 text-yellow-800';
+      case 'delayed': return 'bg-orange-100 text-orange-800';
+      case 'not enough': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="border rounded-lg p-4 space-y-4 mt-6">
-      <h3 className="font-semibold">Products & Progress</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="font-semibold">Products & Progress</h3>
+        <div className="flex items-center gap-4">
+          <Badge 
+            variant="outline" 
+            className={getStatusBadgeColor(orderProducts[0]?.materials_status || 'not booked')}
+          >
+            {orderProducts[0]?.materials_status || 'Not booked'}
+          </Badge>
+          <Button
+            onClick={handleCheckMaterials}
+            disabled={checking || productsLoading}
+            className="gap-2"
+          >
+            <CheckCircle className="h-4 w-4" />
+            {checking ? 'Checking...' : 'Check Materials'}
+          </Button>
+        </div>
+      </div>
+
       {productsLoading ? (
         <div className="text-muted-foreground italic text-center py-2">Loading products...</div>
       ) : orderProducts.length === 0 ? (

@@ -114,6 +114,7 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
         <OrderProductsProgress 
           productsLoading={productsLoading}
           orderProducts={orderProducts}
+          orderId={orderId}
         />
       </CardContent>
     </Card>
