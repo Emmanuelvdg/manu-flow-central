@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { OrderMetaForm } from "./OrderMetaForm";
@@ -64,6 +65,9 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
     }
   };
 
+  // Normalize parts_status for consistent display
+  const normalizedPartsStatus = order.parts_status ? order.parts_status.toLowerCase() : 'not booked';
+
   return (
     <Card>
       <CardHeader>
@@ -113,7 +117,10 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
         
         <OrderProductsProgress 
           productsLoading={productsLoading}
-          orderProducts={orderProducts}
+          orderProducts={orderProducts.map(p => ({
+            ...p,
+            materials_status: normalizedPartsStatus // Ensure consistent status display
+          }))}
           orderId={orderId}
         />
       </CardContent>

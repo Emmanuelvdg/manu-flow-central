@@ -6,15 +6,37 @@ import { supabase } from "@/integrations/supabase/client";
 export const useOrderForm = (order: any, orderId: string, refetch: () => Promise<void>) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState(() => {
-    // Initialize form data with quote information if available
-    if (order?.quotes) {
+    // Initialize form data based on order or quote information if available
+    if (order) {
+      let shippingAddress = order.shipping_address || '';
+      
+      // If the quote has shipping method and incoterms, use that for the address
+      // if no proper shipping address is available
+      if (order.quotes && 
+          (!shippingAddress || shippingAddress.includes('fob') || shippingAddress.includes('FOB'))) {
+        const quoteShippingMethod = order.quotes.shipping_method;
+        const quoteIncoterms = order.quotes.incoterms;
+        
+        if (order.quotes.shipping_address) {
+          // Use quote's shipping address if available
+          shippingAddress = order.quotes.shipping_address;
+        } else if (quoteShippingMethod || quoteIncoterms) {
+          // Format a proper shipping address from the available information
+          const shipInfo = [];
+          if (order.quotes.company_name) shipInfo.push(order.quotes.company_name);
+          if (order.quotes.customer_name) shipInfo.push(order.quotes.customer_name);
+          if (order.quotes.location) shipInfo.push(order.quotes.location);
+          shippingAddress = shipInfo.join(', ');
+        }
+      }
+      
       return {
-        customerName: order.quotes.customer_name || order.customer_name || '',
+        customerName: order.customer_name || (order.quotes?.customer_name || ''),
         status: order.status || 'created',
-        shippingAddress: order.shipping_address || '',
+        shippingAddress: shippingAddress,
       };
     }
-    return order || {};
+    return {};
   });
 
   const updateMaterialAllocations = async (
@@ -22,7 +44,7 @@ export const useOrderForm = (order: any, orderId: string, refetch: () => Promise
     status: string,
     materials: any[]
   ) => {
-    if (!['booked', 'requested', 'expected'].includes(status)) {
+    if (!['booked', 'requested', 'expected'].includes(status.toLowerCase())) {
       // Delete existing allocations if status is not one of these
       await supabase
         .from('material_allocations')
@@ -36,7 +58,7 @@ export const useOrderForm = (order: any, orderId: string, refetch: () => Promise
       order_id: orderId,
       material_id: material.materialId,
       quantity: material.quantity,
-      allocation_type: status
+      allocation_type: status.toLowerCase()
     }));
 
     await supabase

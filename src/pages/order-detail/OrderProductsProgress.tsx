@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
@@ -81,7 +82,8 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
 
   // Helper function to get status badge color
   const getStatusBadgeColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
       case 'booked': return 'bg-green-100 text-green-800';
       case 'expected': return 'bg-blue-100 text-blue-800';
       case 'requested': return 'bg-yellow-100 text-yellow-800';
@@ -91,6 +93,9 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
     }
   };
 
+  // Get the order level material status
+  const orderPartsStatus = orderProducts[0]?.materials_status || 'not booked';
+  
   return (
     <div className="border rounded-lg p-4 space-y-4 mt-6">
       <div className="flex justify-between items-center">
@@ -98,9 +103,9 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
         <div className="flex items-center gap-4">
           <Badge 
             variant="outline" 
-            className={getStatusBadgeColor(orderProducts[0]?.materials_status || 'not booked')}
+            className={getStatusBadgeColor(orderPartsStatus)}
           >
-            {orderProducts[0]?.materials_status || 'Not booked'}
+            {orderPartsStatus}
           </Badge>
           <Button
             onClick={handleCheckMaterials}
@@ -139,9 +144,6 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
                     'bg-gray-100 text-gray-800'
                   }>
                     {product.status.replace('_', ' ')}
-                  </Badge>
-                  <Badge variant="outline" className="ml-2 bg-orange-100 text-orange-800">
-                    {product.materials_status}
                   </Badge>
                 </div>
               </div>

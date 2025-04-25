@@ -7,7 +7,7 @@ import { OrderDetailContent } from "./order-detail/OrderDetailContent";
 import { useOrderDetail } from "@/hooks/useOrderDetail";
 import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatches";
 import { useMaterials } from "@/components/resources/hooks/useMaterials";
-import { updateOrderMaterialsStatus } from "@/utils/materialUtils";
+import { checkMaterialAvailability, updateOrderMaterialStatus } from "@/services/materialReservationService";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,7 +32,6 @@ const OrderDetail = () => {
 
   // Fetch materials and their batches
   const { data: batches } = useMaterialBatches();
-  const { materials } = useMaterials();
 
   React.useEffect(() => {
     if (!orderProducts || !batches || orderProducts.length === 0 || !order) return;
@@ -48,10 +47,10 @@ const OrderDetail = () => {
 
     // Calculate and update order status
     const updateStatus = async () => {
-      const newStatus = await updateOrderMaterialsStatus(orderProducts, materialBatches);
-      
-      if (order?.parts_status !== newStatus) {
-        try {
+      try {
+        const newStatus = await checkMaterialAvailability(orderProducts, materialBatches);
+        
+        if (order?.parts_status !== newStatus) {
           // Use the actual UUID of the order, not the order_number
           const { error } = await supabase
             .from('orders')
@@ -62,30 +61,16 @@ const OrderDetail = () => {
 
           refetch();
           
-          toast({
-            title: "Status Updated",
-            description: `Order parts status updated to ${newStatus}`,
-          });
-        } catch (err) {
-          console.error("Error updating order status:", err);
-          toast({
-            title: "Update Failed",
-            description: "Failed to update order status",
-            variant: "destructive",
-          });
+          console.log(`Status updated from ${order?.parts_status} to ${newStatus}`);
         }
+      } catch (err) {
+        console.error("Error updating order status:", err);
       }
     };
 
+    // Only run this on initial load or when batches/products change
     updateStatus();
-  }, [orderProducts, batches, order?.parts_status]);
-
-  // Run debug mapping on initial load
-  React.useEffect(() => {
-    if (order && !isQuoteOrderMapping) {
-      console.log(`Initial recipe mapping check for order ${orderId}`);
-    }
-  }, [order, orderId, isQuoteOrderMapping]);
+  }, [orderProducts, batches, order?.id]);
 
   return (
     <MainLayout title={isQuoteOrderMapping ? "Quote-Order Mappings" : `Order Detail - ${orderId}`}>
@@ -100,7 +85,6 @@ const OrderDetail = () => {
             productsLoading={productsLoading}
             orderProducts={orderProducts}
             refetch={async () => {
-              // Wrap the refetch call in an async function
               await Promise.resolve(refetch());
             }}
             syncOrderProducts={syncOrderProducts}

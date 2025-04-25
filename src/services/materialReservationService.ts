@@ -56,10 +56,16 @@ export const updateOrderMaterialStatus = async (
   status: ReservationStatus
 ): Promise<void> => {
   try {
+    // Normalize status format for consistency across the application
+    // This ensures the status is stored consistently in the database
+    const normalizedStatus = status.toLowerCase();
+    
     await supabase
       .from('orders')
-      .update({ parts_status: status })
+      .update({ parts_status: normalizedStatus })
       .eq('id', orderId);
+      
+    console.log(`Updated order ${orderId} parts_status to: ${normalizedStatus}`);
   } catch (error) {
     console.error('Error updating order material status:', error);
     throw error;
