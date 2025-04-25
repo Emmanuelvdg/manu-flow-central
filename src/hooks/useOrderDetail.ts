@@ -31,7 +31,9 @@ export const useOrderDetail = (orderId: string | undefined) => {
         // Make sure we're handling products as an array
         const productsArray = Array.isArray(order.products) 
           ? order.products 
-          : [order.products];
+          : typeof order.products === 'object' && order.products !== null
+            ? [order.products]
+            : [];
         
         await syncOrderProducts(productsArray);
       }

@@ -15,7 +15,7 @@ interface OrderDetailContentProps {
   error: Error | null;
   productsLoading: boolean;
   orderProducts: any[];
-  refetch: () => void;
+  refetch: () => Promise<void>;
   syncOrderProducts?: () => Promise<void>;
 }
 
@@ -68,7 +68,7 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
         {hasNoProducts && syncOrderProducts && (
           <div className="mt-4 mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CircleAlert className="h-5 w-5 text-amber-500" />
+              <CircleAlert className="h-5 w-4 text-amber-500" />
               <span>No product entries found for this order. Sync to create them from order data.</span>
             </div>
             <Button 

@@ -91,7 +91,10 @@ const OrderDetail = () => {
             error={error}
             productsLoading={productsLoading}
             orderProducts={orderProducts}
-            refetch={refetch}
+            refetch={async () => {
+              // Wrap the refetch call in an async function
+              await Promise.resolve(refetch());
+            }}
             syncOrderProducts={syncOrderProducts}
           />
         </div>
