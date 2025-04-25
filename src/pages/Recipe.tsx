@@ -79,45 +79,80 @@ const Recipe = () => {
       setLoading(true);
       
       try {
-        // Check if the ID is a productID that matches our mock data
+        // First check if the ID is a product ID in our mock data
         if (mockRecipes[id as keyof typeof mockRecipes]) {
           setRecipe(mockRecipes[id as keyof typeof mockRecipes]);
           return;
         }
 
-        // If not in mock data, try to fetch from database
-        const { data, error } = await supabase
-          .from('recipes')
-          .select('*')
-          .or(`id.eq.${id},product_id.eq.${id}`)
-          .maybeSingle();
-          
-        if (error) throw error;
+        console.log(`Fetching recipe for ID: ${id}`);
         
-        if (data) {
-          // If found in DB, convert to mock recipe format
+        // If not in mock data, try to fetch from database
+        // First, check if the ID is a direct recipe ID (UUID format)
+        let recipeData = null;
+        
+        if (id && id.includes('-')) {
+          // Looks like a UUID, try to fetch recipe by ID
+          const { data: recipeById, error: recipeByIdError } = await supabase
+            .from('recipes')
+            .select('*')
+            .eq('id', id)
+            .maybeSingle();
+            
+          if (recipeByIdError) {
+            console.error("Error fetching recipe by ID:", recipeByIdError);
+          } else if (recipeById) {
+            recipeData = recipeById;
+            console.log("Found recipe by ID:", recipeData);
+          }
+        } 
+        
+        // If we didn't find it by ID, try by product_id
+        if (!recipeData) {
+          const { data: recipeByProductId, error: productError } = await supabase
+            .from('recipes')
+            .select('*')
+            .eq('product_id', id)
+            .maybeSingle();
+            
+          if (productError) {
+            console.error("Error fetching recipe by product_id:", productError);
+          } else if (recipeByProductId) {
+            recipeData = recipeByProductId;
+            console.log("Found recipe by product_id:", recipeData);
+          }
+        }
+        
+        if (recipeData) {
+          // Convert to our recipe display format
           const dbRecipe = {
-            id: data.id,
-            productName: data.product_name,
-            // Use a default group if no field exists in the DB record
-            group: "Product Recipe", // Changed from data.category to a default value
-            materials: Array.isArray(data.materials) ? data.materials : [],
-            personnel: Array.isArray(data.personnel) ? data.personnel : [],
-            machines: Array.isArray(data.machines) ? data.machines : [],
+            id: recipeData.id,
+            productName: recipeData.product_name || recipeData.name,
+            group: "Product Recipe",
+            materials: Array.isArray(recipeData.materials) ? recipeData.materials : [],
+            personnel: Array.isArray(recipeData.personnel) ? recipeData.personnel : [],
+            machines: Array.isArray(recipeData.machines) ? recipeData.machines : [],
           };
           setRecipe(dbRecipe);
         } else {
-          // Fallback to default recipe if nothing found
-          setRecipe(mockRecipes["WT"]);
           console.error(`No recipe found for ID: ${id}`);
           toast({
             title: "Recipe not found",
-            description: `Using default recipe. No recipe was found for ID: ${id}`,
+            description: `No recipe was found for ID: ${id}`,
+            variant: "destructive"
           });
+          
+          // Don't fallback to default recipe anymore
+          setRecipe(null);
         }
       } catch (error) {
         console.error("Error fetching recipe:", error);
-        setRecipe(mockRecipes["WT"]);
+        toast({
+          title: "Error loading recipe",
+          description: "There was a problem loading the recipe. Please try again.",
+          variant: "destructive"
+        });
+        setRecipe(null);
       } finally {
         setLoading(false);
       }
@@ -164,6 +199,35 @@ const Recipe = () => {
     );
   }
 
+  if (!recipe) {
+    return (
+      <MainLayout title="Recipe Not Found">
+        <div className="space-y-5">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/recipes">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Recipes
+            </Link>
+          </Button>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="text-amber-500 mb-4 text-6xl">⚠️</div>
+                <h2 className="text-2xl font-semibold mb-2">Recipe Not Found</h2>
+                <p className="text-muted-foreground mb-6">
+                  We couldn't find a recipe for the product ID: {id}
+                </p>
+                <Button asChild>
+                  <Link to="/recipes">View All Recipes</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout title="Product Recipe Mapping">
       <div className="space-y-5">
@@ -180,29 +244,27 @@ const Recipe = () => {
           </Button>
         </div>
 
-        {recipe && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{recipe.productName} ({recipe.id})</CardTitle>
-              <div className="text-sm text-muted-foreground">{recipe.group}</div>
-            </CardHeader>
-            <CardContent>
-              <RequirementsSection
-                materials={recipe.materials}
-                personnel={recipe.personnel}
-                machines={recipe.machines}
-                onAddMaterial={handleAddMaterial}
-                onAddPersonnel={handleAddPersonnel}
-                onAddMachine={handleAddMachine}
-              />
-              <RecipeFullTable
-                materials={recipe.materials}
-                personnel={recipe.personnel}
-                machines={recipe.machines}
-              />
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">{recipe.productName} ({recipe.id})</CardTitle>
+            <div className="text-sm text-muted-foreground">{recipe.group}</div>
+          </CardHeader>
+          <CardContent>
+            <RequirementsSection
+              materials={recipe.materials}
+              personnel={recipe.personnel}
+              machines={recipe.machines}
+              onAddMaterial={handleAddMaterial}
+              onAddPersonnel={handleAddPersonnel}
+              onAddMachine={handleAddMachine}
+            />
+            <RecipeFullTable
+              materials={recipe.materials}
+              personnel={recipe.personnel}
+              machines={recipe.machines}
+            />
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

@@ -149,7 +149,7 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
               </div>
               {product.recipe_id ? (
                 <Link 
-                  to={`/recipes/${product.product_id}`}
+                  to={`/recipes/${product.recipe_id}`}
                   className="text-sm text-blue-600 hover:underline hover:text-blue-800"
                 >
                   View Recipe
