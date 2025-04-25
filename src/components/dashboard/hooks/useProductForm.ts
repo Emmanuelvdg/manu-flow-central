@@ -27,9 +27,9 @@ interface UseProductFormProps {
 
 export function useProductForm({ product, onClose }: UseProductFormProps) {
   const { toast } = useToast();
-  const [variantTypes, setVariantTypes] = useState<VariantType[]>(
-    parseJsonField(product.varianttypes) || []
-  );
+  // Cast the varianttypes explicitly to avoid type errors
+  const parsedVariantTypes = parseJsonField(product.varianttypes as any) || [];
+  const [variantTypes, setVariantTypes] = useState<VariantType[]>(parsedVariantTypes);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingVariantsLoaded, setExistingVariantsLoaded] = useState(false);

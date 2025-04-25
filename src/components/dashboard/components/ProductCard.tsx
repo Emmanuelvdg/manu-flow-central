@@ -73,7 +73,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
           // Transform the data to match our Product type
           const transformedProduct = {
             ...data,
-            varianttypes: parseJsonField(data.varianttypes)
+            // Explicitly cast varianttypes to any before parsing to avoid type issues
+            varianttypes: parseJsonField(data.varianttypes as any)
           } as Product;
           
           setCurrentProduct(transformedProduct);
