@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { OrderMetaForm } from "./OrderMetaForm";
@@ -6,7 +5,7 @@ import { OrderProductsProgress } from "./OrderProductsProgress";
 import { OrderDetailState } from "./components/OrderDetailState";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { Button } from "@/components/ui/button";
-import { CircleAlert, Tool } from "lucide-react";
+import { CircleAlert, Wrench } from "lucide-react";
 
 interface OrderDetailContentProps {
   order: any;
@@ -35,7 +34,6 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
   const [syncing, setSyncing] = React.useState(false);
   const [fixing, setFixing] = React.useState(false);
 
-  // If we're on the root orders page with no specific order ID, show mappings
   const showMappings = orderId === "quote-order-mapping";
 
   if (isLoading || error || !order || showMappings) {
@@ -106,7 +104,7 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
                 disabled={fixing}
                 size="sm"
               >
-                <Tool className="h-4 w-4 mr-2" />
+                <Wrench className="h-4 w-4 mr-2" />
                 {fixing ? "Fixing Mappings..." : "Fix Recipe Mappings"}
               </Button>
             </div>
