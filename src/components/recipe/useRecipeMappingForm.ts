@@ -29,6 +29,7 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
   const [materialList, setMaterialList] = useState<MaterialOption[]>([]);
   const [personnelRoleList, setPersonnelRoleList] = useState<PersonnelRoleOption[]>([]);
   const [loading, setLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Form fields
   const [productId, setProductId] = useState("");
@@ -51,6 +52,7 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
   useEffect(() => {
     const loadData = async () => {
       if (!open) return;
+      
       setLoading(true);
       try {
         const [products, materials, personnelRoles] = await Promise.all([
@@ -58,10 +60,15 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
           fetchMaterials(),
           fetchPersonnelRoles()
         ]);
+        
         setProductList(products);
         setMaterialList(materials);
         setPersonnelRoleList(personnelRoles);
+        setDataLoaded(true);
+        
+        console.log("Loaded products:", products);
       } catch (error) {
+        console.error("Error loading data:", error);
         toast({
           title: "Error loading data",
           description: "Could not load products and materials. Using fallback data.",
@@ -71,13 +78,15 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
         setLoading(false);
       }
     };
+    
     loadData();
   }, [open, toast]);
 
   // Populate/reset form on open/recipe change
   useEffect(() => {
-    if (initialRecipe) {
+    if (initialRecipe && dataLoaded) {
       console.log("Initializing form with recipe:", initialRecipe);
+      
       setProductId(initialRecipe.product_id || "");
       setProductName(initialRecipe.product_name || "");
       setName(initialRecipe.name || "");
@@ -85,7 +94,17 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
       setMaterials(initialRecipe.materials || []);
       setPersonnel(initialRecipe.personnel || []);
       setMachines(initialRecipe.machines || []);
-    } else {
+      
+      // Verify the product exists in the list
+      const matchingProduct = productList.find(p => p.id === initialRecipe.product_id);
+      console.log(`Product ${initialRecipe.product_id} exists in list: ${Boolean(matchingProduct)}`);
+      console.log("Product list size when setting initial values:", productList.length);
+      
+      if (!matchingProduct && initialRecipe.product_id) {
+        console.log(`Product ${initialRecipe.product_id} not found in product list`);
+      }
+    } else if (!initialRecipe && open) {
+      // Reset form when opening the modal for a new recipe
       setProductId("");
       setProductName("");
       setName("");
@@ -94,13 +113,17 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
       setPersonnel([]);
       setMachines([]);
     }
-    setShowMaterials(true);
-    setShowPersonnel(false);
-    setShowMachines(false);
-    setEditingMaterial(null);
-    setEditingPersonnel(null);
-    setEditingMachine(null);
-  }, [initialRecipe, open]);
+    
+    // Always reset UI state
+    if (open) {
+      setShowMaterials(true);
+      setShowPersonnel(false);
+      setShowMachines(false);
+      setEditingMaterial(null);
+      setEditingPersonnel(null);
+      setEditingMachine(null);
+    }
+  }, [initialRecipe, open, dataLoaded, productList]);
 
   // Material handlers
   const handleAddMaterial = () => setEditingMaterial({ id: "", name: "", quantity: 1, unit: "" });
@@ -163,6 +186,7 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
   const handleProductChange = (id: string) => {
     console.log("Product changed to:", id);
     setProductId(id);
+    
     const prod = productList.find(p => p.id === id);
     
     if (prod) {

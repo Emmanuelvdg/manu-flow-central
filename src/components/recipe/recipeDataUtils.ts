@@ -20,14 +20,19 @@ export interface PersonnelRoleOption {
 // Fetch products from the backend
 export async function fetchProducts(): Promise<ProductOption[]> {
   try {
+    console.log("Fetching products from database...");
     const { data, error } = await supabase
       .from('products')
       .select('id, name')
       .order('name');
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching products from database:", error);
+      throw error;
+    }
 
     if (data && data.length > 0) {
+      console.log(`Fetched ${data.length} products from database`);
       return data.map(product => ({
         id: product.id,
         name: product.name
@@ -35,6 +40,7 @@ export async function fetchProducts(): Promise<ProductOption[]> {
     }
 
     // Fallback to mock data if no database results
+    console.log("No products found in database, using fallback data");
     return [
       { id: "PFP_5L", name: "Packaged Food Product, 5L Canister" },
       { id: "WT", name: "Wooden Table" },
@@ -54,14 +60,19 @@ export async function fetchProducts(): Promise<ProductOption[]> {
 // Fetch materials from the backend
 export async function fetchMaterials(): Promise<MaterialOption[]> {
   try {
+    console.log("Fetching materials from database...");
     const { data, error } = await supabase
       .from('materials')
       .select('id, name, unit')
       .order('name');
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching materials from database:", error);
+      throw error;
+    }
 
     if (data && data.length > 0) {
+      console.log(`Fetched ${data.length} materials from database`);
       return data.map(material => ({
         id: material.id,
         name: material.name,
@@ -70,6 +81,7 @@ export async function fetchMaterials(): Promise<MaterialOption[]> {
     }
 
     // Fallback to mock data if no database results
+    console.log("No materials found in database, using fallback data");
     return [
       { id: "mat-001", name: "Aluminum Sheet 1mm", unit: "sqm" },
       { id: "mat-002", name: "Copper Wire 2mm", unit: "m" },
@@ -95,18 +107,24 @@ export async function fetchMaterials(): Promise<MaterialOption[]> {
 // Fetch personnel roles
 export async function fetchPersonnelRoles(): Promise<PersonnelRoleOption[]> {
   try {
+    console.log("Fetching personnel roles from database...");
     const { data, error } = await supabase
       .from('personnel_roles')
       .select('id, role')
       .order('role');
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching personnel roles from database:", error);
+      throw error;
+    }
 
     if (data && data.length > 0) {
+      console.log(`Fetched ${data.length} personnel roles from database`);
       return data;
     }
 
     // Fallback to default roles if no database results
+    console.log("No personnel roles found in database, using fallback data");
     return [
       { id: "1", role: "Operator" },
       { id: "2", role: "Quality Control" },

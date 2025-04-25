@@ -25,6 +25,7 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
         productId={form.productId}
         onProductChange={form.handleProductChange}
         disabled={form.isEditing || form.loading}
+        loading={form.loading}
       />
       <div>
         <label className="block text-sm font-medium mb-1">Recipe Name<span className="text-red-500">*</span></label>
