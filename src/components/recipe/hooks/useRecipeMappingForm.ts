@@ -1,165 +1,237 @@
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { insertRecipe, updateRecipe, Recipe } from "../recipeUtils";
-import { useRecipeReferenceData } from "./useRecipeReferenceData";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useMaterialsManagement } from "./useMaterialsManagement";
 import { usePersonnelManagement } from "./usePersonnelManagement";
 import { useMachineManagement } from "./useMachineManagement";
+import { useRecipeReferenceData } from "./useRecipeReferenceData";
 
 export function useRecipeMappingForm(
-  open: boolean, 
-  initialRecipe?: Recipe | null, 
-  onSuccess?: () => void, 
-  onClose?: () => void
+  isOpen: boolean,
+  initialRecipe: any,
+  onSuccess: () => void,
+  onClose: () => void
 ) {
-  const { toast } = useToast();
-  const { 
-    productList, 
-    materialList, 
-    personnelRoleList, 
-    loading, 
-    dataLoaded 
-  } = useRecipeReferenceData(open);
-
-  const materialsManager = useMaterialsManagement();
-  const personnelManager = usePersonnelManagement();
-  const machinesManager = useMachineManagement();
-
+  // States for form fields
   const [productId, setProductId] = useState("");
   const [productName, setProductName] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [variantId, setVariantId] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
-  // Product select handler
+  // Reuse existing hooks for managing recipe components
+  const { 
+    materials, setMaterials,
+    showMaterials, setShowMaterials,
+    editingMaterial, setEditingMaterial,
+    handleAddMaterial, handleEditMaterial, handleSaveMaterial, handleDeleteMaterial
+  } = useMaterialsManagement();
+  
+  const { 
+    personnel, setPersonnel,
+    showPersonnel, setShowPersonnel,
+    editingPersonnel, setEditingPersonnel,
+    handleAddPersonnel, handleEditPersonnel, handleSavePersonnel, handleDeletePersonnel
+  } = usePersonnelManagement();
+  
+  const { 
+    machines, setMachines,
+    showMachines, setShowMachines,
+    editingMachine, setEditingMachine,
+    handleAddMachine, handleEditMachine, handleSaveMachine, handleDeleteMachine
+  } = useMachineManagement();
+
+  // Reference data (products, materials, personnel)
+  const { productList, materialList, personnelRoleList, loading: refDataLoading } = useRecipeReferenceData();
+  
+  // Toast for notifications
+  const { toast } = useToast();
+
+  // Is this an edit operation?
+  const isEditing = !!initialRecipe;
+
+  // Reset form when modal opens/closes or when editing a different recipe
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(refDataLoading);
+      
+      if (initialRecipe) {
+        console.log("Setting up form for editing recipe:", initialRecipe);
+        // Populate form with initial recipe data
+        setProductId(initialRecipe.product_id || "");
+        setProductName(initialRecipe.product_name || "");
+        setName(initialRecipe.name || "");
+        setDescription(initialRecipe.description || "");
+        setVariantId(initialRecipe.variantId || "");
+        
+        // Set recipe components
+        setMaterials(initialRecipe.materials || []);
+        setPersonnel(initialRecipe.personnel || []);
+        setMachines(initialRecipe.machines || []);
+      } else {
+        // Reset form for new recipe
+        setProductId("");
+        setProductName("");
+        setName("");
+        setDescription("");
+        setVariantId("");
+        setMaterials([]);
+        setPersonnel([]);
+        setMachines([]);
+      }
+    }
+  }, [isOpen, initialRecipe, refDataLoading]);
+
+  // Handle product selection
   const handleProductChange = (id: string) => {
     console.log("Product changed to:", id);
     setProductId(id);
     
-    const prod = productList.find(p => p.id === id);
-    
-    if (prod) {
-      console.log("Found product in list:", prod);
-      setProductName(prod.name);
+    // Try to find the product in the list to get its name
+    const product = productList.find(p => p.id === id);
+    if (product) {
+      console.log("Found product:", product);
+      setProductName(product.name);
+      // Auto-set recipe name if empty
+      if (!name) {
+        setName(`${product.name} Recipe`);
+      }
     } else {
-      console.log("Product not found in list, keeping name:", productName);
+      console.log("Product not found in list");
     }
+    
+    // Reset variant when product changes
+    setVariantId("");
   };
 
-  // Populate/reset form on open/recipe change
-  useEffect(() => {
-    if (initialRecipe && dataLoaded) {
-      console.log("Initializing form with recipe:", initialRecipe);
-      
-      setProductId(initialRecipe.product_id || "");
-      setProductName(initialRecipe.product_name || "");
-      setName(initialRecipe.name || "");
-      setDescription(initialRecipe.description || "");
-      materialsManager.setMaterials(initialRecipe.materials || []);
-      personnelManager.setPersonnel(initialRecipe.personnel || []);
-      machinesManager.setMachines(initialRecipe.machines || []);
-      
-      const matchingProduct = productList.find(p => p.id === initialRecipe.product_id);
-      console.log(`Product ${initialRecipe.product_id} exists in list: ${Boolean(matchingProduct)}`);
-      console.log("Product list size when setting initial values:", productList.length);
-      
-      if (!matchingProduct && initialRecipe.product_id) {
-        console.log(`Product ${initialRecipe.product_id} not found in product list`);
-      }
-    } else if (!initialRecipe && open) {
-      // Reset form when opening the modal for a new recipe
-      setProductId("");
-      setProductName("");
-      setName("");
-      setDescription("");
-      materialsManager.setMaterials([]);
-      personnelManager.setPersonnel([]);
-      machinesManager.setMachines([]);
-    }
-    
-    // Always reset UI state
-    if (open) {
-      materialsManager.setShowMaterials(true);
-      personnelManager.setShowPersonnel(false);
-      machinesManager.setShowMachines(false);
-      materialsManager.setEditingMaterial(null);
-      personnelManager.setEditingPersonnel(null);
-      machinesManager.setEditingMachine(null);
-    }
-  }, [initialRecipe, open, dataLoaded, productList]);
-
-  // Submit handler
-  const isEditing = Boolean(initialRecipe);
-
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productId || !name) {
-      toast({ 
-        title: "Missing required fields", 
-        description: "Product ID and Recipe Name are required",
-        variant: "destructive"
-      });
-      return;
-    }
     
-    const finalProductName = productName || (isEditing && initialRecipe ? initialRecipe.product_name : "");
-    
-    if (!finalProductName) {
+    if (!productId) {
       toast({
-        title: "Product name missing",
-        description: "Could not determine product name",
+        title: "Error",
+        description: "Please select a product",
         variant: "destructive"
       });
       return;
     }
     
-    const payload = {
-      product_id: productId,
-      product_name: finalProductName,
-      name,
-      description,
-      materials: materialsManager.materials,
-      personnel: personnelManager.personnel,
-      machines: machinesManager.machines,
-    };
+    if (!name) {
+      toast({
+        title: "Error",
+        description: "Please enter a recipe name",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setLoading(true);
     
     try {
-      if (isEditing && initialRecipe) {
-        await updateRecipe(initialRecipe.id, { ...payload });
-        toast({ title: "Success", description: "Recipe updated successfully" });
+      const recipeData = {
+        product_id: productId,
+        product_name: productName,
+        name,
+        description,
+        materials,
+        personnel,
+        machines,
+        variantId: variantId || null
+      };
+      
+      console.log("Saving recipe:", recipeData);
+      
+      if (isEditing) {
+        // Update existing recipe
+        const { error } = await supabase
+          .from("recipes")
+          .update(recipeData)
+          .eq("id", initialRecipe.id);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Recipe Updated",
+          description: `${name} has been updated successfully.`
+        });
       } else {
-        await insertRecipe(payload);
-        toast({ title: "Success", description: "Recipe created successfully" });
+        // Create new recipe
+        const { error } = await supabase
+          .from("recipes")
+          .insert(recipeData);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Recipe Created",
+          description: `${name} has been created successfully.`
+        });
       }
-      onSuccess?.();
-      onClose?.();
-    } catch (err: any) {
+      
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      console.error("Error saving recipe:", error);
       toast({
-        title: "Error saving recipe",
-        description: err.message || "An error occurred",
+        title: "Error",
+        description: error.message || "An error occurred while saving the recipe",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
+    productId,
+    productName,
+    name,
+    description,
+    variantId,
+    materials,
+    personnel,
+    machines,
     productList,
     materialList,
     personnelRoleList,
-    loading,
-    productId,
-    setProductId,
-    productName,
-    setProductName,
-    name,
-    setName,
-    description,
-    setDescription,
-    handleProductChange,
-    handleSubmit,
+    showMaterials,
+    showPersonnel,
+    showMachines,
+    editingMaterial,
+    editingPersonnel,
+    editingMachine,
+    loading: loading || refDataLoading,
     isEditing,
-    ...materialsManager,
-    ...personnelManager,
-    ...machinesManager
+    setProductId,
+    setProductName,
+    setName,
+    setDescription,
+    setVariantId,
+    setMaterials,
+    setPersonnel,
+    setMachines,
+    setShowMaterials,
+    setShowPersonnel,
+    setShowMachines,
+    setEditingMaterial,
+    setEditingPersonnel,
+    setEditingMachine,
+    handleSubmit,
+    handleProductChange,
+    handleAddMaterial,
+    handleEditMaterial,
+    handleSaveMaterial,
+    handleDeleteMaterial,
+    handleAddPersonnel,
+    handleEditPersonnel,
+    handleSavePersonnel,
+    handleDeletePersonnel,
+    handleAddMachine,
+    handleEditMachine,
+    handleSaveMachine,
+    handleDeleteMachine
   };
 }

@@ -19,6 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 export interface CartItem {
   product: Product;
   quantity: number;
+  variantId?: string;
+  variant?: Record<string, any>;
 }
 
 export const ProductCatalog = () => {
@@ -28,26 +30,68 @@ export const ProductCatalog = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [productVariants, setProductVariants] = useState<Record<string, any[]>>({});
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('name');
+      setLoading(true);
       
-      if (error) {
+      try {
+        // Fetch products with variant types
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('name');
+        
+        if (error) {
+          toast({
+            title: "Error loading products",
+            description: error.message,
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+        
+        setProducts(data || []);
+        
+        // Fetch variants for products that have them
+        const productsWithVariants = (data || []).filter(p => p.hasVariants);
+        if (productsWithVariants.length > 0) {
+          // Get all product IDs with variants
+          const productIds = productsWithVariants.map(p => p.id);
+          
+          // Fetch all variants for these products
+          const { data: variantsData, error: variantsError } = await supabase
+            .from('product_variants')
+            .select('*')
+            .in('productId', productIds);
+            
+          if (!variantsError && variantsData) {
+            // Group variants by product ID
+            const variantsByProduct: Record<string, any[]> = {};
+            variantsData.forEach(variant => {
+              if (!variantsByProduct[variant.productId]) {
+                variantsByProduct[variant.productId] = [];
+              }
+              variantsByProduct[variant.productId].push(variant);
+            });
+            
+            setProductVariants(variantsByProduct);
+          }
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching products:", err);
         toast({
           title: "Error loading products",
-          description: error.message,
+          description: "An unexpected error occurred",
           variant: "destructive"
         });
-        return;
+        setLoading(false);
       }
-      
-      setProducts(data || []);
-      setLoading(false);
     };
 
     fetchProducts();
@@ -61,47 +105,80 @@ export const ProductCatalog = () => {
 
   const categories = Array.from(new Set(products.map(p => p.category)));
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, variantId?: string) => {
     setCartItems(prev => {
-      const idx = prev.findIndex(item => item.product.id === product.id);
+      // If product has variants and no variant is selected, alert user
+      if (product.hasVariants && !variantId) {
+        toast({
+          title: "Select Variant",
+          description: "Please select a product variant before adding to RFQ",
+          variant: "destructive",
+        });
+        return prev;
+      }
+      
+      // Find the variant object if variantId is provided
+      let variant = undefined;
+      if (variantId && productVariants[product.id]) {
+        variant = productVariants[product.id].find(v => v.id === variantId);
+      }
+      
+      // Check if item exists in cart (same product and same variant if applicable)
+      const idx = prev.findIndex(item => 
+        item.product.id === product.id && 
+        ((!variantId && !item.variantId) || (item.variantId === variantId))
+      );
+      
       if (idx === -1) {
+        // Item not in cart
         toast({
           title: "Added to RFQ",
-          description: `${product.name} has been added to your quote request.`,
+          description: `${product.name}${variant ? ` (${formatVariantAttributes(variant.attributes)})` : ''} has been added to your quote request.`,
         });
-        return [...prev, { product, quantity: 1 }];
+        return [...prev, { product, quantity: 1, variantId, variant }];
       } else {
+        // Item already in cart, increase quantity
         const newCart = [...prev];
         newCart[idx].quantity += 1;
         toast({
           title: "Quantity Increased",
-          description: `Increased quantity of ${product.name} to ${newCart[idx].quantity}.`,
+          description: `Increased quantity of ${product.name}${variant ? ` (${formatVariantAttributes(variant.attributes)})` : ''} to ${newCart[idx].quantity}.`,
         });
         return newCart;
       }
     });
   };
+  
+  // Helper to format variant attributes for display
+  const formatVariantAttributes = (attributes: Record<string, string>): string => {
+    return Object.entries(attributes)
+      .map(([key, value]) => `${value}`)
+      .join(', ');
+  };
 
-  const removeFromCart = (productId: string) => {
-    setCartItems(cartItems.filter(item => item.product.id !== productId));
+  const removeFromCart = (index: number) => {
+    const item = cartItems[index];
+    setCartItems(prev => prev.filter((_, i) => i !== index));
     toast({
       title: "Removed from RFQ",
-      description: "Item has been removed from your quote request.",
+      description: `${item.product.name}${item.variant ? ` (${formatVariantAttributes(item.variant.attributes)})` : ''} has been removed from your quote request.`,
     });
   };
 
-  const updateQuantity = (productId: string, newQty: number) => {
+  const updateQuantity = (index: number, newQty: number) => {
     setCartItems(prev => {
       if (newQty < 1) {
+        const item = prev[index];
         toast({
           title: "Removed from RFQ",
-          description: "Item has been removed from your quote request.",
+          description: `${item.product.name}${item.variant ? ` (${formatVariantAttributes(item.variant.attributes)})` : ''} has been removed from your quote request.`,
         });
-        return prev.filter(item => item.product.id !== productId);
+        return prev.filter((_, i) => i !== index);
       }
-      return prev.map(item =>
-        item.product.id === productId ? { ...item, quantity: newQty } : item
-      );
+      
+      const newCart = [...prev];
+      newCart[index].quantity = newQty;
+      return newCart;
     });
   };
 
@@ -167,7 +244,9 @@ export const ProductCatalog = () => {
               key={product.id}
               product={product}
               onAddToCart={addToCart}
-              quantity={cartItems.find(item => item.product.id === product.id)?.quantity || 0}
+              quantity={cartItems
+                .filter(item => item.product.id === product.id)
+                .reduce((sum, item) => sum + item.quantity, 0)}
             />
           ))}
         </div>

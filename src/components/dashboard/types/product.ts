@@ -1,4 +1,18 @@
 
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  attributes: Record<string, string>; // e.g. {color: 'red', size: 'large', material: 'cotton'}
+  price: number | null;
+  image?: string;
+  inventory?: number;
+}
+
+export interface VariantType {
+  name: string; // e.g. 'color', 'size', 'material'
+  options: string[]; // e.g. ['red', 'blue', 'green']
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -8,6 +22,9 @@ export interface Product {
   image: string;
   created_at?: string;
   updated_at?: string;
+  variants?: ProductVariant[];
+  variantTypes?: VariantType[];
+  hasVariants?: boolean;
 }
 
 export const getDefaultProductImage = (category: string): string => {

@@ -15,20 +15,45 @@ import {
 import { EditProductForm } from '../EditProductForm';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ProductVariantSelector } from './ProductVariantSelector';
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, variantId?: string) => void;
   quantity?: number;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, quantity }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product>(product);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [selectedVariantId, setSelectedVariantId] = useState<string>();
   const { toast } = useToast();
   
   // Use the product image or default if not available
   const imageUrl = currentProduct.image || getDefaultProductImage(currentProduct.category);
+
+  // Load product variants if product has them
+  useEffect(() => {
+    if (!product.hasVariants) return;
+    
+    const loadVariants = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('product_variants')
+          .select('*')
+          .eq('productId', product.id);
+          
+        if (!error && data) {
+          setVariants(data);
+        }
+      } catch (err) {
+        console.error('Error loading variants:', err);
+      }
+    };
+    
+    loadVariants();
+  }, [product.id, product.hasVariants]);
 
   // Handle dialog closing and product updates
   const handleCloseDialog = () => {
@@ -73,6 +98,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
     setCurrentProduct(product);
   }, [product]);
 
+  // Handle adding product to cart (with or without variant)
+  const handleAddToCart = () => {
+    onAddToCart(currentProduct, selectedVariantId);
+  };
+
   return (
     <>
       <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg">
@@ -107,8 +137,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
               </span>
               <span className="text-sm text-gray-500">Lead time: {currentProduct.lead_time}</span>
             </div>
+            
+            {currentProduct.hasVariants && variants.length > 0 && (
+              <ProductVariantSelector
+                variants={variants}
+                variantTypes={currentProduct.variantTypes || []}
+                selectedVariantId={selectedVariantId}
+                onVariantChange={setSelectedVariantId}
+              />
+            )}
+            
             <Button 
-              onClick={() => onAddToCart(currentProduct)} 
+              onClick={handleAddToCart} 
               className="w-full"
               variant={quantity && quantity > 0 ? "secondary" : "default"}
             >

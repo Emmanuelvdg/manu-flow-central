@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RecipeProductSelect } from "./RecipeProductSelect";
@@ -7,6 +7,9 @@ import { RecipeMaterialsSection } from "./RecipeMaterialsSection";
 import { RecipePersonnelSection } from "./RecipePersonnelSection";
 import { RecipeMachinesSection } from "./RecipeMachinesSection";
 import { useRecipeMappingForm } from "./hooks/useRecipeMappingForm";
+import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface RecipeMappingFormProps {
   open: boolean;
@@ -17,6 +20,70 @@ interface RecipeMappingFormProps {
 
 export default function RecipeMappingForm(props: RecipeMappingFormProps) {
   const form = useRecipeMappingForm(props.open, props.initialRecipe, props.onSuccess, props.onClose);
+  const [productVariants, setProductVariants] = useState<any[]>([]);
+  const [selectedVariantId, setSelectedVariantId] = useState<string>("");
+
+  // Load variants when product changes
+  useEffect(() => {
+    if (!form.productId) {
+      setProductVariants([]);
+      setSelectedVariantId("");
+      return;
+    }
+    
+    const loadVariants = async () => {
+      try {
+        // First check if product has variants
+        const { data: product, error: productError } = await supabase
+          .from('products')
+          .select('hasVariants')
+          .eq('id', form.productId)
+          .single();
+          
+        if (productError || !product?.hasVariants) {
+          setProductVariants([]);
+          setSelectedVariantId("");
+          return;
+        }
+        
+        // Load variants for the product
+        const { data, error } = await supabase
+          .from('product_variants')
+          .select('*')
+          .eq('productId', form.productId);
+          
+        if (!error && data && data.length > 0) {
+          setProductVariants(data);
+          
+          // If we have an initial recipe with variantId, select it
+          if (props.initialRecipe?.variantId) {
+            setSelectedVariantId(props.initialRecipe.variantId);
+          }
+        } else {
+          setProductVariants([]);
+          setSelectedVariantId("");
+        }
+      } catch (err) {
+        console.error("Error loading product variants:", err);
+        setProductVariants([]);
+      }
+    };
+    
+    loadVariants();
+  }, [form.productId, props.initialRecipe?.variantId]);
+  
+  // Format variant for display
+  const formatVariantOption = (variant: any) => {
+    if (!variant.attributes) return variant.sku;
+    
+    const attributeValues = Object.values(variant.attributes).join(", ");
+    return `${attributeValues} (${variant.sku})`;
+  };
+  
+  // Update form's variantId when selection changes
+  useEffect(() => {
+    form.setVariantId(selectedVariantId);
+  }, [selectedVariantId]);
 
   return (
     <form onSubmit={form.handleSubmit} className="space-y-3">
@@ -27,6 +94,31 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
         disabled={form.isEditing || form.loading}
         loading={form.loading}
       />
+      
+      {/* Product Variant Selection */}
+      {productVariants.length > 0 && (
+        <div>
+          <Label className="block text-sm font-medium mb-1">Product Variant</Label>
+          <Select
+            value={selectedVariantId}
+            onValueChange={setSelectedVariantId}
+            disabled={form.loading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a variant" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Base product (no variant)</SelectItem>
+              {productVariants.map((variant) => (
+                <SelectItem key={variant.id} value={variant.id}>
+                  {formatVariantOption(variant)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      
       <div>
         <label className="block text-sm font-medium mb-1">Recipe Name<span className="text-red-500">*</span></label>
         <Input 
