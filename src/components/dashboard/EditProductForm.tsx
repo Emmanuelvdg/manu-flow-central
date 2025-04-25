@@ -126,7 +126,7 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
           return;
         }
         
-        // Include variant types in product update
+        // Include variant types in product update using correct column name
         productData.varianttypes = variantTypes;
       } else {
         // Clear variant types if hasVariants is false

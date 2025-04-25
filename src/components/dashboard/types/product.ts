@@ -24,9 +24,9 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   variants?: ProductVariant[];
-  variantTypes?: VariantType[];
-  hasvariants?: boolean; // Match the database column name
+  // Use varianttypes to match database column name
   varianttypes?: VariantType[] | null; // Match the database column name
+  hasvariants?: boolean; // Match the database column name
 }
 
 export const getDefaultProductImage = (category: string): string => {

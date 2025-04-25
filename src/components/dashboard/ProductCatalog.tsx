@@ -54,7 +54,8 @@ export const ProductCatalog = () => {
           return;
         }
         
-        setProducts(data || []);
+        // Convert database records to our Product type
+        setProducts(data as Product[] || []);
         
         // Fetch variants for products that have them
         const productsWithVariants = (data || []).filter(p => p.hasvariants);
@@ -108,7 +109,7 @@ export const ProductCatalog = () => {
   const addToCart = (product: Product, variantId?: string) => {
     setCartItems(prev => {
       // If product has variants and no variant is selected, alert user
-      if (product.hasVariants && !variantId) {
+      if (product.hasvariants && !variantId) {
         toast({
           title: "Select Variant",
           description: "Please select a product variant before adding to RFQ",

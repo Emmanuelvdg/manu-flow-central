@@ -94,7 +94,7 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
           return;
         }
 
-        // Add variantTypes to productData
+        // Add variantTypes to productData using the correct column name
         productData.varianttypes = variantTypes;
       }
       

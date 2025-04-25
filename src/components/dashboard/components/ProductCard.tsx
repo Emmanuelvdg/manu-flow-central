@@ -35,14 +35,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
 
   // Load product variants if product has them
   useEffect(() => {
-    if (!product.hasVariants) return;
+    if (!product.hasvariants) return;
     
     const loadVariants = async () => {
       try {
         const { data, error } = await supabase
           .from('product_variants')
           .select('*')
-          .eq('productId', product.id);
+          .eq('product_id', product.id);
           
         if (!error && data) {
           setVariants(data);
@@ -53,7 +53,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
     };
     
     loadVariants();
-  }, [product.id, product.hasVariants]);
+  }, [product.id, product.hasvariants]);
 
   // Handle dialog closing and product updates
   const handleCloseDialog = () => {
@@ -69,7 +69,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
           
         if (!error && data) {
           console.log('Product data from database:', data);
-          setCurrentProduct(data);
+          setCurrentProduct(data as Product);
           console.log('Product refreshed successfully:', data);
         } else {
           console.error('Error refreshing product:', error);
@@ -138,10 +138,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
               <span className="text-sm text-gray-500">Lead time: {currentProduct.lead_time}</span>
             </div>
             
-            {currentProduct.hasVariants && variants.length > 0 && (
+            {currentProduct.hasvariants && variants.length > 0 && (
               <ProductVariantSelector
                 variants={variants}
-                variantTypes={currentProduct.variantTypes || []}
+                variantTypes={currentProduct.varianttypes || []}
                 selectedVariantId={selectedVariantId}
                 onVariantChange={setSelectedVariantId}
               />
