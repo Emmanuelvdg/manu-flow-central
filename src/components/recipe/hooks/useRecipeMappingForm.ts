@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -131,14 +130,15 @@ export function useRecipeMappingForm(
     setLoading(true);
     
     try {
+      // Convert arrays to JSON for database storage
       const recipeData = {
         product_id: productId,
         product_name: productName,
         name,
         description,
-        materials,
-        personnel,
-        machines,
+        materials: materials as any,
+        personnel: personnel as any,
+        machines: machines as any,
         variantId: variantId || null
       };
       

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,11 +35,11 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
         // First check if product has variants
         const { data: product, error: productError } = await supabase
           .from('products')
-          .select('hasVariants')
+          .select('hasvariants')
           .eq('id', form.productId)
           .single();
           
-        if (productError || !product?.hasVariants) {
+        if (productError || !product?.hasvariants) {
           setProductVariants([]);
           setSelectedVariantId("");
           return;
@@ -50,7 +49,7 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
         const { data, error } = await supabase
           .from('product_variants')
           .select('*')
-          .eq('productId', form.productId);
+          .eq('product_id', form.productId);
           
         if (!error && data && data.length > 0) {
           setProductVariants(data);

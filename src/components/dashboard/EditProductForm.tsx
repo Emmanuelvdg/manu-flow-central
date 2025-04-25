@@ -40,7 +40,7 @@ interface EditProductFormProps {
 export function EditProductForm({ product, onClose }: EditProductFormProps) {
   const { toast } = useToast();
   const [variantTypes, setVariantTypes] = useState<VariantType[]>(
-    product.variantTypes || []
+    product.varianttypes as VariantType[] || []
   );
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,7 +54,7 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
       price: product.price?.toString() || '',
       lead_time: product.lead_time || '',
       image: product.image || '',
-      hasVariants: !!product.hasVariants,
+      hasVariants: !!product.hasvariants,
     },
   });
   
@@ -70,10 +70,21 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         const { data, error } = await supabase
           .from('product_variants')
           .select('*')
-          .eq('productId', product.id);
+          .eq('product_id', product.id);
           
         if (!error && data) {
-          setVariants(data);
+          // Convert database structure to our component structure
+          const mappedVariants = data.map(variant => ({
+            id: variant.id,
+            sku: variant.sku,
+            attributes: variant.attributes as Record<string, string>,
+            price: variant.price,
+            image: variant.image || undefined,
+            inventory: variant.inventory || undefined,
+            product_id: variant.product_id
+          }));
+          
+          setVariants(mappedVariants);
           setExistingVariantsLoaded(true);
         } else if (error) {
           console.error('Error loading variants:', error);
@@ -98,7 +109,7 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         price: Number(data.price),
         lead_time: data.lead_time,
         image: data.image || null,
-        hasVariants: data.hasVariants,
+        hasvariants: data.hasVariants, // Match database column name
         updated_at: new Date().toISOString(),
       };
       
@@ -116,10 +127,10 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         }
         
         // Include variant types in product update
-        productData.variantTypes = variantTypes;
+        productData.varianttypes = variantTypes;
       } else {
         // Clear variant types if hasVariants is false
-        productData.variantTypes = null;
+        productData.varianttypes = null;
       }
       
       // Update the base product
@@ -145,12 +156,12 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         // First, remove any existing variants that are not in the current state
         const variantIds = variants.map(v => v.id);
         
-        if (existingVariantsLoaded) {
+        if (existingVariantsLoaded && variantIds.length > 0) {
           // Delete variants that are no longer in the list
           const { error: deleteError } = await supabase
             .from('product_variants')
             .delete()
-            .eq('productId', product.id)
+            .eq('product_id', product.id)
             .not('id', 'in', `(${variantIds.join(',')})`);
             
           if (deleteError) {
@@ -161,28 +172,45 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         // Then upsert all current variants
         for (const variant of variants) {
           const variantData = {
-            ...variant,
-            productId: product.id,
+            sku: variant.sku,
+            attributes: variant.attributes,
+            price: variant.price,
+            image: variant.image,
+            inventory: variant.inventory,
+            product_id: product.id
           };
           
-          if (variant.id?.startsWith('variant-')) {
+          if (variant.id && variant.id.startsWith('variant-')) {
             // This is a new variant (temporary ID), create it
-            delete variantData.id;
-            await supabase.from('product_variants').insert(variantData);
+            const { error: insertError } = await supabase
+              .from('product_variants')
+              .insert(variantData);
+              
+            if (insertError) {
+              console.error('Error inserting variant:', insertError);
+            }
           } else {
             // This is an existing variant, update it
-            await supabase
+            const { error: updateError } = await supabase
               .from('product_variants')
               .update(variantData)
               .eq('id', variant.id);
+              
+            if (updateError) {
+              console.error('Error updating variant:', updateError);
+            }
           }
         }
       } else if (existingVariantsLoaded) {
         // If product no longer has variants, remove all existing ones
-        await supabase
+        const { error: deleteError } = await supabase
           .from('product_variants')
           .delete()
-          .eq('productId', product.id);
+          .eq('product_id', product.id);
+          
+        if (deleteError) {
+          console.error('Error deleting variants:', deleteError);
+        }
       }
       
       console.log('Product updated successfully:', updatedData);

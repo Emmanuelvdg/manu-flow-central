@@ -57,7 +57,7 @@ export const ProductCatalog = () => {
         setProducts(data || []);
         
         // Fetch variants for products that have them
-        const productsWithVariants = (data || []).filter(p => p.hasVariants);
+        const productsWithVariants = (data || []).filter(p => p.hasvariants);
         if (productsWithVariants.length > 0) {
           // Get all product IDs with variants
           const productIds = productsWithVariants.map(p => p.id);
@@ -66,16 +66,16 @@ export const ProductCatalog = () => {
           const { data: variantsData, error: variantsError } = await supabase
             .from('product_variants')
             .select('*')
-            .in('productId', productIds);
+            .in('product_id', productIds);
             
           if (!variantsError && variantsData) {
             // Group variants by product ID
             const variantsByProduct: Record<string, any[]> = {};
             variantsData.forEach(variant => {
-              if (!variantsByProduct[variant.productId]) {
-                variantsByProduct[variant.productId] = [];
+              if (!variantsByProduct[variant.product_id]) {
+                variantsByProduct[variant.product_id] = [];
               }
-              variantsByProduct[variant.productId].push(variant);
+              variantsByProduct[variant.product_id].push(variant);
             });
             
             setProductVariants(variantsByProduct);

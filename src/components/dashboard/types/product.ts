@@ -6,6 +6,7 @@ export interface ProductVariant {
   price: number | null;
   image?: string;
   inventory?: number;
+  product_id?: string; // Match the database column name
 }
 
 export interface VariantType {
@@ -24,7 +25,8 @@ export interface Product {
   updated_at?: string;
   variants?: ProductVariant[];
   variantTypes?: VariantType[];
-  hasVariants?: boolean;
+  hasvariants?: boolean; // Match the database column name
+  varianttypes?: VariantType[] | null; // Match the database column name
 }
 
 export const getDefaultProductImage = (category: string): string => {

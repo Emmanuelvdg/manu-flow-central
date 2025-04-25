@@ -67,7 +67,7 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
         price: Number(data.price),
         lead_time: data.lead_time,
         image: data.image || null,
-        hasVariants: data.hasVariants,
+        hasvariants: data.hasVariants, // Match the database column name
       };
       
       // Include variant types if hasVariants is true
@@ -93,15 +93,15 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
           setIsSubmitting(false);
           return;
         }
+
+        // Add variantTypes to productData
+        productData.varianttypes = variantTypes;
       }
       
       // Insert the base product
       const { data: newProduct, error } = await supabase
         .from('products')
-        .insert({
-          ...productData,
-          variantTypes: data.hasVariants ? variantTypes : null,
-        })
+        .insert(productData)
         .select()
         .single();
 
@@ -119,8 +119,12 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
       if (data.hasVariants && variants.length > 0) {
         // Add product ID to each variant
         const variantsToInsert = variants.map(v => ({
-          ...v,
-          productId: data.id,
+          product_id: data.id, // Match the database column name
+          sku: v.sku,
+          attributes: v.attributes,
+          price: v.price,
+          image: v.image,
+          inventory: v.inventory
         }));
         
         const { error: variantsError } = await supabase
