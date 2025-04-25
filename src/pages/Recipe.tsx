@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { ArrowLeft, Edit } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import RequirementsSection from '@/components/recipe/RequirementsSection';
 import RecipeFullTable from '@/components/recipe/RecipeFullTable';
+import { supabase } from '@/integrations/supabase/client';
 
 // Enhanced mock recipes to demonstrate mapping (sample data)
 const mockRecipes = {
@@ -70,7 +71,59 @@ const mockRecipes = {
 const Recipe = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const recipe = mockRecipes[id as keyof typeof mockRecipes] || mockRecipes["PFP_5L"];
+  const [recipe, setRecipe] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      setLoading(true);
+      
+      try {
+        // Check if the ID is a productID that matches our mock data
+        if (mockRecipes[id as keyof typeof mockRecipes]) {
+          setRecipe(mockRecipes[id as keyof typeof mockRecipes]);
+          return;
+        }
+
+        // If not in mock data, try to fetch from database
+        const { data, error } = await supabase
+          .from('recipes')
+          .select('*')
+          .or(`id.eq.${id},product_id.eq.${id}`)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        if (data) {
+          // If found in DB, convert to mock recipe format
+          const dbRecipe = {
+            id: data.id,
+            productName: data.product_name,
+            group: data.category || "Uncategorized",
+            materials: Array.isArray(data.materials) ? data.materials : [],
+            personnel: Array.isArray(data.personnel) ? data.personnel : [],
+            machines: Array.isArray(data.machines) ? data.machines : [],
+          };
+          setRecipe(dbRecipe);
+        } else {
+          // Fallback to default recipe if nothing found
+          setRecipe(mockRecipes["WT"]);
+          console.error(`No recipe found for ID: ${id}`);
+          toast({
+            title: "Recipe not found",
+            description: `Using default recipe. No recipe was found for ID: ${id}`,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching recipe:", error);
+        setRecipe(mockRecipes["WT"]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchRecipe();
+  }, [id, toast]);
 
   const handleEdit = () => {
     toast({
@@ -78,24 +131,37 @@ const Recipe = () => {
       description: "Recipe editing feature coming soon.",
     });
   };
+  
   const handleAddMaterial = () => {
     toast({
       title: "Add Material",
       description: "Material addition feature coming soon.",
     });
   };
+  
   const handleAddPersonnel = () => {
     toast({
       title: "Add Personnel",
       description: "Personnel addition feature coming soon.",
     });
   };
+  
   const handleAddMachine = () => {
     toast({
       title: "Add Machine",
       description: "Machine addition feature coming soon.",
     });
   };
+
+  if (loading) {
+    return (
+      <MainLayout title="Loading Recipe...">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-pulse">Loading recipe information...</div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="Product Recipe Mapping">
@@ -113,27 +179,29 @@ const Recipe = () => {
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{recipe.productName} ({recipe.id})</CardTitle>
-            <div className="text-sm text-muted-foreground">{recipe.group}</div>
-          </CardHeader>
-          <CardContent>
-            <RequirementsSection
-              materials={recipe.materials}
-              personnel={recipe.personnel}
-              machines={recipe.machines}
-              onAddMaterial={handleAddMaterial}
-              onAddPersonnel={handleAddPersonnel}
-              onAddMachine={handleAddMachine}
-            />
-            <RecipeFullTable
-              materials={recipe.materials}
-              personnel={recipe.personnel}
-              machines={recipe.machines}
-            />
-          </CardContent>
-        </Card>
+        {recipe && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">{recipe.productName} ({recipe.id})</CardTitle>
+              <div className="text-sm text-muted-foreground">{recipe.group}</div>
+            </CardHeader>
+            <CardContent>
+              <RequirementsSection
+                materials={recipe.materials}
+                personnel={recipe.personnel}
+                machines={recipe.machines}
+                onAddMaterial={handleAddMaterial}
+                onAddPersonnel={handleAddPersonnel}
+                onAddMachine={handleAddMachine}
+              />
+              <RecipeFullTable
+                materials={recipe.materials}
+                personnel={recipe.personnel}
+                machines={recipe.machines}
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </MainLayout>
   );

@@ -20,6 +20,11 @@ type OrderProductRow = {
   product_name: string | null;
   product_description: string | null;
   group: string | null;
+  recipes?: {
+    id: string;
+    name: string;
+    product_name: string;
+  } | null;
 };
 
 interface OrderProductsProgressProps {
@@ -70,7 +75,7 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
               </div>
               {product.recipe_id ? (
                 <Link 
-                  to={`/recipes/${product.recipe_id}`}
+                  to={`/recipes/${product.product_id}`}
                   className="text-sm text-blue-600 hover:underline hover:text-blue-800"
                 >
                   View Recipe
