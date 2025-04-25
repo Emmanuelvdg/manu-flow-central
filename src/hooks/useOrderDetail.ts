@@ -2,6 +2,7 @@
 import { useOrderData } from "./orders/useOrderData";
 import { useOrderProducts } from "./orders/useOrderProducts";
 import { useOrderProductsSync } from "./orders/useOrderProductsSync";
+import { useRecipeLookup } from "./orders/useRecipeLookup";
 
 export const useOrderDetail = (orderId: string | undefined) => {
   const { 
@@ -17,7 +18,16 @@ export const useOrderDetail = (orderId: string | undefined) => {
     refetch: refetchProducts
   } = useOrderProducts(order?.id);
 
-  const { syncOrderProducts } = useOrderProductsSync(order?.id, refetchProducts);
+  const { syncOrderProducts, debugRecipeMapping } = useOrderProductsSync(order?.id, refetchProducts);
+  const { debugRecipeMapping: debugRecipes } = useRecipeLookup();
+
+  const debugOrderProductMapping = async () => {
+    if (order?.id) {
+      await debugRecipes(order.id);
+    } else {
+      console.error("Cannot debug recipe mapping: No order ID available");
+    }
+  };
 
   return {
     order,
@@ -26,6 +36,7 @@ export const useOrderDetail = (orderId: string | undefined) => {
     productsLoading,
     error,
     refetch,
+    debugOrderProductMapping,
     syncOrderProducts: async () => {
       if (order?.products) {
         // Make sure we're handling products as an array
@@ -35,7 +46,11 @@ export const useOrderDetail = (orderId: string | undefined) => {
             ? [order.products]
             : [];
         
+        console.log("Syncing products:", productsArray);
         await syncOrderProducts(productsArray);
+        
+        // Debug recipe mapping after sync
+        await debugOrderProductMapping();
       }
     }
   };

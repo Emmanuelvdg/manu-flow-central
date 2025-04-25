@@ -6,7 +6,7 @@ import { useProductManagement } from "./useProductManagement";
 
 export const useOrderProductCreation = (orderId: string | undefined, refetchProducts: () => void) => {
   const { toast } = useToast();
-  const { findRecipeForProduct } = useRecipeLookup();
+  const { findRecipeForProduct, debugRecipeMapping } = useRecipeLookup();
   const { findOrCreateProduct } = useProductManagement();
 
   const createOrderProduct = async (product: any) => {
@@ -17,11 +17,15 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
     const productName = product.name || productId;
     
     try {
+      console.log(`Creating order product for: ${productName} (${productId})`);
+      
       // Find or create the product
       const actualProductId = await findOrCreateProduct(productName, productId, orderId);
+      console.log(`Using product ID: ${actualProductId}`);
       
       // Find recipe if exists
       const recipeId = await findRecipeForProduct(actualProductId);
+      console.log(`Recipe lookup result: ${recipeId || 'No recipe found'}`);
       
       // Create order product entry
       const productEntry = {
@@ -58,6 +62,7 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
         throw error;
       }
       
+      console.log("Order product created successfully:", data[0]);
       return data[0];
     } catch (err) {
       console.error("Error in createOrderProduct:", err);
@@ -72,8 +77,13 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
     }
     
     try {
+      console.log(`Starting sync of ${products.length} products for order ${orderId}`);
       const result = await Promise.all(products.map(createOrderProduct));
       console.log("Synced order products:", result);
+      
+      // Debug recipe mapping after sync
+      await debugRecipeMapping(orderId);
+      
       refetchProducts();
       toast({
         title: "Products synchronized",
@@ -89,5 +99,5 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
     }
   };
 
-  return { syncOrderProducts };
+  return { syncOrderProducts, debugRecipeMapping };
 };
