@@ -36,7 +36,12 @@ export const useOrderForm = (order: any, orderId: string, refetch: () => Promise
         shippingAddress: shippingAddress,
       };
     }
-    return {};
+    // Return default values even when there's no order
+    return {
+      customerName: '',
+      status: 'created',
+      shippingAddress: '',
+    };
   });
 
   const updateMaterialAllocations = async (

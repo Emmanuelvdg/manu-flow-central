@@ -13,9 +13,9 @@ import { Label } from "@/components/ui/label";
 
 interface OrderMetaFormProps {
   formData: {
-    customerName: string;
-    status: string;
-    shippingAddress: string;
+    customerName?: string;
+    status?: string;
+    shippingAddress?: string;
   };
   isLoading: boolean;
   onChange: (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => void;
@@ -57,7 +57,7 @@ export const OrderMetaForm: React.FC<OrderMetaFormProps> = ({
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
           <Select 
-            value={formData.status} 
+            value={formData.status || 'created'} 
             onValueChange={handleStatusChange}
             disabled={isLoading}
           >
