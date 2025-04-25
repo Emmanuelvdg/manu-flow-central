@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,25 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
     form.setVariantId(selectedVariantId);
   }, [selectedVariantId]);
 
+  // Create wrapper functions to fix the function signature issues
+  const handleSaveMaterial = () => {
+    if (form.editingMaterial) {
+      form.handleSaveMaterial(form.editingMaterial);
+    }
+  };
+
+  const handleSavePersonnel = () => {
+    if (form.editingPersonnel) {
+      form.handleSavePersonnel(form.editingPersonnel);
+    }
+  };
+
+  const handleSaveMachine = () => {
+    if (form.editingMachine) {
+      form.handleSaveMachine(form.editingMachine);
+    }
+  };
+
   return (
     <form onSubmit={form.handleSubmit} className="space-y-3">
       <RecipeProductSelect
@@ -146,7 +166,7 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
           setEditingMaterial={form.setEditingMaterial}
           handleAddMaterial={form.handleAddMaterial}
           handleEditMaterial={form.handleEditMaterial}
-          handleSaveMaterial={form.handleSaveMaterial}
+          handleSaveMaterial={handleSaveMaterial}
           handleDeleteMaterial={form.handleDeleteMaterial}
           disabled={form.loading}
         />
@@ -159,7 +179,7 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
           setEditingPersonnel={form.setEditingPersonnel}
           handleAddPersonnel={form.handleAddPersonnel}
           handleEditPersonnel={form.handleEditPersonnel}
-          handleSavePersonnel={form.handleSavePersonnel}
+          handleSavePersonnel={handleSavePersonnel}
           handleDeletePersonnel={form.handleDeletePersonnel}
           disabled={form.loading}
         />
@@ -171,7 +191,7 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
           setEditingMachine={form.setEditingMachine}
           handleAddMachine={form.handleAddMachine}
           handleEditMachine={form.handleEditMachine}
-          handleSaveMachine={form.handleSaveMachine}
+          handleSaveMachine={handleSaveMachine}
           handleDeleteMachine={form.handleDeleteMachine}
           disabled={form.loading}
         />

@@ -44,7 +44,18 @@ export const useRecipeMappingForm = (open: boolean, initialRecipe: any, onSucces
       // Load materials
       const { data: materialsData } = await supabase.from('materials').select('*');
       if (materialsData) {
-        setMaterialList(materialsData);
+        // Transform the materials data to match our Material type
+        const transformedMaterials = materialsData.map(m => ({
+          id: m.id,
+          name: m.name,
+          category: m.category || '',
+          unit: m.unit,
+          status: m.status || '',
+          vendor: m.vendor || '',
+          stock: 0, // Default value
+          costPerUnit: 0, // Default value
+        }));
+        setMaterialList(transformedMaterials);
       }
 
       // Load personnel roles

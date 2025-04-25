@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,10 +30,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
   const [selectedVariantId, setSelectedVariantId] = useState<string>();
   const { toast } = useToast();
   
-  // Use the product image or default if not available
   const imageUrl = currentProduct.image || getDefaultProductImage(currentProduct.category);
 
-  // Load product variants if product has them
   useEffect(() => {
     if (!product.hasvariants) return;
     
@@ -56,9 +53,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
     loadVariants();
   }, [product.id, product.hasvariants]);
 
-  // Handle dialog closing and product updates
   const handleCloseDialog = () => {
-    // Refresh the product data when dialog closes using Supabase directly
     const refreshProduct = async () => {
       try {
         console.log('Refreshing product with ID:', product.id);
@@ -70,11 +65,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
           
         if (!error && data) {
           console.log('Product data from database:', data);
-          // Transform the data to match our Product type
           const transformedProduct = {
             ...data,
-            // Explicitly cast varianttypes to any before parsing to avoid type issues
-            varianttypes: parseJsonField(data.varianttypes as any)
+            varianttypes: parseJsonField(data.varianttypes) as any
           } as Product;
           
           setCurrentProduct(transformedProduct);
@@ -101,12 +94,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
     setIsEditDialogOpen(false);
   };
 
-  // When the product prop changes, update the currentProduct state
   useEffect(() => {
     setCurrentProduct(product);
   }, [product]);
 
-  // Handle adding product to cart (with or without variant)
   const handleAddToCart = () => {
     onAddToCart(currentProduct, selectedVariantId);
   };
