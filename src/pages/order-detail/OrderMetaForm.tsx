@@ -29,7 +29,6 @@ export const OrderMetaForm: React.FC<OrderMetaFormProps> = ({
   onSave,
 }) => {
   const handleStatusChange = (value: string) => {
-    // Create a synthetic event-like object
     const syntheticEvent = {
       target: {
         name: "status",
@@ -49,9 +48,10 @@ export const OrderMetaForm: React.FC<OrderMetaFormProps> = ({
             id="customerName"
             type="text" 
             name="customerName"
-            value={formData.customerName}
+            value={formData.customerName || ''}
             onChange={onChange}
             disabled={isLoading}
+            placeholder="Enter customer name"
           />
         </div>
         <div className="space-y-2">
@@ -79,9 +79,10 @@ export const OrderMetaForm: React.FC<OrderMetaFormProps> = ({
           id="shippingAddress"
           type="text" 
           name="shippingAddress"
-          value={formData.shippingAddress}
+          value={formData.shippingAddress || ''}
           onChange={onChange}
           disabled={isLoading}
+          placeholder="Enter shipping address"
         />
       </div>
       <div className="flex justify-end">

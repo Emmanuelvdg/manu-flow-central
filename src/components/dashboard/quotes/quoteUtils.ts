@@ -115,7 +115,7 @@ export const createOrderFromQuote = async (quote: Partial<Quote> & { id: string;
     // Create new order number
     const orderNumber = generateOrderNumber();
     
-    // Prepare order payload with normalized product data
+    // Prepare order payload with normalized product data and quote information
     const orderPayload = {
       quote_id: quote.id,
       order_number: orderNumber,
@@ -123,7 +123,11 @@ export const createOrderFromQuote = async (quote: Partial<Quote> & { id: string;
       products: quote.products,
       total: quote.total,
       status: 'created',
-      parts_status: 'Not booked'
+      parts_status: 'Not booked',
+      // Include shipping method and incoterms as shipping address
+      shipping_address: quote.shipping_method ? 
+        `${quote.shipping_method}${quote.incoterms ? ` - ${quote.incoterms}` : ''}` : 
+        null
     };
 
     // Step 1: Create the order
