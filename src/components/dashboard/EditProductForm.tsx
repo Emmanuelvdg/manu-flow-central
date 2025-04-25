@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -18,8 +17,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductVariant, VariantType } from './types/product';
-import { VariantTypesManager } from './components/VariantTypesManager';
-import { ProductVariantsManager } from './components/ProductVariantsManager';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -61,7 +58,6 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
   const hasVariants = form.watch('hasVariants');
   const basePrice = Number(form.watch('price')) || 0;
 
-  // Load existing variants if product has them
   useEffect(() => {
     if (!hasVariants || existingVariantsLoaded) return;
     
@@ -73,7 +69,6 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
           .eq('product_id', product.id);
           
         if (!error && data) {
-          // Convert database structure to our component structure
           const mappedVariants = data.map(variant => ({
             id: variant.id,
             sku: variant.sku,
@@ -102,20 +97,17 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
       setIsSubmitting(true);
       console.log('Submitting product update with image URL:', data.image);
       
-      // Basic product data to update
-      const productData = {
+      const productData: any = {
         name: data.name,
         category: data.category,
         price: Number(data.price),
         lead_time: data.lead_time,
         image: data.image || null,
-        hasvariants: data.hasVariants, // Match database column name
+        hasvariants: data.hasVariants,
         updated_at: new Date().toISOString(),
       };
       
-      // If product has variants, include variant types
       if (data.hasVariants) {
-        // Check if we have valid variant types
         if (variantTypes.length === 0 || variantTypes.every(t => t.options.length === 0)) {
           toast({
             title: 'Error',
@@ -126,14 +118,11 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
           return;
         }
         
-        // Include variant types in product update using correct column name
         productData.varianttypes = variantTypes;
       } else {
-        // Clear variant types if hasVariants is false
         productData.varianttypes = null;
       }
       
-      // Update the base product
       const { data: updatedData, error } = await supabase
         .from('products')
         .update(productData)
@@ -151,13 +140,10 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
         return;
       }
       
-      // If product has variants, update them
       if (data.hasVariants) {
-        // First, remove any existing variants that are not in the current state
         const variantIds = variants.map(v => v.id);
         
         if (existingVariantsLoaded && variantIds.length > 0) {
-          // Delete variants that are no longer in the list
           const { error: deleteError } = await supabase
             .from('product_variants')
             .delete()
@@ -169,7 +155,6 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
           }
         }
         
-        // Then upsert all current variants
         for (const variant of variants) {
           const variantData = {
             sku: variant.sku,
@@ -181,7 +166,6 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
           };
           
           if (variant.id && variant.id.startsWith('variant-')) {
-            // This is a new variant (temporary ID), create it
             const { error: insertError } = await supabase
               .from('product_variants')
               .insert(variantData);
@@ -190,7 +174,6 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
               console.error('Error inserting variant:', insertError);
             }
           } else {
-            // This is an existing variant, update it
             const { error: updateError } = await supabase
               .from('product_variants')
               .update(variantData)
@@ -202,7 +185,6 @@ export function EditProductForm({ product, onClose }: EditProductFormProps) {
           }
         }
       } else if (existingVariantsLoaded) {
-        // If product no longer has variants, remove all existing ones
         const { error: deleteError } = await supabase
           .from('product_variants')
           .delete()

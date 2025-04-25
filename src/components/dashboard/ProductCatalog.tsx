@@ -54,11 +54,32 @@ export const ProductCatalog = () => {
           return;
         }
         
-        // Convert database records to our Product type
-        setProducts(data as Product[] || []);
+        // Convert database records to our Product type with proper type handling
+        const typedProducts = (data || []).map(item => {
+          // Parse varianttypes JSON if needed
+          let varianttypes = null;
+          if (item.varianttypes) {
+            try {
+              if (typeof item.varianttypes === 'string') {
+                varianttypes = JSON.parse(item.varianttypes);
+              } else {
+                varianttypes = item.varianttypes;
+              }
+            } catch (e) {
+              console.error('Failed to parse varianttypes:', e);
+            }
+          }
+          
+          return {
+            ...item,
+            varianttypes
+          } as Product;
+        });
+        
+        setProducts(typedProducts);
         
         // Fetch variants for products that have them
-        const productsWithVariants = (data || []).filter(p => p.hasvariants);
+        const productsWithVariants = typedProducts.filter(p => p.hasvariants);
         if (productsWithVariants.length > 0) {
           // Get all product IDs with variants
           const productIds = productsWithVariants.map(p => p.id);

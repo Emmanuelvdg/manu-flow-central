@@ -60,7 +60,7 @@ export function AddProductForm({ onClose }: { onClose: () => void }) {
       setIsSubmitting(true);
       
       // Basic product data
-      const productData = {
+      const productData: any = {
         id: data.id,
         name: data.name,
         category: data.category,

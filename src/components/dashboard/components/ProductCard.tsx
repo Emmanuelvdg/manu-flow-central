@@ -69,8 +69,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
           
         if (!error && data) {
           console.log('Product data from database:', data);
-          setCurrentProduct(data as Product);
-          console.log('Product refreshed successfully:', data);
+          // Parse varianttypes if needed before setting the state
+          let parsedData = {...data};
+          if (data.varianttypes) {
+            try {
+              if (typeof data.varianttypes === 'string') {
+                parsedData.varianttypes = JSON.parse(data.varianttypes);
+              }
+            } catch (e) {
+              console.error('Failed to parse varianttypes:', e);
+            }
+          }
+          setCurrentProduct(parsedData as Product);
+          console.log('Product refreshed successfully:', parsedData);
         } else {
           console.error('Error refreshing product:', error);
           toast({

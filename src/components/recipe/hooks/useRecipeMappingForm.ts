@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,10 +66,10 @@ export function useRecipeMappingForm(
         setDescription(initialRecipe.description || "");
         setVariantId(initialRecipe.variantId || "");
         
-        // Set recipe components
-        setMaterials(initialRecipe.materials || []);
-        setPersonnel(initialRecipe.personnel || []);
-        setMachines(initialRecipe.machines || []);
+        // Set recipe components - parse JSON if needed
+        setMaterials(handleJsonData(initialRecipe.materials) || []);
+        setPersonnel(handleJsonData(initialRecipe.personnel) || []);
+        setMachines(handleJsonData(initialRecipe.machines) || []);
       } else {
         // Reset form for new recipe
         setProductId("");
@@ -82,6 +83,21 @@ export function useRecipeMappingForm(
       }
     }
   }, [isOpen, initialRecipe, refDataLoading]);
+
+  // Helper function to handle JSON data that might be stored as a string
+  const handleJsonData = (data: any) => {
+    if (!data) return null;
+    
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.error('Error parsing JSON data:', e);
+        return null;
+      }
+    }
+    return data;
+  };
 
   // Handle product selection
   const handleProductChange = (id: string) => {
@@ -131,14 +147,14 @@ export function useRecipeMappingForm(
     
     try {
       // Convert arrays to JSON for database storage
-      const recipeData = {
+      const recipeData: any = {
         product_id: productId,
         product_name: productName,
         name,
         description,
-        materials: materials as any,
-        personnel: personnel as any,
-        machines: machines as any,
+        materials: materials,
+        personnel: personnel,
+        machines: machines,
         variantId: variantId || null
       };
       
