@@ -5,7 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useOrderForm = (order: any, orderId: string, refetch: () => Promise<void>) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState(order || {});
+  const [formData, setFormData] = useState(() => {
+    // Initialize form data with quote information if available
+    if (order?.quotes) {
+      return {
+        customerName: order.quotes.customer_name || order.customer_name || '',
+        status: order.status || 'created',
+        shippingAddress: order.shipping_address || '',
+      };
+    }
+    return order || {};
+  });
 
   const updateMaterialAllocations = async (
     orderId: string,
