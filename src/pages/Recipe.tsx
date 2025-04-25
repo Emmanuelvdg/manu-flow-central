@@ -99,7 +99,8 @@ const Recipe = () => {
           const dbRecipe = {
             id: data.id,
             productName: data.product_name,
-            group: data.category || "Uncategorized",
+            // Use a default group if no field exists in the DB record
+            group: "Product Recipe", // Changed from data.category to a default value
             materials: Array.isArray(data.materials) ? data.materials : [],
             personnel: Array.isArray(data.personnel) ? data.personnel : [],
             machines: Array.isArray(data.machines) ? data.machines : [],
