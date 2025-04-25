@@ -140,7 +140,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
             {currentProduct.hasvariants && variants.length > 0 && (
               <ProductVariantSelector
                 variants={variants}
-                variantTypes={parseJsonField(currentProduct.varianttypes) || []}
+                variantTypes={(Array.isArray(parseJsonField(currentProduct.varianttypes)) 
+                  ? parseJsonField(currentProduct.varianttypes) 
+                  : []) as any[]}
                 selectedVariantId={selectedVariantId}
                 onVariantChange={setSelectedVariantId}
               />
