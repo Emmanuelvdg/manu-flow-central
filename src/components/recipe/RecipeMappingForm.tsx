@@ -6,7 +6,7 @@ import { RecipeProductSelect } from "./RecipeProductSelect";
 import { RecipeMaterialsSection } from "./RecipeMaterialsSection";
 import { RecipePersonnelSection } from "./RecipePersonnelSection";
 import { RecipeMachinesSection } from "./RecipeMachinesSection";
-import { useRecipeMappingForm } from "./useRecipeMappingForm";
+import { useRecipeMappingForm } from "./hooks/useRecipeMappingForm";
 
 interface RecipeMappingFormProps {
   open: boolean;
