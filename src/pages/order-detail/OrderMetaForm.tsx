@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -18,7 +18,7 @@ interface OrderMetaFormProps {
     shippingAddress: string;
   };
   isLoading: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onChange: (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => void;
   onSave: () => void;
 }
 
@@ -35,7 +35,7 @@ export const OrderMetaForm: React.FC<OrderMetaFormProps> = ({
         name: "status",
         value
       }
-    } as React.ChangeEvent<HTMLSelectElement>;
+    } as ChangeEvent<HTMLSelectElement>;
     
     onChange(syntheticEvent);
   };
