@@ -79,20 +79,12 @@ const Recipe = () => {
       setLoading(true);
       
       try {
-        // First check if the ID is a product ID in our mock data
-        if (mockRecipes[id as keyof typeof mockRecipes]) {
-          setRecipe(mockRecipes[id as keyof typeof mockRecipes]);
-          return;
-        }
-
+        // Log the ID we're trying to fetch
         console.log(`Fetching recipe for ID: ${id}`);
         
-        // If not in mock data, try to fetch from database
-        // First, check if the ID is a direct recipe ID (UUID format)
-        let recipeData = null;
-        
+        // First check if the ID is a UUID format (recipe ID)
         if (id && id.includes('-')) {
-          // Looks like a UUID, try to fetch recipe by ID
+          console.log("Appears to be a UUID, fetching recipe by ID");
           const { data: recipeById, error: recipeByIdError } = await supabase
             .from('recipes')
             .select('*')
@@ -102,49 +94,66 @@ const Recipe = () => {
           if (recipeByIdError) {
             console.error("Error fetching recipe by ID:", recipeByIdError);
           } else if (recipeById) {
-            recipeData = recipeById;
-            console.log("Found recipe by ID:", recipeData);
-          }
-        } 
-        
-        // If we didn't find it by ID, try by product_id
-        if (!recipeData) {
-          const { data: recipeByProductId, error: productError } = await supabase
-            .from('recipes')
-            .select('*')
-            .eq('product_id', id)
-            .maybeSingle();
+            console.log("Found recipe by ID:", recipeById);
             
-          if (productError) {
-            console.error("Error fetching recipe by product_id:", productError);
-          } else if (recipeByProductId) {
-            recipeData = recipeByProductId;
-            console.log("Found recipe by product_id:", recipeData);
+            // Convert to our recipe display format
+            const dbRecipe = {
+              id: recipeById.id,
+              productName: recipeById.product_name || recipeById.name,
+              group: "Product Recipe",
+              materials: Array.isArray(recipeById.materials) ? recipeById.materials : [],
+              personnel: Array.isArray(recipeById.personnel) ? recipeById.personnel : [],
+              machines: Array.isArray(recipeById.machines) ? recipeById.machines : [],
+            };
+            setRecipe(dbRecipe);
+            setLoading(false);
+            return;
           }
         }
         
-        if (recipeData) {
+        // If not a UUID or not found by UUID, check mock data
+        if (mockRecipes[id as keyof typeof mockRecipes]) {
+          console.log("Found in mock data:", mockRecipes[id as keyof typeof mockRecipes]);
+          setRecipe(mockRecipes[id as keyof typeof mockRecipes]);
+          setLoading(false);
+          return;
+        }
+
+        console.log("Not found in mock data, trying to fetch from database by product_id");
+        // Try to fetch by product_id
+        const { data: recipeByProductId, error: productError } = await supabase
+          .from('recipes')
+          .select('*')
+          .eq('product_id', id)
+          .maybeSingle();
+          
+        if (productError) {
+          console.error("Error fetching recipe by product_id:", productError);
+        } else if (recipeByProductId) {
+          console.log("Found recipe by product_id:", recipeByProductId);
+          
           // Convert to our recipe display format
           const dbRecipe = {
-            id: recipeData.id,
-            productName: recipeData.product_name || recipeData.name,
+            id: recipeByProductId.id,
+            productName: recipeByProductId.product_name || recipeByProductId.name,
             group: "Product Recipe",
-            materials: Array.isArray(recipeData.materials) ? recipeData.materials : [],
-            personnel: Array.isArray(recipeData.personnel) ? recipeData.personnel : [],
-            machines: Array.isArray(recipeData.machines) ? recipeData.machines : [],
+            materials: Array.isArray(recipeByProductId.materials) ? recipeByProductId.materials : [],
+            personnel: Array.isArray(recipeByProductId.personnel) ? recipeByProductId.personnel : [],
+            machines: Array.isArray(recipeByProductId.machines) ? recipeByProductId.machines : [],
           };
           setRecipe(dbRecipe);
-        } else {
-          console.error(`No recipe found for ID: ${id}`);
-          toast({
-            title: "Recipe not found",
-            description: `No recipe was found for ID: ${id}`,
-            variant: "destructive"
-          });
-          
-          // Don't fallback to default recipe anymore
-          setRecipe(null);
+          setLoading(false);
+          return;
         }
+        
+        // If we get here, we didn't find a recipe
+        console.error(`No recipe found for ID: ${id}`);
+        toast({
+          title: "Recipe not found",
+          description: `No recipe was found for ID: ${id}`,
+          variant: "destructive"
+        });
+        setRecipe(null);
       } catch (error) {
         console.error("Error fetching recipe:", error);
         toast({
@@ -215,7 +224,7 @@ const Recipe = () => {
                 <div className="text-amber-500 mb-4 text-6xl">⚠️</div>
                 <h2 className="text-2xl font-semibold mb-2">Recipe Not Found</h2>
                 <p className="text-muted-foreground mb-6">
-                  We couldn't find a recipe for the product ID: {id}
+                  We couldn't find a recipe for the ID: {id}
                 </p>
                 <Button asChild>
                   <Link to="/recipes">View All Recipes</Link>

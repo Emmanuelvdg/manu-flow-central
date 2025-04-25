@@ -77,6 +77,7 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
   // Populate/reset form on open/recipe change
   useEffect(() => {
     if (initialRecipe) {
+      console.log("Initializing form with recipe:", initialRecipe);
       setProductId(initialRecipe.product_id || "");
       setProductName(initialRecipe.product_name || "");
       setName(initialRecipe.name || "");
@@ -160,9 +161,16 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
 
   // Product select handler
   const handleProductChange = (id: string) => {
+    console.log("Product changed to:", id);
     setProductId(id);
     const prod = productList.find(p => p.id === id);
-    setProductName(prod ? prod.name : "");
+    
+    if (prod) {
+      console.log("Found product in list:", prod);
+      setProductName(prod.name);
+    } else {
+      console.log("Product not found in list, keeping name:", productName);
+    }
   };
 
   // Submit handler
@@ -170,16 +178,37 @@ export function useRecipeMappingForm(open: boolean, initialRecipe?: Recipe | nul
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productId || !productName || !name) return;
+    if (!productId || !name) {
+      toast({ 
+        title: "Missing required fields", 
+        description: "Product ID and Recipe Name are required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Use existing product name if not found in the list but we're editing
+    const finalProductName = productName || (isEditing && initialRecipe ? initialRecipe.product_name : "");
+    
+    if (!finalProductName) {
+      toast({
+        title: "Product name missing",
+        description: "Could not determine product name",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const payload = {
       product_id: productId,
-      product_name: productName,
+      product_name: finalProductName,
       name,
       description,
       materials,
       personnel,
       machines,
     };
+    
     try {
       setLoading(true);
       if (isEditing && initialRecipe) {
