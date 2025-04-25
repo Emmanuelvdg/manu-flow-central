@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -13,6 +12,7 @@ import { PurchaseOrdersSection } from "./PurchaseOrdersSection";
 import { usePurchaseOrders } from "./hooks/usePurchaseOrders";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { MaterialsLoadingState } from "./MaterialsLoadingState";
+import { MaterialStockReport } from "./MaterialStockReport";
 
 export const MaterialsSection = () => {
   const { toast } = useToast();
@@ -149,42 +149,48 @@ export const MaterialsSection = () => {
   }
 
   return (
-    <ErrorBoundary>
-      <>
-        <Card>
-          <MaterialsHeader onNewMaterial={handleNewMaterial} />
-          <CardContent>
-            <MaterialsTable
-              materials={materials}
-              onEditMaterial={handleEditMaterial}
-              onCreateOrder={handleCreateOrder}
-              formatCurrency={formatCurrency}
-            />
-          </CardContent>
-        </Card>
+    <div className="space-y-8">
+      <ErrorBoundary>
+        <>
+          <Card>
+            <MaterialsHeader onNewMaterial={handleNewMaterial} />
+            <CardContent>
+              <MaterialsTable
+                materials={materials}
+                onEditMaterial={handleEditMaterial}
+                onCreateOrder={handleCreateOrder}
+                formatCurrency={formatCurrency}
+              />
+            </CardContent>
+          </Card>
 
-        <PurchaseOrdersSection 
-          purchaseOrders={purchaseOrders}
-          materials={materials}
-          formatDate={formatDate}
-        />
+          <PurchaseOrdersSection 
+            purchaseOrders={purchaseOrders}
+            materials={materials}
+            formatDate={formatDate}
+          />
 
-        <MaterialDialogs
-          selectedMaterial={selectedMaterial}
-          isEditDialogOpen={isEditDialogOpen}
-          isPurchaseDialogOpen={isPurchaseDialogOpen}
-          onCloseEditDialog={() => {
-            setIsEditDialogOpen(false);
-            setSelectedMaterial(null);
-          }}
-          onClosePurchaseDialog={() => {
-            setIsPurchaseDialogOpen(false);
-            setSelectedMaterial(null);
-          }}
-          onSaveMaterial={handleSaveMaterial}
-          onCreateOrder={handleProcessPurchaseOrder}
-        />
-      </>
-    </ErrorBoundary>
+          <MaterialDialogs
+            selectedMaterial={selectedMaterial}
+            isEditDialogOpen={isEditDialogOpen}
+            isPurchaseDialogOpen={isPurchaseDialogOpen}
+            onCloseEditDialog={() => {
+              setIsEditDialogOpen(false);
+              setSelectedMaterial(null);
+            }}
+            onClosePurchaseDialog={() => {
+              setIsPurchaseDialogOpen(false);
+              setSelectedMaterial(null);
+            }}
+            onSaveMaterial={handleSaveMaterial}
+            onCreateOrder={handleProcessPurchaseOrder}
+          />
+        </>
+      </ErrorBoundary>
+
+      <MaterialStockReport />
+    </div>
   );
 };
+
+export default MaterialsSection;
