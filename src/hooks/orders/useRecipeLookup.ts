@@ -17,7 +17,7 @@ export const useRecipeLookup = () => {
       // First try to find by exact product_id match
       const { data: recipes, error } = await supabase
         .from('recipes')
-        .select('id, name, product_name')
+        .select('id, name, product_name, product_id')
         .eq('product_id', productId)
         .maybeSingle();
         
@@ -30,7 +30,20 @@ export const useRecipeLookup = () => {
         console.log(`Found recipe ${recipes.id} (${recipes.name}) for product ${productId}`);
         return recipes.id;
       } else {
-        console.log(`No recipe found for product ${productId}`);
+        // If no recipe found, log more details to help debug
+        console.log(`No recipe found with exact product_id match for ${productId}, checking all recipes`);
+        
+        // Fetch all recipes to help with debugging
+        const { data: allRecipes } = await supabase
+          .from('recipes')
+          .select('id, name, product_name, product_id');
+          
+        if (allRecipes && allRecipes.length > 0) {
+          console.log("Available recipes:", allRecipes);
+        } else {
+          console.log("No recipes found in the database");
+        }
+        
         return null;
       }
     } catch (err) {
@@ -48,8 +61,8 @@ export const useRecipeLookup = () => {
           id, 
           product_id,
           recipe_id,
-          products:product_id (name),
-          recipes:recipe_id (name, product_name)
+          products:product_id (id, name, category, description),
+          recipes:recipe_id (id, name, product_name, product_id)
         `)
         .eq('order_id', orderId);
 
@@ -61,7 +74,7 @@ export const useRecipeLookup = () => {
       // Get all available recipes
       const { data: allRecipes, error: recipeError } = await supabase
         .from('recipes')
-        .select('id, product_id, name, product_name');
+        .select('id, product_id, name, product_name, description');
 
       if (recipeError) {
         console.error("Error fetching recipes:", recipeError);
@@ -69,25 +82,99 @@ export const useRecipeLookup = () => {
       }
 
       console.log("=== Recipe Mapping Debug ===");
+      console.log(`Order ID: ${orderId}`);
       console.log("Order Products:", orderProducts);
       console.log("Available Recipes:", allRecipes);
       
       // Check each order product for correct recipe mapping
       orderProducts?.forEach(product => {
-        console.log(`Product: ${product.product_id} (${product.products?.name || 'Unknown'})`);
+        console.log(`\nProduct: ${product.product_id} (${product.products?.name || 'Unknown'})`);
         console.log(`  Current Recipe: ${product.recipe_id || 'None'} (${product.recipes?.name || 'None'})`);
         
         // Find matching recipes
         const matchingRecipes = allRecipes?.filter(r => r.product_id === product.product_id);
         console.log(`  Available matching recipes: ${matchingRecipes?.length || 0}`);
         matchingRecipes?.forEach(r => {
-          console.log(`    - ${r.id}: ${r.name} for ${r.product_name} (${r.product_id})`);
+          console.log(`    - ${r.id}: ${r.name} (product: ${r.product_name}, product_id: ${r.product_id})`);
         });
+        
+        // Check for potential mismatches
+        if (product.recipe_id && product.recipes?.product_id !== product.product_id) {
+          console.error(`  ⚠️ MISMATCH: Recipe ${product.recipe_id} is for product ${product.recipes?.product_id} but assigned to product ${product.product_id}`);
+        }
       });
+
+      // Return useful information
+      return {
+        orderProducts,
+        allRecipes
+      };
     } catch (err) {
       console.error("Error in debugRecipeMapping:", err);
     }
   };
 
-  return { findRecipeForProduct, debugRecipeMapping };
+  const fixRecipeMapping = async (orderId: string) => {
+    try {
+      const debug = await debugRecipeMapping(orderId);
+      if (!debug) return;
+
+      const { orderProducts, allRecipes } = debug;
+      let updatesNeeded = 0;
+      let updatesPerformed = 0;
+
+      for (const product of orderProducts || []) {
+        // Check if there's a mismatch or missing recipe
+        const needsUpdate = !product.recipe_id || product.recipes?.product_id !== product.product_id;
+        
+        if (needsUpdate) {
+          updatesNeeded++;
+          console.log(`Fixing recipe for product ${product.product_id} (${product.products?.name || 'Unknown'})`);
+          
+          // Find the correct recipe
+          const correctRecipe = allRecipes?.find(r => r.product_id === product.product_id);
+          
+          if (correctRecipe) {
+            console.log(`  Found correct recipe: ${correctRecipe.id} (${correctRecipe.name})`);
+            
+            // Update the order product
+            const { error } = await supabase
+              .from('order_products')
+              .update({ recipe_id: correctRecipe.id })
+              .eq('id', product.id);
+              
+            if (error) {
+              console.error("  Failed to update recipe mapping:", error);
+            } else {
+              updatesPerformed++;
+              console.log(`  Successfully updated recipe to ${correctRecipe.id}`);
+            }
+          } else {
+            console.log(`  No matching recipe found for product ${product.product_id}`);
+          }
+        }
+      }
+
+      if (updatesNeeded === 0) {
+        console.log("No recipe mapping fixes needed!");
+      } else {
+        console.log(`Fixed ${updatesPerformed}/${updatesNeeded} recipe mappings`);
+        
+        if (updatesPerformed > 0) {
+          toast({
+            title: "Recipe mappings updated",
+            description: `Successfully fixed ${updatesPerformed} recipe mappings.`,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error in fixRecipeMapping:", err);
+    }
+  };
+
+  return { 
+    findRecipeForProduct, 
+    debugRecipeMapping,
+    fixRecipeMapping 
+  };
 };

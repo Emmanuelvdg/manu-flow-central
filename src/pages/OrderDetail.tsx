@@ -26,7 +26,8 @@ const OrderDetail = () => {
     productsLoading,
     error,
     refetch,
-    syncOrderProducts
+    syncOrderProducts,
+    fixOrderProductMapping
   } = useOrderDetail(isQuoteOrderMapping ? undefined : orderId);
 
   // Fetch materials and their batches
@@ -79,6 +80,13 @@ const OrderDetail = () => {
     updateStatus();
   }, [orderProducts, batches, order?.parts_status]);
 
+  // Run debug mapping on initial load
+  React.useEffect(() => {
+    if (order && !isQuoteOrderMapping) {
+      console.log(`Initial recipe mapping check for order ${orderId}`);
+    }
+  }, [order, orderId, isQuoteOrderMapping]);
+
   return (
     <MainLayout title={isQuoteOrderMapping ? "Quote-Order Mappings" : `Order Detail - ${orderId}`}>
       <div className="max-w-4xl mx-auto mt-8">
@@ -96,6 +104,7 @@ const OrderDetail = () => {
               await Promise.resolve(refetch());
             }}
             syncOrderProducts={syncOrderProducts}
+            fixOrderProductMapping={fixOrderProductMapping}
           />
         </div>
       </div>

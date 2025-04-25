@@ -6,7 +6,7 @@ import { OrderProductsProgress } from "./OrderProductsProgress";
 import { OrderDetailState } from "./components/OrderDetailState";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { Button } from "@/components/ui/button";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, Tool } from "lucide-react";
 
 interface OrderDetailContentProps {
   order: any;
@@ -17,6 +17,7 @@ interface OrderDetailContentProps {
   orderProducts: any[];
   refetch: () => Promise<void>;
   syncOrderProducts?: () => Promise<void>;
+  fixOrderProductMapping?: () => Promise<void>;
 }
 
 export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
@@ -27,10 +28,12 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
   productsLoading,
   orderProducts,
   refetch,
-  syncOrderProducts
+  syncOrderProducts,
+  fixOrderProductMapping
 }) => {
   const { formData, handleChange, handleSaveOrder } = useOrderForm(order, orderId, refetch);
   const [syncing, setSyncing] = React.useState(false);
+  const [fixing, setFixing] = React.useState(false);
 
   // If we're on the root orders page with no specific order ID, show mappings
   const showMappings = orderId === "quote-order-mapping";
@@ -52,6 +55,17 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
     }
   };
 
+  const handleFixMappings = async () => {
+    if (!fixOrderProductMapping) return;
+    
+    try {
+      setFixing(true);
+      await fixOrderProductMapping();
+    } finally {
+      setFixing(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -65,22 +79,39 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
           onSave={handleSaveOrder}
         />
         
-        {hasNoProducts && syncOrderProducts && (
-          <div className="mt-4 mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CircleAlert className="h-5 w-4 text-amber-500" />
-              <span>No product entries found for this order. Sync to create them from order data.</span>
+        <div className="flex flex-wrap gap-2 mt-4 mb-4">
+          {hasNoProducts && syncOrderProducts && (
+            <div className="w-full p-4 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CircleAlert className="h-5 w-4 text-amber-500" />
+                <span>No product entries found for this order. Sync to create them from order data.</span>
+              </div>
+              <Button 
+                onClick={handleSyncProducts} 
+                variant="outline" 
+                className="bg-amber-100 hover:bg-amber-200"
+                disabled={syncing}
+              >
+                {syncing ? "Syncing..." : "Sync Products"}
+              </Button>
             </div>
-            <Button 
-              onClick={handleSyncProducts} 
-              variant="outline" 
-              className="bg-amber-100 hover:bg-amber-200"
-              disabled={syncing}
-            >
-              {syncing ? "Syncing..." : "Sync Products"}
-            </Button>
-          </div>
-        )}
+          )}
+
+          {!hasNoProducts && fixOrderProductMapping && (
+            <div className="w-full flex justify-end">
+              <Button 
+                onClick={handleFixMappings} 
+                variant="outline" 
+                className="bg-blue-50 hover:bg-blue-100"
+                disabled={fixing}
+                size="sm"
+              >
+                <Tool className="h-4 w-4 mr-2" />
+                {fixing ? "Fixing Mappings..." : "Fix Recipe Mappings"}
+              </Button>
+            </div>
+          )}
+        </div>
         
         <OrderProductsProgress 
           productsLoading={productsLoading}
