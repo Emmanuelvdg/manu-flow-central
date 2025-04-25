@@ -37,12 +37,18 @@ export const calculateAvailableStock = (
   // Calculate total physical stock from batches
   const totalStock = batches.reduce((sum, batch) => sum + batch.remainingStock, 0);
   
-  // Calculate total allocated stock
-  const allocatedStock = allocations.reduce((sum, allocation) => sum + allocation.quantity, 0);
+  // Calculate allocated stock - only count booked and requested allocations
+  // Expected allocations represent future stock but don't reduce current available stock
+  const allocatedStock = allocations
+    .filter(allocation => ['booked', 'requested'].includes(allocation.allocation_type))
+    .reduce((sum, allocation) => sum + allocation.quantity, 0);
+  
+  // Available stock is total minus allocated
+  const availableStock = Math.max(0, totalStock - allocatedStock);
   
   return {
     totalStock,
     allocatedStock,
-    availableStock: totalStock - allocatedStock
+    availableStock
   };
 };

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DataTable, Column, ColumnCellProps } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/button";
@@ -39,10 +40,17 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
         const materialAllocations = allocations.filter(a => a.material_id === material.id);
+        
+        // Calculate stock details
         const { totalStock, allocatedStock, availableStock } = calculateAvailableStock(
           material.batches || [],
           materialAllocations
         );
+        
+        // Get booked allocations only
+        const bookedStock = materialAllocations
+          .filter(a => a.allocation_type === 'booked')
+          .reduce((sum, a) => sum + Number(a.quantity), 0);
 
         return (
           <div className="space-y-1">
@@ -54,7 +62,11 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
             </div>
             {allocatedStock > 0 && (
               <div className="text-sm text-muted-foreground">
-                ({allocatedStock} {material.unit} allocated)
+                <div>Total: {totalStock} {material.unit}</div>
+                <div>Allocated: {allocatedStock} {material.unit}</div>
+                {bookedStock > 0 && (
+                  <div className="font-medium">Booked: {bookedStock} {material.unit}</div>
+                )}
               </div>
             )}
           </div>

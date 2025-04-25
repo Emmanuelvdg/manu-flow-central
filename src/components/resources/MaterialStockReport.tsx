@@ -16,7 +16,17 @@ export const MaterialStockReport = () => {
       ...allocation,
       materialName: material?.name || 'Unknown',
       materialUnit: material?.unit || '-',
+      // Add stock information for better context
+      totalStock: material?.stock || 0
     };
+  });
+
+  // Sort by material name and then by order_id for better organization
+  const sortedReportData = [...reportData].sort((a, b) => {
+    if (a.materialName !== b.materialName) {
+      return a.materialName.localeCompare(b.materialName);
+    }
+    return a.order_id.localeCompare(b.order_id);
   });
 
   const columns = [
@@ -50,7 +60,7 @@ export const MaterialStockReport = () => {
           </Badge>
         );
       },
-    },
+    }
   ];
 
   return (
@@ -61,7 +71,7 @@ export const MaterialStockReport = () => {
       <CardContent>
         <DataTable 
           columns={columns} 
-          data={reportData}
+          data={sortedReportData}
         />
       </CardContent>
     </Card>
