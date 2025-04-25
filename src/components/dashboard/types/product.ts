@@ -1,4 +1,6 @@
 
+import { Json } from '@/integrations/supabase/types';
+
 export interface ProductVariant {
   id: string;
   sku: string;
@@ -25,8 +27,9 @@ export interface Product {
   updated_at?: string;
   variants?: ProductVariant[];
   // Use varianttypes to match database column name
-  varianttypes?: VariantType[] | null; // Match the database column name
+  varianttypes?: Json | VariantType[] | null; // Match the database column name
   hasvariants?: boolean; // Match the database column name
+  description?: string | null;
 }
 
 export const getDefaultProductImage = (category: string): string => {

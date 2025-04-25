@@ -16,6 +16,7 @@ import { EditProductForm } from '../EditProductForm';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ProductVariantSelector } from './ProductVariantSelector';
+import { parseJsonField } from '../utils/productUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -69,19 +70,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
           
         if (!error && data) {
           console.log('Product data from database:', data);
-          // Parse varianttypes if needed before setting the state
-          let parsedData = {...data};
-          if (data.varianttypes) {
-            try {
-              if (typeof data.varianttypes === 'string') {
-                parsedData.varianttypes = JSON.parse(data.varianttypes);
-              }
-            } catch (e) {
-              console.error('Failed to parse varianttypes:', e);
-            }
-          }
-          setCurrentProduct(parsedData as Product);
-          console.log('Product refreshed successfully:', parsedData);
+          // Transform the data to match our Product type
+          const transformedProduct = {
+            ...data,
+            varianttypes: parseJsonField(data.varianttypes)
+          } as Product;
+          
+          setCurrentProduct(transformedProduct);
+          console.log('Product refreshed successfully:', transformedProduct);
         } else {
           console.error('Error refreshing product:', error);
           toast({
@@ -152,7 +148,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
             {currentProduct.hasvariants && variants.length > 0 && (
               <ProductVariantSelector
                 variants={variants}
-                variantTypes={currentProduct.varianttypes || []}
+                variantTypes={parseJsonField(currentProduct.varianttypes) || []}
                 selectedVariantId={selectedVariantId}
                 onVariantChange={setSelectedVariantId}
               />
