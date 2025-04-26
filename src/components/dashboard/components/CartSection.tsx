@@ -123,7 +123,7 @@ export const CartSection: React.FC<CartSectionProps> = ({
       
       onClearCart();
       setIsCartOpen(false);
-      navigate(`/rfq/${data.id}`);
+      navigate(`/rfqs/${data.id}`); // Changed from /rfq/ to /rfqs/ to match route definition
     } catch (error: any) {
       console.error("Error creating RFQ:", error);
       toast({
