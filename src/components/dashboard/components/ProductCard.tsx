@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -73,8 +72,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
         // Transform the data to match our Product interface
         const transformedProduct = {
           ...data,
-          // Cast to any to bypass type checking - we know this is safe
-          varianttypes: parseJsonField(data.varianttypes)
+          // Ensure varianttypes is properly parsed before setting state
+          varianttypes: data.varianttypes ? parseJsonField(data.varianttypes) : []
         } as Product;
         
         setCurrentProduct(transformedProduct);
@@ -103,18 +102,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
     setCurrentProduct(product);
   }, [product]);
 
+  // Set default variant when variants are loaded
+  useEffect(() => {
+    if (variants.length > 0 && !selectedVariantId) {
+      setSelectedVariantId(variants[0].id);
+    }
+  }, [variants, selectedVariantId]);
+
   const handleAddToCart = () => {
     onAddToCart(currentProduct, selectedVariantId);
   };
 
-  // Helper function to safely get variant types as an array
+  // Helper function to safely get variant types as an array with proper type assertion
   const getVariantTypes = () => {
-    const parsed = parseJsonField(currentProduct.varianttypes);
-    // Ensure we always return an array
-    if (Array.isArray(parsed)) {
-      return parsed as any[];
+    if (!currentProduct.varianttypes) return [] as any[];
+    
+    // If it's already an array, return it
+    if (Array.isArray(currentProduct.varianttypes)) {
+      return currentProduct.varianttypes as any[];
     }
-    return [] as any[];
+    
+    // Otherwise parse it
+    const parsed = parseJsonField(currentProduct.varianttypes);
+    return Array.isArray(parsed) ? parsed as any[] : [] as any[];
   };
 
   return (

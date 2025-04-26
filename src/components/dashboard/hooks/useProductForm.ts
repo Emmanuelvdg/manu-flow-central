@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,11 +27,21 @@ interface UseProductFormProps {
 export function useProductForm({ product, onClose }: UseProductFormProps) {
   const { toast } = useToast();
   
-  // Parse variant types and ensure it's an array
-  const parsedData = parseJsonField(product.varianttypes);
-  const parsedVariantTypes = Array.isArray(parsedData) ? parsedData as VariantType[] : [] as VariantType[];
+  // Safely parse variant types ensuring it's an array
+  const parsedVariantTypes = () => {
+    if (!product.varianttypes) return [] as VariantType[];
+    
+    // If it's already an array, return it with type assertion
+    if (Array.isArray(product.varianttypes)) {
+      return product.varianttypes as VariantType[];
+    }
+    
+    // Otherwise parse it
+    const parsed = parseJsonField(product.varianttypes);
+    return Array.isArray(parsed) ? parsed as VariantType[] : [] as VariantType[];
+  };
   
-  const [variantTypes, setVariantTypes] = useState<VariantType[]>(parsedVariantTypes);
+  const [variantTypes, setVariantTypes] = useState<VariantType[]>(parsedVariantTypes());
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingVariantsLoaded, setExistingVariantsLoaded] = useState(false);
