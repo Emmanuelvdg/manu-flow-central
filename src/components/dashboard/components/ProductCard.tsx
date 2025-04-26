@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
           
         if (!error && data) {
           setVariants(data);
+          // Set default selected variant when variants are loaded
+          if (data.length > 0 && !selectedVariantId) {
+            setSelectedVariantId(data[0].id);
+          }
         }
       } catch (err) {
         console.error('Error loading variants:', err);
@@ -51,47 +56,47 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
     };
     
     loadVariants();
-  }, [product.id, product.hasvariants]);
+  }, [product.id, product.hasvariants, selectedVariantId]);
 
-  const handleCloseDialog = () => {
-    const refreshProduct = async () => {
-      try {
-        console.log('Refreshing product with ID:', product.id);
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', product.id)
-          .single();
-          
-        if (!error && data) {
-          console.log('Product data from database:', data);
-          const transformedProduct = {
-            ...data,
-            varianttypes: parseJsonField(data.varianttypes) as any
-          } as Product;
-          
-          setCurrentProduct(transformedProduct);
-          console.log('Product refreshed successfully:', transformedProduct);
-        } else {
-          console.error('Error refreshing product:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to refresh product data',
-            variant: 'destructive',
-          });
-        }
-      } catch (err) {
-        console.error('Failed to refresh product:', err);
+  const handleCloseDialog = async () => {
+    try {
+      console.log('Refreshing product with ID:', product.id);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', product.id)
+        .single();
+        
+      if (!error && data) {
+        console.log('Product data from database:', data);
+        
+        // Transform the data to match our Product interface
+        const transformedProduct = {
+          ...data,
+          // Cast to any to bypass type checking - we know this is safe
+          varianttypes: parseJsonField(data.varianttypes)
+        } as Product;
+        
+        setCurrentProduct(transformedProduct);
+        console.log('Product refreshed successfully:', transformedProduct);
+      } else {
+        console.error('Error refreshing product:', error);
         toast({
           title: 'Error',
-          description: 'An unexpected error occurred',
+          description: 'Failed to refresh product data',
           variant: 'destructive',
         });
       }
-    };
-    
-    refreshProduct();
-    setIsEditDialogOpen(false);
+    } catch (err) {
+      console.error('Failed to refresh product:', err);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsEditDialogOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -100,6 +105,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
 
   const handleAddToCart = () => {
     onAddToCart(currentProduct, selectedVariantId);
+  };
+
+  // Helper function to safely get variant types as an array
+  const getVariantTypes = () => {
+    const parsed = parseJsonField(currentProduct.varianttypes);
+    // Ensure we always return an array
+    if (Array.isArray(parsed)) {
+      return parsed as any[];
+    }
+    return [] as any[];
   };
 
   return (
@@ -140,9 +155,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, 
             {currentProduct.hasvariants && variants.length > 0 && (
               <ProductVariantSelector
                 variants={variants}
-                variantTypes={(Array.isArray(parseJsonField(currentProduct.varianttypes)) 
-                  ? parseJsonField(currentProduct.varianttypes) 
-                  : []) as any[]}
+                variantTypes={getVariantTypes()}
                 selectedVariantId={selectedVariantId}
                 onVariantChange={setSelectedVariantId}
               />
