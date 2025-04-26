@@ -1,7 +1,7 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { createOrderFromQuote } from "@/components/dashboard/quotes/quoteUtils";
+import { createOrderFromQuote } from "@/components/dashboard/quotes/services/orderService";
 
 export const useOrderOperations = (refetch: () => void) => {
   const { toast } = useToast();

@@ -13,7 +13,14 @@ export const useOrders = () => {
     queryFn: async () => {
       const { data, error: fetchError } = await supabase
         .from("orders")
-        .select("*")
+        .select(`
+          *,
+          quotes:quote_id (
+            quote_number,
+            customer_name,
+            products
+          )
+        `)
         .order("created_at", { ascending: false });
         
       if (fetchError) throw fetchError;
