@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Trash, X, ShoppingCart, Plus, Minus } from 'lucide-react';
 import {
@@ -8,14 +7,29 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetFooter,
-  SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { CartItem } from '../ProductCatalog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const rfqFormSchema = z.object({
+  customerName: z.string().min(1, "Customer name is required"),
+  customerEmail: z.string().email().optional().or(z.literal('')),
+  customerPhone: z.string().optional().or(z.literal('')),
+  companyName: z.string().optional().or(z.literal('')),
+  location: z.string().optional().or(z.literal('')),
+  notes: z.string().optional().or(z.literal(''))
+});
+
+type RfqFormValues = z.infer<typeof rfqFormSchema>;
 
 interface CartSectionProps {
   cartItems: CartItem[];
@@ -37,20 +51,30 @@ export const CartSection: React.FC<CartSectionProps> = ({
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cartItems.reduce((sum, item) => {
-    // If item has a variant, check if it has its own price
     const price = item.variant && item.variant.price !== null && item.variant.price !== undefined
       ? item.variant.price
       : item.product.price;
     return sum + (price || 0) * item.quantity;
   }, 0);
 
-  const handleCreateRFQ = async () => {
+  const form = useForm<RfqFormValues>({
+    resolver: zodResolver(rfqFormSchema),
+    defaultValues: {
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      companyName: '',
+      location: '',
+      notes: ''
+    }
+  });
+
+  const handleCreateRFQ = async (formData: RfqFormValues) => {
     if (cartItems.length === 0) return;
     
     setIsCreatingRFQ(true);
     
     try {
-      // Format products for RFQ
       const products = cartItems.map(item => ({
         id: item.product.id,
         name: item.product.name,
@@ -61,15 +85,18 @@ export const CartSection: React.FC<CartSectionProps> = ({
         sku: item.variant ? item.variant.sku : null
       }));
       
-      // Generate RFQ number
       const rfqNumber = `RFQ-${Date.now().toString().substring(6)}`;
       
-      // Create RFQ in database
       const { data, error } = await supabase
         .from('rfqs')
         .insert({
           rfq_number: rfqNumber,
-          customer_name: 'New Customer',
+          customer_name: formData.customerName,
+          customer_email: formData.customerEmail,
+          customer_phone: formData.customerPhone,
+          company_name: formData.companyName,
+          location: formData.location,
+          notes: formData.notes,
           products,
           status: 'new'
         })
@@ -80,7 +107,6 @@ export const CartSection: React.FC<CartSectionProps> = ({
         throw error;
       }
       
-      // Success, clear cart and navigate to RFQ detail page
       toast({
         title: "RFQ Created",
         description: `RFQ #${rfqNumber} has been created successfully.`,
@@ -101,15 +127,6 @@ export const CartSection: React.FC<CartSectionProps> = ({
     }
   };
 
-  // Helper to format variant attributes for display
-  const formatVariantAttributes = (attributes: Record<string, string> | undefined): string => {
-    if (!attributes || Object.keys(attributes).length === 0) return "";
-    
-    return Object.entries(attributes)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join(', ');
-  };
-
   return (
     <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
       <SheetTrigger asChild>
@@ -120,7 +137,7 @@ export const CartSection: React.FC<CartSectionProps> = ({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex flex-col">
+      <SheetContent className="flex flex-col w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="text-xl">Quote Request ({totalItems} items)</SheetTitle>
           <div className="absolute right-4 top-4">
@@ -198,30 +215,114 @@ export const CartSection: React.FC<CartSectionProps> = ({
           )}
         </div>
         
-        <SheetFooter className="border-t pt-4">
-          <div className="w-full space-y-4">
-            <div className="flex justify-between">
-              <span>Total</span>
-              <span className="font-semibold">${totalPrice.toLocaleString()}</span>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2">
-              <Button 
-                variant="outline" 
-                onClick={onClearCart}
-                disabled={cartItems.length === 0 || isCreatingRFQ}
-              >
-                Clear All
-              </Button>
-              <Button
-                onClick={handleCreateRFQ}
-                disabled={cartItems.length === 0 || isCreatingRFQ}
-              >
-                {isCreatingRFQ ? "Creating..." : "Create RFQ"}
-              </Button>
-            </div>
-          </div>
-        </SheetFooter>
+        {cartItems.length > 0 && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleCreateRFQ)} className="space-y-4 pt-4 border-t">
+              <FormField
+                control={form.control}
+                name="customerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer Name*</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter customer name" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="customerEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" placeholder="Enter email address" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="customerPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter phone number" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter company name" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter location" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Add any notes" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <SheetFooter className="pt-4 border-t">
+                <div className="w-full space-y-4">
+                  <div className="flex justify-between">
+                    <span>Total</span>
+                    <span className="font-semibold">${totalPrice.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={onClearCart}
+                      disabled={isCreatingRFQ}
+                    >
+                      Clear All
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isCreatingRFQ}
+                    >
+                      {isCreatingRFQ ? "Creating..." : "Create RFQ"}
+                    </Button>
+                  </div>
+                </div>
+              </SheetFooter>
+            </form>
+          </Form>
+        )}
       </SheetContent>
     </Sheet>
   );
