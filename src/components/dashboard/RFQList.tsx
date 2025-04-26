@@ -55,6 +55,11 @@ export const RFQList = () => {
     });
   };
 
+  // Helper function to check if an RFQ already has associated quotes
+  const hasQuotes = (rfq: any): boolean => {
+    return rfq.quotes && Array.isArray(rfq.quotes) && rfq.quotes.length > 0;
+  };
+
   const columns: Column<any>[] = [
     {
       header: 'RFQ ID',
@@ -94,7 +99,7 @@ export const RFQList = () => {
               <Eye className="mr-2 h-4 w-4" />
               View
             </Button>
-            {(row.status === 'new' || row.status === 'reviewing') && (
+            {(row.status === 'new' || row.status === 'reviewing') && !hasQuotes(row) && (
               <Button
                 variant="default"
                 size="sm"

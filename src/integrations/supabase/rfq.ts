@@ -4,7 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 export async function fetchRFQs() {
   const { data, error } = await supabase
     .from("rfqs")
-    .select("*")
+    .select(`
+      *,
+      quotes:quotes(id)
+    `)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data;
