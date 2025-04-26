@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Trash, X, ShoppingCart, Plus, Minus } from 'lucide-react';
 import {
@@ -19,6 +20,14 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+
+// Helper function to format variant attributes for display
+const formatVariantAttributes = (attributes: Record<string, string> | null | undefined): string => {
+  if (!attributes) return '';
+  return Object.entries(attributes)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join(', ');
+};
 
 const rfqFormSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
