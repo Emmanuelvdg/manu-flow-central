@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { RFQForm } from './cart/RFQForm';
 import { CartItems } from './cart/CartItems';
 import { CartTotal } from './cart/CartTotal';
+import { z } from 'zod';
 
 interface CartSectionProps {
   cartItems: CartItem[];
@@ -44,12 +45,29 @@ export const CartSection: React.FC<CartSectionProps> = ({
     return sum + (price || 0) * item.quantity;
   }, 0);
 
-  const handleCreateRFQ = async (formData: any) => {
+  // Define the form schema
+  const rfqFormSchema = z.object({
+    customerName: z.string().min(1, "Customer name is required"),
+    customerEmail: z.string().email().optional().or(z.literal('')),
+    customerPhone: z.string().optional().or(z.literal('')),
+    companyName: z.string().optional().or(z.literal('')),
+    location: z.string().optional().or(z.literal('')),
+    notes: z.string().optional().or(z.literal(''))
+  });
+
+  type RfqFormValues = z.infer<typeof rfqFormSchema>;
+
+  const handleCreateRFQ = async (formData: RfqFormValues) => {
     if (cartItems.length === 0) return;
     
     setIsCreatingRFQ(true);
     
     try {
+      // Ensure customerName is provided
+      if (!formData.customerName || formData.customerName.trim() === '') {
+        throw new Error('Customer name is required');
+      }
+      
       const products = cartItems.map(item => ({
         id: item.product.id,
         name: item.product.name,
@@ -129,12 +147,7 @@ export const CartSection: React.FC<CartSectionProps> = ({
         </div>
         
         {cartItems.length > 0 && (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            const formElement = e.target as HTMLFormElement;
-            const formData = new FormData(formElement);
-            handleCreateRFQ(Object.fromEntries(formData));
-          }}>
+          <div>
             <RFQForm 
               onSubmit={handleCreateRFQ}
               isSubmitting={isCreatingRFQ}
@@ -144,7 +157,7 @@ export const CartSection: React.FC<CartSectionProps> = ({
               onClear={onClearCart}
               isSubmitting={isCreatingRFQ}
             />
-          </form>
+          </div>
         )}
       </SheetContent>
     </Sheet>

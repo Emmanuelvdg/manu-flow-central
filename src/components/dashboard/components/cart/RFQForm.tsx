@@ -3,7 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
 const rfqFormSchema = z.object({
@@ -47,6 +47,7 @@ export const RFQForm: React.FC<RFQFormProps> = ({ onSubmit, isSubmitting }) => {
               <FormControl>
                 <Input {...field} placeholder="Enter customer name" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
