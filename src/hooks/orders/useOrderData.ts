@@ -13,15 +13,13 @@ export const useOrderData = (orderId: string | undefined) => {
       
       console.log("Fetching order details for:", orderId);
       
-      // Try fetching by order_number first
+      // Try fetching by order_number first with expanded quote data
       const { data, error } = await supabase
         .from('orders')
         .select(`
           *,
           quotes:quote_id (
-            quote_number,
-            customer_name,
-            products
+            *
           )
         `)
         .eq('order_number', orderId)
@@ -40,9 +38,7 @@ export const useOrderData = (orderId: string | undefined) => {
           .select(`
             *,
             quotes:quote_id (
-              quote_number,
-              customer_name,
-              products
+              *
             )
           `)
           .eq('id', orderId)

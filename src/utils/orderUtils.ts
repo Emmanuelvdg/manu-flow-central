@@ -54,6 +54,9 @@ export const parseOrderRow = (row: any): Order => {
     const quantity = prod?.quantity ? parseInt(String(prod.quantity)) : 0;
     return sum + quantity;
   }, 0);
+  
+  // Get customer name with fallback to quote data
+  const customerName = row.customer_name || (row.quotes ? row.quotes.customer_name : null) || "-";
     
   return {
     number: row.order_number || "-",
@@ -67,7 +70,7 @@ export const parseOrderRow = (row: any): Order => {
     statusColor: getStatusColor(row.status),      
     editable: true,
     checked: false,
-    customerName: row.customer_name || (row.quotes ? row.quotes.customer_name : null),
+    customerName: customerName,
     total: row.total,
     products: effectiveProducts
   };

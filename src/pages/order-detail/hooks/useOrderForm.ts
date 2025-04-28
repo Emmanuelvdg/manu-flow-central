@@ -8,34 +8,53 @@ export const useOrderForm = (order: any, orderId: string, refetch: () => Promise
   const [formData, setFormData] = useState(() => {
     // Initialize form data based on order or quote information if available
     if (order) {
+      // Get customer name from order or from quote if not in order
+      const customerName = order.customer_name || 
+        (order.quotes && order.quotes.customer_name ? order.quotes.customer_name : '');
+      
+      // Handle shipping address with better fallbacks
       let shippingAddress = order.shipping_address || '';
       
-      // If the quote has shipping method and incoterms, use that for the address
-      // if no proper shipping address is available
-      if (order.quotes && 
-          (!shippingAddress || shippingAddress.includes('fob') || shippingAddress.includes('FOB'))) {
-        const quoteShippingMethod = order.quotes.shipping_method;
-        const quoteIncoterms = order.quotes.incoterms;
+      // If shipping address is empty or generic, try to build a better one from quote data
+      if ((!shippingAddress || shippingAddress === 'null') && order.quotes) {
+        // Build shipping address from quote information
+        const addressParts = [];
         
-        if (order.quotes.shipping_address) {
-          // Use quote's shipping address if available
-          shippingAddress = order.quotes.shipping_address;
-        } else if (quoteShippingMethod || quoteIncoterms) {
-          // Format a proper shipping address from the available information
-          const shipInfo = [];
-          if (order.quotes.company_name) shipInfo.push(order.quotes.company_name);
-          if (order.quotes.customer_name) shipInfo.push(order.quotes.customer_name);
-          if (order.quotes.location) shipInfo.push(order.quotes.location);
-          shippingAddress = shipInfo.join(', ');
+        // Add company name if available
+        if (order.quotes.company_name) {
+          addressParts.push(order.quotes.company_name);
+        }
+        
+        // Add shipping method and incoterms if available
+        if (order.quotes.shipping_method || order.quotes.incoterms) {
+          const shippingInfo = [
+            order.quotes.shipping_method,
+            order.quotes.incoterms
+          ].filter(Boolean).join(', ');
+          
+          if (shippingInfo) {
+            addressParts.push(shippingInfo);
+          }
+        }
+        
+        // Add location if available
+        if (order.quotes.location) {
+          addressParts.push(order.quotes.location);
+        }
+        
+        // Combine all available address parts
+        if (addressParts.length > 0) {
+          shippingAddress = addressParts.join(' - ');
         }
       }
       
       return {
-        customerName: order.customer_name || (order.quotes?.customer_name || ''),
+        customerName: customerName || '',
         status: order.status || 'created',
-        shippingAddress: shippingAddress,
+        shippingAddress: shippingAddress || '',
       };
     }
+    
     // Return default values even when there's no order
     return {
       customerName: '',
