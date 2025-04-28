@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const rfqFormSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
@@ -61,6 +62,7 @@ export const RFQForm: React.FC<RFQFormProps> = ({ onSubmit, isSubmitting }) => {
               <FormControl>
                 <Input {...field} type="email" placeholder="Enter email address" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -74,6 +76,7 @@ export const RFQForm: React.FC<RFQFormProps> = ({ onSubmit, isSubmitting }) => {
               <FormControl>
                 <Input {...field} placeholder="Enter phone number" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -87,6 +90,7 @@ export const RFQForm: React.FC<RFQFormProps> = ({ onSubmit, isSubmitting }) => {
               <FormControl>
                 <Input {...field} placeholder="Enter company name" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -100,6 +104,7 @@ export const RFQForm: React.FC<RFQFormProps> = ({ onSubmit, isSubmitting }) => {
               <FormControl>
                 <Input {...field} placeholder="Enter location" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -113,9 +118,14 @@ export const RFQForm: React.FC<RFQFormProps> = ({ onSubmit, isSubmitting }) => {
               <FormControl>
                 <Input {...field} placeholder="Add any notes" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
+        
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Creating..." : "Submit Request"}
+        </Button>
       </form>
     </Form>
   );

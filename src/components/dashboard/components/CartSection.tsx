@@ -58,7 +58,14 @@ export const CartSection: React.FC<CartSectionProps> = ({
   type RfqFormValues = z.infer<typeof rfqFormSchema>;
 
   const handleCreateRFQ = async (formData: RfqFormValues) => {
-    if (cartItems.length === 0) return;
+    if (cartItems.length === 0) {
+      toast({
+        title: "Error",
+        description: "Your cart is empty. Please add some products first.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsCreatingRFQ(true);
     
@@ -85,11 +92,11 @@ export const CartSection: React.FC<CartSectionProps> = ({
         .insert({
           rfq_number: rfqNumber,
           customer_name: formData.customerName,
-          customer_email: formData.customerEmail,
-          customer_phone: formData.customerPhone,
-          company_name: formData.companyName,
-          location: formData.location,
-          notes: formData.notes,
+          customer_email: formData.customerEmail || null,
+          customer_phone: formData.customerPhone || null,
+          company_name: formData.companyName || null,
+          location: formData.location || null,
+          notes: formData.notes || null,
           products,
           status: 'new'
         })
@@ -147,7 +154,7 @@ export const CartSection: React.FC<CartSectionProps> = ({
         </div>
         
         {cartItems.length > 0 && (
-          <div>
+          <div className="mt-4">
             <RFQForm 
               onSubmit={handleCreateRFQ}
               isSubmitting={isCreatingRFQ}
