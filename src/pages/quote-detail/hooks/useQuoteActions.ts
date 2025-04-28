@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,13 +30,16 @@ export const useQuoteActions = ({
         quantity: product.quantity || 1
       }));
       
+      // Ensure status is set properly when creating a new quote
+      const initialStatus = isNew ? 'draft' : formState.status;
+      
       const quoteData = {
         customer_name: formState.customerName,
         customer_email: formState.customerEmail,
         company_name: formState.companyName,
         rfq_id: formState.rfqId,
         products: jsonProducts,
-        status: formState.status,
+        status: initialStatus,
         total: formState.total,
         payment_terms: formState.paymentTerms,
         incoterms: formState.incoterms,

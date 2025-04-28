@@ -8,10 +8,11 @@ import { Plus } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
 import { Quote, fetchQuotes } from './quotes/quoteUtils';
 import { createQuotesColumns } from './quotes/quotesColumns';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 export const QuotesList = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Use React Query to fetch quotes
   const { data: quotes = [], isLoading, error, refetch } = useQuery({

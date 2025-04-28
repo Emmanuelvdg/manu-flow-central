@@ -100,7 +100,7 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
         <Eye className="mr-2 h-4 w-4" />
         View
       </Button>
-      {status === 'submitted' && (
+      {status === 'draft' || status === 'submitted' ? (
         <>
           <Button variant="default" size="sm" onClick={(e) => {
             e.stopPropagation();
@@ -117,7 +117,7 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
             Reject
           </Button>
         </>
-      )}
+      ) : null}
     </div>
   );
 };
