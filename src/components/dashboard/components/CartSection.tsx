@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { createRFQ } from '@/integrations/supabase/rfq';
+import { useToast } from '@/hooks/use-toast';
 
 interface CartItem {
   product: any;
@@ -30,6 +32,8 @@ export const CartSection: React.FC<CartSectionProps> = ({
   onClearCart,
 }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [customerDetails, setCustomerDetails] = useState({
     customerName: '',
     companyName: '',
@@ -43,13 +47,64 @@ export const CartSection: React.FC<CartSectionProps> = ({
     return null;
   }
 
-  const handleCreateRFQ = () => {
-    navigate('/rfqs/create', {
-      state: {
-        cartItems,
-        customerDetails
-      }
-    });
+  const handleCreateRFQ = async () => {
+    if (!customerDetails.customerName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Customer name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Format products for RFQ creation
+      const formattedProducts = cartItems.map(item => {
+        const variant = item.variant;
+        const variantInfo = variant 
+          ? ` (${Object.entries(variant.attributes).map(([k, v]) => `${k}: ${v}`).join(', ')})`
+          : '';
+        return `${item.product.name}${variantInfo} x ${item.quantity}`;
+      });
+      
+      // Create RFQ directly
+      const rfqData = {
+        rfq_number: `RFQ-${Date.now().toString().substring(6)}`,
+        customer_name: customerDetails.customerName,
+        customer_email: customerDetails.customerEmail,
+        customer_phone: customerDetails.customerPhone,
+        company_name: customerDetails.companyName,
+        location: customerDetails.location,
+        notes: customerDetails.notes,
+        products: formattedProducts,
+        status: "new",
+      };
+      
+      const createdRfq = await createRFQ(rfqData);
+      
+      toast({
+        title: "RFQ Created",
+        description: `RFQ ${rfqData.rfq_number} created successfully.`,
+      });
+      
+      // Clear cart after successful submission
+      onClearCart();
+      
+      // Navigate to the RFQ list or detail page
+      navigate('/rfqs');
+      
+    } catch (err: any) {
+      console.error("Error creating RFQ:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to create RFQ. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Calculate total price from cart items
@@ -148,7 +203,7 @@ export const CartSection: React.FC<CartSectionProps> = ({
             <CartTotal 
               total={calculateTotal()}
               onClear={onClearCart}
-              isSubmitting={false}
+              isSubmitting={isSubmitting}
             />
             <div className="flex gap-2 w-full md:w-auto">
               <Button variant="outline" onClick={onClearCart} className="flex-1 md:flex-none">
@@ -157,9 +212,9 @@ export const CartSection: React.FC<CartSectionProps> = ({
               <Button 
                 onClick={handleCreateRFQ} 
                 className="flex-1 md:flex-none"
-                disabled={!customerDetails.customerName.trim()}
+                disabled={!customerDetails.customerName.trim() || isSubmitting}
               >
-                Create RFQ
+                {isSubmitting ? "Creating..." : "Create RFQ"}
               </Button>
             </div>
           </div>
