@@ -13,7 +13,7 @@ interface UseProductSubmissionProps {
 
 export function useProductSubmission({ 
   productId, 
-  onClose, 
+  onClose,
   existingVariantsLoaded 
 }: UseProductSubmissionProps) {
   const { toast } = useToast();

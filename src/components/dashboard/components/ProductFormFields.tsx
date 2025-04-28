@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
@@ -10,7 +9,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { ProductFormData } from '../hooks/useProductForm';
+import { ProductFormData } from '../validation/productFormSchema';
 
 interface ProductFormFieldsProps {
   form: UseFormReturn<ProductFormData>;
