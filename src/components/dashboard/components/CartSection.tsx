@@ -1,9 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CartItems } from './cart/CartItems';
 import { CartTotal } from './cart/CartTotal';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface CartItem {
   product: any;
@@ -26,13 +30,26 @@ export const CartSection: React.FC<CartSectionProps> = ({
   onClearCart,
 }) => {
   const navigate = useNavigate();
+  const [customerDetails, setCustomerDetails] = useState({
+    customerName: '',
+    companyName: '',
+    customerPhone: '',
+    customerEmail: '',
+    location: '',
+    notes: ''
+  });
 
   if (cartItems.length === 0) {
     return null;
   }
 
   const handleCreateRFQ = () => {
-    navigate('/rfqs/create');
+    navigate('/rfqs/create', {
+      state: {
+        cartItems,
+        customerDetails
+      }
+    });
   };
 
   // Calculate total price from cart items
@@ -43,15 +60,90 @@ export const CartSection: React.FC<CartSectionProps> = ({
     }, 0);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setCustomerDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 z-50">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <CartItems
-            items={cartItems}
-            onRemoveItem={onRemoveItem}
-            onUpdateQuantity={onUpdateQuantity}
-          />
+          <div className="flex-1">
+            <CartItems
+              items={cartItems}
+              onRemoveItem={onRemoveItem}
+              onUpdateQuantity={onUpdateQuantity}
+            />
+            <Card className="mt-4">
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <Label htmlFor="customerName">Customer Name</Label>
+                  <Input
+                    id="customerName"
+                    name="customerName"
+                    value={customerDetails.customerName}
+                    onChange={handleInputChange}
+                    placeholder="Enter customer name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="companyName">Company Name</Label>
+                  <Input
+                    id="companyName"
+                    name="companyName"
+                    value={customerDetails.companyName}
+                    onChange={handleInputChange}
+                    placeholder="Enter company name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="customerPhone">Phone</Label>
+                  <Input
+                    id="customerPhone"
+                    name="customerPhone"
+                    value={customerDetails.customerPhone}
+                    onChange={handleInputChange}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="customerEmail">Email</Label>
+                  <Input
+                    id="customerEmail"
+                    name="customerEmail"
+                    type="email"
+                    value={customerDetails.customerEmail}
+                    onChange={handleInputChange}
+                    placeholder="Enter email address"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    name="location"
+                    value={customerDetails.location}
+                    onChange={handleInputChange}
+                    placeholder="Enter location"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    name="notes"
+                    value={customerDetails.notes}
+                    onChange={handleInputChange}
+                    placeholder="Enter any additional notes"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
           <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
             <CartTotal 
               total={calculateTotal()}
@@ -62,7 +154,11 @@ export const CartSection: React.FC<CartSectionProps> = ({
               <Button variant="outline" onClick={onClearCart} className="flex-1 md:flex-none">
                 Clear
               </Button>
-              <Button onClick={handleCreateRFQ} className="flex-1 md:flex-none">
+              <Button 
+                onClick={handleCreateRFQ} 
+                className="flex-1 md:flex-none"
+                disabled={!customerDetails.customerName.trim()}
+              >
                 Create RFQ
               </Button>
             </div>

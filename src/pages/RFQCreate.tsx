@@ -1,29 +1,45 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createRFQ, RFQInsert } from "@/integrations/supabase/rfq";
 import { useToast } from "@/hooks/use-toast";
 
 const RFQCreate = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
-  const [fields, setFields] = useState<Omit<RFQInsert, "products">>({
-    rfq_number: `RFQ-${Date.now().toString().substring(6)}`,
-    customer_name: "",
-    customer_email: "",
-    customer_phone: "",
-    company_name: "",
-    location: "",
-    notes: "",
-    status: "new",
+
+  // Initialize form state with cart data if available
+  const [fields, setFields] = useState<Omit<RFQInsert, "products">>(() => {
+    const cartData = location.state?.customerDetails;
+    return {
+      rfq_number: `RFQ-${Date.now().toString().substring(6)}`,
+      customer_name: cartData?.customerName || "",
+      customer_email: cartData?.customerEmail || "",
+      customer_phone: cartData?.customerPhone || "",
+      company_name: cartData?.companyName || "",
+      location: cartData?.location || "",
+      notes: cartData?.notes || "",
+      status: "new",
+    };
   });
-  const [productsInput, setProductsInput] = useState("");
+
+  // Initialize products from cart items if available
+  const [productsInput, setProductsInput] = useState(() => {
+    const cartItems = location.state?.cartItems;
+    if (!cartItems) return "";
+    return cartItems.map((item: any) => {
+      const variant = item.variant;
+      const variantInfo = variant ? ` (${Object.entries(variant.attributes).map(([k, v]) => `${k}: ${v}`).join(', ')})` : '';
+      return `${item.product.name}${variantInfo} x ${item.quantity}`;
+    }).join(', ');
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFields(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -32,7 +48,6 @@ const RFQCreate = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
     if (!fields.customer_name.trim()) {
       toast({
         title: "Validation Error",
