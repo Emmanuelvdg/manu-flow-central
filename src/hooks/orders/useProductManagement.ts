@@ -37,26 +37,38 @@ export const useProductManagement = () => {
         return existingProduct.id;
       }
       
-      // If product doesn't exist, use a placeholder ID based on the name
-      // instead of trying to create a new product (which would fail due to RLS)
-      console.log(`Product "${productName}" doesn't exist, using name-based ID`);
+      // Create a new product if it doesn't exist
+      console.log(`Product "${productName}" doesn't exist, creating a new product`);
       
-      // Create a simplified ID from the name
-      const placeholderId = productName
+      // Generate a product ID if none was provided
+      const finalProductId = productId || productName
         .replace(/[^a-zA-Z0-9]/g, '_')
         .replace(/_+/g, '_')
         .toUpperCase()
         .substring(0, 20);
+      
+      const { data: newProduct, error: createError } = await supabase
+        .from('products')
+        .insert({
+          id: finalProductId,
+          name: productName,
+          description: `Auto-generated from order ${orderId}`,
+          category: 'General'
+        })
+        .select()
+        .single();
         
-      console.log(`Using placeholder ID: ${placeholderId} for "${productName}"`);
-      return placeholderId;
+      if (createError) {
+        console.error(`Failed to create product for "${productName}":`, createError);
+        throw createError;
+      }
+      
+      console.log(`Created new product with ID ${newProduct.id}`);
+      return newProduct.id;
+      
     } catch (err) {
       console.error(`Error in findOrCreateProduct for "${productName}":`, err);
-      
-      // Return a fallback ID on error
-      const fallbackId = `PRODUCT_${Date.now()}`;
-      console.log(`Using fallback ID: ${fallbackId}`);
-      return fallbackId;
+      throw err;
     }
   };
 
