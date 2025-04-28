@@ -1,23 +1,30 @@
 
-import { useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useOrderForm = (order: any, orderId: string, refetch: () => Promise<void>) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState(() => {
-    // Initialize form data based on order or quote information if available
+  const [formData, setFormData] = useState({
+    customerName: '',
+    status: 'created',
+    shippingAddress: '',
+  });
+
+  // Initialize form data when order changes
+  useEffect(() => {
     if (order) {
-      // Get customer name from order or from quote if not in order
+      console.log("Setting form data from order:", order);
+      
+      // Get customer name with fallback to quote data
       const customerName = order.customer_name || 
         (order.quotes && order.quotes.customer_name ? order.quotes.customer_name : '');
       
       // Handle shipping address with better fallbacks
       let shippingAddress = order.shipping_address || '';
       
-      // If shipping address is empty or generic, try to build a better one from quote data
+      // If shipping address is empty or non-meaningful, build from quote data
       if ((!shippingAddress || shippingAddress === 'null') && order.quotes) {
-        // Build shipping address from quote information
         const addressParts = [];
         
         // Add company name if available
@@ -48,20 +55,13 @@ export const useOrderForm = (order: any, orderId: string, refetch: () => Promise
         }
       }
       
-      return {
+      setFormData({
         customerName: customerName || '',
         status: order.status || 'created',
         shippingAddress: shippingAddress || '',
-      };
+      });
     }
-    
-    // Return default values even when there's no order
-    return {
-      customerName: '',
-      status: 'created',
-      shippingAddress: '',
-    };
-  });
+  }, [order]);
 
   const updateMaterialAllocations = async (
     orderId: string,

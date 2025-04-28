@@ -46,7 +46,20 @@ export const useOrderData = (orderId: string | undefined) => {
         
         if (errorById) throw errorById;
         console.log("Found order by ID:", dataById);
+        
+        // Make sure null values are properly handled
+        if (dataById) {
+          if (dataById.shipping_address === null) dataById.shipping_address = '';
+          if (dataById.customer_name === null) dataById.customer_name = '';
+        }
+        
         return dataById;
+      }
+      
+      // Make sure null values are properly handled
+      if (data) {
+        if (data.shipping_address === null) data.shipping_address = '';
+        if (data.customer_name === null) data.customer_name = '';
       }
       
       console.log("Found order:", data);

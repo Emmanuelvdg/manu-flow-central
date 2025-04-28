@@ -39,6 +39,11 @@ export const OrderMetaForm: React.FC<OrderMetaFormProps> = ({
     onChange(syntheticEvent);
   };
   
+  // Log formData for debugging
+  React.useEffect(() => {
+    console.log("OrderMetaForm formData:", formData);
+  }, [formData]);
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
