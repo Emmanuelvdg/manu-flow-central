@@ -56,6 +56,9 @@ export const QuoteActions: React.FC<QuoteActionsProps> = ({
       });
       
       onStatusChange();
+      
+      // Navigate to orders page to ensure the orders list is refreshed
+      navigate('/orders');
     } catch (error: any) {
       console.error("Error accepting quote:", error);
       toast({
