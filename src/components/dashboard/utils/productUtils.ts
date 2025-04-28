@@ -1,4 +1,3 @@
-
 import { Json } from "@/integrations/supabase/types";
 import { VariantType } from "../types/product";
 
@@ -36,4 +35,10 @@ export function createDefaultVariant(sku: string, price: number, attributes: Rec
     price,
     product_id: '', // Will be filled when saving
   };
+}
+
+export function formatVariantAttributes(attributes: Record<string, string>): string {
+  return Object.entries(attributes)
+    .map(([_, value]) => `${value}`)
+    .join(', ');
 }
