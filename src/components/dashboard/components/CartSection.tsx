@@ -35,6 +35,14 @@ export const CartSection: React.FC<CartSectionProps> = ({
     navigate('/rfqs/create');
   };
 
+  // Calculate total price from cart items
+  const calculateTotal = () => {
+    return cartItems.reduce((total, item) => {
+      const price = item.variant?.price || item.product.price || 0;
+      return total + (price * item.quantity);
+    }, 0);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 z-50">
       <div className="max-w-7xl mx-auto">
@@ -45,7 +53,11 @@ export const CartSection: React.FC<CartSectionProps> = ({
             onUpdateQuantity={onUpdateQuantity}
           />
           <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-            <CartTotal items={cartItems} />
+            <CartTotal 
+              total={calculateTotal()}
+              onClear={onClearCart}
+              isSubmitting={false}
+            />
             <div className="flex gap-2 w-full md:w-auto">
               <Button variant="outline" onClick={onClearCart} className="flex-1 md:flex-none">
                 Clear

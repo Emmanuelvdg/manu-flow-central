@@ -14,37 +14,9 @@ export const CartTotal: React.FC<CartTotalProps> = ({ total, onClear, isSubmitti
   const formContext = useFormContext();
   
   return (
-    <SheetFooter className="pt-4 border-t">
-      <div className="w-full space-y-4">
-        <div className="flex justify-between">
-          <span>Total</span>
-          <span className="font-semibold">${total.toLocaleString()}</span>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <Button 
-            variant="outline" 
-            onClick={onClear}
-            type="button"
-            disabled={isSubmitting}
-          >
-            Clear All
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            onClick={() => {
-              if (formContext) {
-                formContext.handleSubmit((data) => {
-                  // The form will be submitted through the parent form element
-                })();
-              }
-            }}
-          >
-            {isSubmitting ? "Creating..." : "Create RFQ"}
-          </Button>
-        </div>
-      </div>
-    </SheetFooter>
+    <div className="flex items-center gap-2">
+      <span className="text-sm font-medium">Total:</span>
+      <span className="font-bold">${total.toLocaleString()}</span>
+    </div>
   );
 };
