@@ -16,6 +16,10 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
     const productId = product.id || product.name;
     const productName = product.name || productId;
     
+    // Extract quantity if included in product name (e.g., "Wooden Table x 6")
+    const quantityMatch = productName.match(/\s+x\s+(\d+)$/);
+    const explicitQuantity = quantityMatch ? parseInt(quantityMatch[1], 10) : null;
+    
     try {
       console.log(`Creating order product for: ${productName} (${productId})`);
       
@@ -31,7 +35,7 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
       const productEntry = {
         order_id: orderId,
         product_id: actualProductId,
-        quantity: parseInt(String(product.quantity)) || 1,
+        quantity: explicitQuantity || parseInt(String(product.quantity)) || 1,
         unit: product.unit || 'pcs',
         status: 'pending',
         materials_status: 'Not booked',

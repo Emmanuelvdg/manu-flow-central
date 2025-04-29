@@ -8,7 +8,10 @@ export const useProductManagement = () => {
       throw new Error("Product name is required");
     }
     
-    console.log(`Finding or creating product: "${productName}" with ID: "${productId}"`);
+    // Clean product name by removing quantity information (e.g., "Wooden Table x 6" -> "Wooden Table")
+    const cleanProductName = productName.replace(/\s+x\s+\d+$/, '').trim();
+    
+    console.log(`Finding or creating product: "${cleanProductName}" (original: "${productName}") with ID: "${productId}"`);
     
     try {
       // First, check if the product exists by ID
@@ -25,23 +28,23 @@ export const useProductManagement = () => {
         }
       }
       
-      // Then, check if the product exists by name
+      // Then, check if the product exists by clean name
       const { data: existingProduct } = await supabase
         .from('products')
         .select('id, name')
-        .eq('name', productName)
+        .eq('name', cleanProductName)
         .maybeSingle();
         
       if (existingProduct) {
-        console.log(`Found existing product ${existingProduct.id} for "${productName}"`);
+        console.log(`Found existing product ${existingProduct.id} for "${cleanProductName}"`);
         return existingProduct.id;
       }
       
       // Create a new product if it doesn't exist
-      console.log(`Product "${productName}" doesn't exist, creating a new product`);
+      console.log(`Product "${cleanProductName}" doesn't exist, creating a new product`);
       
       // Generate a product ID if none was provided
-      const finalProductId = productId || productName
+      const finalProductId = productId || cleanProductName
         .replace(/[^a-zA-Z0-9]/g, '_')
         .replace(/_+/g, '_')
         .toUpperCase()
@@ -51,7 +54,7 @@ export const useProductManagement = () => {
         .from('products')
         .insert({
           id: finalProductId,
-          name: productName,
+          name: cleanProductName,
           description: `Auto-generated from order ${orderId}`,
           category: 'General'
         })
@@ -59,7 +62,7 @@ export const useProductManagement = () => {
         .single();
         
       if (createError) {
-        console.error(`Failed to create product for "${productName}":`, createError);
+        console.error(`Failed to create product for "${cleanProductName}":`, createError);
         throw createError;
       }
       
@@ -67,7 +70,7 @@ export const useProductManagement = () => {
       return newProduct.id;
       
     } catch (err) {
-      console.error(`Error in findOrCreateProduct for "${productName}":`, err);
+      console.error(`Error in findOrCreateProduct for "${cleanProductName}":`, err);
       throw err;
     }
   };
