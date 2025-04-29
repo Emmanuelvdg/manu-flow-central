@@ -9,6 +9,77 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      custom_product_documents: {
+        Row: {
+          created_at: string
+          custom_product_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_product_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_product_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_product_documents_custom_product_id_fkey"
+            columns: ["custom_product_id"]
+            isOneToOne: false
+            referencedRelation: "custom_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_products: {
+        Row: {
+          created_at: string
+          description: string | null
+          documents: Json | null
+          id: string
+          name: string
+          quote_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          documents?: Json | null
+          id?: string
+          name: string
+          quote_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          documents?: Json | null
+          id?: string
+          name?: string
+          quote_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number

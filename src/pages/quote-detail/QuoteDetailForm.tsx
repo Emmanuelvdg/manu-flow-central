@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,9 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData })
 
       <QuoteDetailProductsSection 
         products={formState.products} 
-        setProducts={setters.setProducts} 
+        setProducts={setters.setProducts}
+        customProducts={formState.customProducts}
+        setCustomProducts={setters.setCustomProducts}
         total={formState.total}
         setTotal={setters.setTotal}
         currency={formState.currency}

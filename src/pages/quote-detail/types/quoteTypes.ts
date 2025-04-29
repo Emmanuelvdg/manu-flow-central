@@ -5,12 +5,20 @@ export interface RFQProductItem {
   quantity?: number;
 }
 
+export interface CustomProduct {
+  id?: string;
+  name: string;
+  description?: string;
+  documents?: any[];
+}
+
 export interface QuoteFormState {
   customerName: string;
   customerEmail: string;
   companyName: string;
   rfqId?: string;
   products: RFQProductItem[];
+  customProducts: CustomProduct[];
   status: string;
   total: number;
   paymentTerms: string;
@@ -40,6 +48,7 @@ export interface QuoteFormSetters {
   setCompanyName: (value: string) => void;
   setRfqId: (value: string | undefined) => void;
   setProducts: (items: RFQProductItem[]) => void;
+  setCustomProducts: (items: CustomProduct[]) => void;
   setStatus: (value: string) => void;
   setTotal: (value: number) => void;
   setPaymentTerms: (value: string) => void;

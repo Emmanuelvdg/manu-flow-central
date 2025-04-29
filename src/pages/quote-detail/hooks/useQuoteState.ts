@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import type { QuoteFormState, QuoteFormSetters, RFQProductItem } from "../types/quoteTypes";
+import type { QuoteFormState, QuoteFormSetters, RFQProductItem, CustomProduct } from "../types/quoteTypes";
 import { migrateProducts } from "../quoteDetailUtils";
 
 interface UseQuoteStateProps {
@@ -15,6 +15,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
   const [companyName, setCompanyName] = useState("");
   const [rfqId, setRfqId] = useState<string | undefined>(undefined);
   const [products, setProducts] = useState<RFQProductItem[]>([]);
+  const [customProducts, setCustomProducts] = useState<CustomProduct[]>([]);
   const [status, setStatus] = useState("draft");
   const [total, setTotal] = useState(0);
   const [paymentTerms, setPaymentTerms] = useState("open");
@@ -41,7 +42,36 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
       setCustomerEmail(initialData.customer_email || "");
       setCompanyName(initialData.company_name || "");
       setRfqId(initialData.rfq_id);
-      setProducts(migrateProducts(initialData.products) || []);
+      
+      // Handle standard products
+      if (initialData.products) {
+        // Check if the products array contains custom products flag
+        const standardProducts = Array.isArray(initialData.products) 
+          ? initialData.products.filter((p: any) => !p.isCustom)
+          : [];
+        
+        setProducts(migrateProducts(standardProducts) || []);
+      
+        // Handle custom products if they exist in the products array
+        const customProductsData = Array.isArray(initialData.products) 
+          ? initialData.products.filter((p: any) => p.isCustom) 
+          : [];
+          
+        if (customProductsData.length > 0) {
+          setCustomProducts(customProductsData.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || "",
+            documents: p.documents || []
+          })));
+        } else {
+          setCustomProducts([]);
+        }
+      } else {
+        setProducts([]);
+        setCustomProducts([]);
+      }
+      
       setStatus(initialData.status || "draft");
       setTotal(initialData.total || 0);
       setPaymentTerms(initialData.payment_terms || "open");
@@ -72,6 +102,9 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
           quantity: typeof p === 'object' ? (p.quantity || 1) : 1
         })));
       }
+      
+      // Initialize custom products as empty for new quotes from RFQs
+      setCustomProducts([]);
     }
   }, [initialData, rfqData]);
 
@@ -81,7 +114,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
     }
   }, [isNew, quoteNumber]);
 
-  const isFormValid = customerName.trim() !== '' && products.length > 0;
+  const isFormValid = customerName.trim() !== '' && (products.length > 0 || customProducts.some(cp => cp.name.trim() !== ''));
 
   const formState: QuoteFormState = {
     customerName,
@@ -89,6 +122,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
     companyName,
     rfqId,
     products,
+    customProducts,
     status,
     total,
     paymentTerms,
@@ -118,6 +152,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
     setCompanyName,
     setRfqId,
     setProducts,
+    setCustomProducts,
     setStatus,
     setTotal,
     setPaymentTerms,
