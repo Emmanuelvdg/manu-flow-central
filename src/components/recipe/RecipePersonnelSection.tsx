@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus, Trash, Pencil } from "lucide-react";
-import { RecipePersonnelSectionProps } from "./form/RecipeFormTypes";
+import type { RecipePersonnelSectionProps } from "./form/RecipeFormTypes";
 
 interface PersonnelRoleOption {
   id: string;
@@ -14,19 +14,7 @@ interface Personnel {
   role: string;
   hours: number;
 }
-interface RecipePersonnelSectionProps {
-  personnel: Personnel[];
-  personnelRoleList: PersonnelRoleOption[];
-  showPersonnel: boolean;
-  setShowPersonnel: (show: boolean) => void;
-  editingPersonnel: Partial<Personnel> | null;
-  setEditingPersonnel: (p: Partial<Personnel> | null) => void;
-  handleAddPersonnel: () => void;
-  handleEditPersonnel: (p: Personnel) => void;
-  handleSavePersonnel: () => void;
-  handleDeletePersonnel: (id: string) => void;
-  disabled?: boolean;
-}
+
 export function RecipePersonnelSection({
   personnel,
   personnelRoleList,

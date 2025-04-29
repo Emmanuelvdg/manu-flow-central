@@ -2,25 +2,14 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus, Trash, Pencil } from "lucide-react";
-import { RecipeMachinesSectionProps } from "./form/RecipeFormTypes";
+import type { RecipeMachinesSectionProps } from "./form/RecipeFormTypes";
 
 interface Machine {
   id: string;
   machine: string;
   hours: number;
 }
-interface RecipeMachinesSectionProps {
-  machines: Machine[];
-  showMachines: boolean;
-  setShowMachines: (show: boolean) => void;
-  editingMachine: Partial<Machine> | null;
-  setEditingMachine: (m: Partial<Machine> | null) => void;
-  handleAddMachine: () => void;
-  handleEditMachine: (m: Machine) => void;
-  handleSaveMachine: () => void;
-  handleDeleteMachine: (id: string) => void;
-  disabled?: boolean;
-}
+
 export function RecipeMachinesSection({
   machines,
   showMachines,

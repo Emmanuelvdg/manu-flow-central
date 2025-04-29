@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus, Trash, Pencil } from "lucide-react";
-import { RecipeMaterialsSectionProps } from "./form/RecipeFormTypes";
+import type { RecipeMaterialsSectionProps } from "./form/RecipeFormTypes";
 
 interface MaterialOption {
   id: string;
@@ -16,20 +16,7 @@ interface Material {
   quantity: number;
   unit: string;
 }
-interface RecipeMaterialsSectionProps {
-  materials: Material[];
-  setMaterials: React.Dispatch<React.SetStateAction<Material[]>>;
-  materialList: MaterialOption[];
-  showMaterials: boolean;
-  setShowMaterials: (v: boolean) => void;
-  editingMaterial: Partial<Material> | null;
-  setEditingMaterial: (m: Partial<Material> | null) => void;
-  handleAddMaterial: () => void;
-  handleEditMaterial: (m: Material) => void;
-  handleSaveMaterial: () => void;
-  handleDeleteMaterial: (id: string) => void;
-  disabled?: boolean;
-}
+
 export function RecipeMaterialsSection({
   materials,
   setMaterials,
