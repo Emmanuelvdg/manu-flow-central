@@ -1,8 +1,8 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus, Trash, Pencil } from "lucide-react";
+import { RecipeMachinesSectionProps } from "./form/RecipeFormTypes";
 
 interface Machine {
   id: string;

@@ -1,17 +1,13 @@
 
 import React, { useEffect, useState } from "react";
-import { RecipeProductSelect } from "./RecipeProductSelect";
-import { RecipeMaterialsSection } from "./RecipeMaterialsSection";
-import { RecipePersonnelSection } from "./RecipePersonnelSection";
-import { RecipeMachinesSection } from "./RecipeMachinesSection";
-import { useRecipeMappingForm } from "./hooks/useRecipeMappingForm";
-import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "react-router-dom";
-import { RecipeVariantSection } from "./form/RecipeVariantSection";
+import { supabase } from "@/integrations/supabase/client";
+import { useRecipeMappingForm } from "./hooks/useRecipeMappingForm";
 import { RecipeBasicInfoSection } from "./form/RecipeBasicInfoSection";
-import { RecipeCustomProductDisplay } from "./form/RecipeCustomProductDisplay";
 import { RecipeFormActions } from "./form/RecipeFormActions";
-import { RecipeFormProps } from "./form/RecipeFormTypes";
+import { RecipeProductSelector } from "./form/RecipeProductSelector";
+import { RecipeResourceSections } from "./form/RecipeResourceSections";
+import type { RecipeFormProps } from "./form/RecipeFormTypes";
 
 export default function RecipeMappingForm(props: RecipeFormProps) {
   const form = useRecipeMappingForm(
@@ -108,27 +104,61 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
     }
   };
 
+  // Props for resource sections
+  const materialsProps = {
+    materials: form.materials,
+    setMaterials: form.setMaterials,
+    materialList: form.materialList,
+    showMaterials: form.showMaterials,
+    setShowMaterials: form.setShowMaterials,
+    editingMaterial: form.editingMaterial,
+    setEditingMaterial: form.setEditingMaterial,
+    handleAddMaterial: form.handleAddMaterial,
+    handleEditMaterial: form.handleEditMaterial,
+    handleSaveMaterial,
+    handleDeleteMaterial: form.handleDeleteMaterial,
+    disabled: form.loading
+  };
+
+  const personnelProps = {
+    personnel: form.personnel,
+    personnelRoleList: form.personnelRoleList,
+    showPersonnel: form.showPersonnel,
+    setShowPersonnel: form.setShowPersonnel,
+    editingPersonnel: form.editingPersonnel,
+    setEditingPersonnel: form.setEditingPersonnel,
+    handleAddPersonnel: form.handleAddPersonnel,
+    handleEditPersonnel: form.handleEditPersonnel,
+    handleSavePersonnel,
+    handleDeletePersonnel: form.handleDeletePersonnel,
+    disabled: form.loading
+  };
+
+  const machinesProps = {
+    machines: form.machines,
+    showMachines: form.showMachines,
+    setShowMachines: form.setShowMachines,
+    editingMachine: form.editingMachine,
+    setEditingMachine: form.setEditingMachine,
+    handleAddMachine: form.handleAddMachine,
+    handleEditMachine: form.handleEditMachine,
+    handleSaveMachine,
+    handleDeleteMachine: form.handleDeleteMachine,
+    disabled: form.loading
+  };
+
   return (
     <form onSubmit={form.handleSubmit} className="space-y-3">
-      {!props.customProduct ? (
-        <RecipeProductSelect
-          productList={form.productList}
-          productId={form.productId}
-          onProductChange={form.handleProductChange}
-          disabled={form.isEditing || form.loading}
-          loading={form.loading}
-        />
-      ) : (
-        <RecipeCustomProductDisplay customProduct={props.customProduct} />
-      )}
-      
-      {/* Product Variant Selection */}
-      <RecipeVariantSection 
+      <RecipeProductSelector
+        customProduct={props.customProduct}
+        productList={form.productList}
+        productId={form.productId}
+        handleProductChange={form.handleProductChange}
+        isEditing={form.isEditing}
+        loading={form.loading}
         productVariants={productVariants}
         selectedVariantId={selectedVariantId}
         setSelectedVariantId={setSelectedVariantId}
-        disabled={form.loading}
-        showVariantSection={productVariants.length > 0 && !props.customProduct}
       />
       
       <RecipeBasicInfoSection
@@ -139,47 +169,11 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
         disabled={form.loading}
       />
       
-      <div className="pt-2">
-        <RecipeMaterialsSection
-          materials={form.materials}
-          setMaterials={form.setMaterials}
-          materialList={form.materialList}
-          showMaterials={form.showMaterials}
-          setShowMaterials={form.setShowMaterials}
-          editingMaterial={form.editingMaterial}
-          setEditingMaterial={form.setEditingMaterial}
-          handleAddMaterial={form.handleAddMaterial}
-          handleEditMaterial={form.handleEditMaterial}
-          handleSaveMaterial={handleSaveMaterial}
-          handleDeleteMaterial={form.handleDeleteMaterial}
-          disabled={form.loading}
-        />
-        <RecipePersonnelSection
-          personnel={form.personnel}
-          personnelRoleList={form.personnelRoleList}
-          showPersonnel={form.showPersonnel}
-          setShowPersonnel={form.setShowPersonnel}
-          editingPersonnel={form.editingPersonnel}
-          setEditingPersonnel={form.setEditingPersonnel}
-          handleAddPersonnel={form.handleAddPersonnel}
-          handleEditPersonnel={form.handleEditPersonnel}
-          handleSavePersonnel={handleSavePersonnel}
-          handleDeletePersonnel={form.handleDeletePersonnel}
-          disabled={form.loading}
-        />
-        <RecipeMachinesSection
-          machines={form.machines}
-          showMachines={form.showMachines}
-          setShowMachines={form.setShowMachines}
-          editingMachine={form.editingMachine}
-          setEditingMachine={form.setEditingMachine}
-          handleAddMachine={form.handleAddMachine}
-          handleEditMachine={form.handleEditMachine}
-          handleSaveMachine={handleSaveMachine}
-          handleDeleteMachine={form.handleDeleteMachine}
-          disabled={form.loading}
-        />
-      </div>
+      <RecipeResourceSections 
+        materialsProps={materialsProps}
+        personnelProps={personnelProps}
+        machinesProps={machinesProps}
+      />
       
       <RecipeFormActions 
         onClose={props.onClose}
@@ -187,5 +181,5 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
         isEditing={form.isEditing}
       />
     </form>
-  )
+  );
 }

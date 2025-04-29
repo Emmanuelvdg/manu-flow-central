@@ -1,9 +1,9 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus, Trash, Pencil } from "lucide-react";
+import { RecipeMaterialsSectionProps } from "./form/RecipeFormTypes";
 
 interface MaterialOption {
   id: string;
