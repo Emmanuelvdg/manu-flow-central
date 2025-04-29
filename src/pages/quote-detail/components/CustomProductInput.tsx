@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, X, Upload } from "lucide-react";
+import { Plus, FileText, X, Upload, Recipe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import RecipeMappingModal from "@/components/recipe/RecipeMappingModal";
 
 export interface CustomProduct {
   id?: string;
@@ -29,6 +30,7 @@ export const CustomProductInput: React.FC<CustomProductInputProps> = ({
   const [showDescription, setShowDescription] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>(product.documents || []);
+  const [showRecipeModal, setShowRecipeModal] = useState(false);
   
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange({ ...product, name: e.target.value });
@@ -92,6 +94,10 @@ export const CustomProductInput: React.FC<CustomProductInputProps> = ({
       documents: newUploadedFiles
     });
   };
+
+  const handleRecipeSuccess = () => {
+    setShowRecipeModal(false);
+  };
   
   return (
     <div className="space-y-3 p-3 border rounded bg-gray-50">
@@ -136,6 +142,20 @@ export const CustomProductInput: React.FC<CustomProductInputProps> = ({
           Remove
         </Button>
       </div>
+
+      {/* Recipe mapping button */}
+      <div className="flex justify-start">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setShowRecipeModal(true)}
+          className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+        >
+          <Recipe className="h-4 w-4 mr-1" />
+          Recipe/Material Mapping
+        </Button>
+      </div>
       
       {/* File upload section */}
       <div className="border-t pt-2 mt-2">
@@ -172,6 +192,18 @@ export const CustomProductInput: React.FC<CustomProductInputProps> = ({
           )}
         </div>
       </div>
+
+      {/* Recipe mapping modal */}
+      {showRecipeModal && (
+        <RecipeMappingModal
+          open={showRecipeModal}
+          onClose={() => setShowRecipeModal(false)}
+          onSuccess={handleRecipeSuccess}
+          initialRecipe={null}
+          customProduct={product}
+          returnToQuote={true}
+        />
+      )}
     </div>
   );
 };

@@ -10,18 +10,39 @@ import { useRecipeMappingForm } from "./hooks/useRecipeMappingForm";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useLocation } from "react-router-dom";
+import type { CustomProduct } from "@/pages/quote-detail/components/CustomProductInput";
 
 interface RecipeMappingFormProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   initialRecipe?: any;
+  customProduct?: CustomProduct;
+  returnToQuote?: boolean;
 }
 
 export default function RecipeMappingForm(props: RecipeMappingFormProps) {
-  const form = useRecipeMappingForm(props.open, props.initialRecipe, props.onSuccess, props.onClose);
+  const form = useRecipeMappingForm(
+    props.open, 
+    props.initialRecipe, 
+    props.onSuccess, 
+    props.onClose, 
+    props.customProduct,
+    props.returnToQuote
+  );
+  
   const [productVariants, setProductVariants] = useState<any[]>([]);
   const [selectedVariantId, setSelectedVariantId] = useState<string>("");
+  const location = useLocation();
+  
+  // Set initial form values for a custom product
+  useEffect(() => {
+    if (props.customProduct && props.customProduct.name) {
+      // For custom products, we set name but leave productId empty
+      form.setName(`Recipe for ${props.customProduct.name}`);
+    }
+  }, [props.customProduct]);
 
   // Load variants when product changes
   useEffect(() => {
@@ -106,16 +127,28 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit} className="space-y-3">
-      <RecipeProductSelect
-        productList={form.productList}
-        productId={form.productId}
-        onProductChange={form.handleProductChange}
-        disabled={form.isEditing || form.loading}
-        loading={form.loading}
-      />
+      {!props.customProduct ? (
+        <RecipeProductSelect
+          productList={form.productList}
+          productId={form.productId}
+          onProductChange={form.handleProductChange}
+          disabled={form.isEditing || form.loading}
+          loading={form.loading}
+        />
+      ) : (
+        <div>
+          <Label className="block text-sm font-medium mb-1">Product<span className="text-red-500">*</span></Label>
+          <Input 
+            value={props.customProduct.name} 
+            disabled
+            className="bg-gray-100"
+          />
+          <input type="hidden" value={props.customProduct.id || ''} />
+        </div>
+      )}
       
       {/* Product Variant Selection */}
-      {productVariants.length > 0 && (
+      {productVariants.length > 0 && !props.customProduct && (
         <div>
           <Label className="block text-sm font-medium mb-1">Product Variant</Label>
           <Select

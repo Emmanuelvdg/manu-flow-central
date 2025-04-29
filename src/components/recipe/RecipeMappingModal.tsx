@@ -8,12 +8,15 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import RecipeMappingForm from "./RecipeMappingForm";
+import type { CustomProduct } from "@/pages/quote-detail/components/CustomProductInput";
 
 interface RecipeMappingModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   initialRecipe?: any;
+  customProduct?: CustomProduct;
+  returnToQuote?: boolean;
 }
 
 export default function RecipeMappingModal(props: RecipeMappingModalProps) {

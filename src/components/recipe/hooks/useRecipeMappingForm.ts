@@ -1,10 +1,19 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Material } from '@/types/material';
 import { parseJsonField } from '@/components/dashboard/utils/productUtils';
+import { useNavigate } from 'react-router-dom';
+import type { CustomProduct } from '@/pages/quote-detail/components/CustomProductInput';
 
-export const useRecipeMappingForm = (open: boolean, initialRecipe: any, onSuccess: () => void, onClose: () => void) => {
+export const useRecipeMappingForm = (
+  open: boolean, 
+  initialRecipe: any, 
+  onSuccess: () => void, 
+  onClose: () => void,
+  customProduct?: CustomProduct,
+  returnToQuote?: boolean
+) => {
+  const navigate = useNavigate();
   const [productId, setProductId] = useState<string>(initialRecipe?.product_id || '');
   const [name, setName] = useState<string>(initialRecipe?.name || '');
   const [description, setDescription] = useState<string>(initialRecipe?.description || '');
@@ -73,20 +82,32 @@ export const useRecipeMappingForm = (open: boolean, initialRecipe: any, onSucces
   // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productId || !name) return;
+    if (!name) return;
 
     setLoading(true);
     try {
-      const recipeData = {
-        product_id: productId,
-        product_name: productList.find(p => p.id === productId)?.name || '',
+      let recipeData: any = {
         name,
         description,
         materials,
         personnel,
         machines,
-        ...(variantId ? { variantId } : {})
       };
+      
+      // Handle custom product case
+      if (customProduct) {
+        recipeData.custom_product = true;
+        recipeData.custom_product_name = customProduct.name;
+        recipeData.custom_product_id = customProduct.id;
+      }
+      // Handle regular product case
+      else if (productId) {
+        recipeData.product_id = productId;
+        recipeData.product_name = productList.find(p => p.id === productId)?.name || '';
+        if (variantId) {
+          recipeData.variantId = variantId;
+        }
+      }
 
       if (isEditing) {
         await supabase
@@ -98,7 +119,15 @@ export const useRecipeMappingForm = (open: boolean, initialRecipe: any, onSucces
       }
       
       onSuccess();
-      onClose();
+      
+      // If returnToQuote is true and we're on a quote page, stay there
+      if (returnToQuote) {
+        onClose();
+      } else {
+        // Otherwise, navigate to recipes dashboard
+        navigate('/recipes');
+      }
+      
     } catch (error) {
       console.error('Error saving recipe:', error);
     } finally {
