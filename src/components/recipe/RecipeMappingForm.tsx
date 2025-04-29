@@ -1,28 +1,19 @@
 
 import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { RecipeProductSelect } from "./RecipeProductSelect";
 import { RecipeMaterialsSection } from "./RecipeMaterialsSection";
 import { RecipePersonnelSection } from "./RecipePersonnelSection";
 import { RecipeMachinesSection } from "./RecipeMachinesSection";
 import { useRecipeMappingForm } from "./hooks/useRecipeMappingForm";
 import { supabase } from "@/integrations/supabase/client";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { useLocation } from "react-router-dom";
-import type { CustomProduct } from "@/pages/quote-detail/components/CustomProductInput";
+import { RecipeVariantSection } from "./form/RecipeVariantSection";
+import { RecipeBasicInfoSection } from "./form/RecipeBasicInfoSection";
+import { RecipeCustomProductDisplay } from "./form/RecipeCustomProductDisplay";
+import { RecipeFormActions } from "./form/RecipeFormActions";
+import { RecipeFormProps } from "./form/RecipeFormTypes";
 
-interface RecipeMappingFormProps {
-  open: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-  initialRecipe?: any;
-  customProduct?: CustomProduct;
-  returnToQuote?: boolean;
-}
-
-export default function RecipeMappingForm(props: RecipeMappingFormProps) {
+export default function RecipeMappingForm(props: RecipeFormProps) {
   const form = useRecipeMappingForm(
     props.open, 
     props.initialRecipe, 
@@ -93,14 +84,6 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
     loadVariants();
   }, [form.productId, props.initialRecipe?.variantId]);
   
-  // Format variant for display
-  const formatVariantOption = (variant: any) => {
-    if (!variant.attributes) return variant.sku;
-    
-    const attributeValues = Object.values(variant.attributes).join(", ");
-    return `${attributeValues} (${variant.sku})`;
-  };
-  
   // Update form's variantId when selection changes
   useEffect(() => {
     form.setVariantId(selectedVariantId);
@@ -136,58 +119,26 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
           loading={form.loading}
         />
       ) : (
-        <div>
-          <Label className="block text-sm font-medium mb-1">Product<span className="text-red-500">*</span></Label>
-          <Input 
-            value={props.customProduct.name} 
-            disabled
-            className="bg-gray-100"
-          />
-          <input type="hidden" value={props.customProduct.id || ''} />
-        </div>
+        <RecipeCustomProductDisplay customProduct={props.customProduct} />
       )}
       
       {/* Product Variant Selection */}
-      {productVariants.length > 0 && !props.customProduct && (
-        <div>
-          <Label className="block text-sm font-medium mb-1">Product Variant</Label>
-          <Select
-            value={selectedVariantId}
-            onValueChange={setSelectedVariantId}
-            disabled={form.loading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a variant" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Base product (no variant)</SelectItem>
-              {productVariants.map((variant) => (
-                <SelectItem key={variant.id} value={variant.id}>
-                  {formatVariantOption(variant)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <RecipeVariantSection 
+        productVariants={productVariants}
+        selectedVariantId={selectedVariantId}
+        setSelectedVariantId={setSelectedVariantId}
+        disabled={form.loading}
+        showVariantSection={productVariants.length > 0 && !props.customProduct}
+      />
       
-      <div>
-        <label className="block text-sm font-medium mb-1">Recipe Name<span className="text-red-500">*</span></label>
-        <Input 
-          value={form.name} 
-          onChange={e => form.setName(e.target.value)} 
-          required 
-          disabled={form.loading}
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Description</label>
-        <Input 
-          value={form.description} 
-          onChange={e => form.setDescription(e.target.value)}
-          disabled={form.loading}
-        />
-      </div>
+      <RecipeBasicInfoSection
+        name={form.name}
+        description={form.description}
+        setName={form.setName}
+        setDescription={form.setDescription}
+        disabled={form.loading}
+      />
+      
       <div className="pt-2">
         <RecipeMaterialsSection
           materials={form.materials}
@@ -229,14 +180,12 @@ export default function RecipeMappingForm(props: RecipeMappingFormProps) {
           disabled={form.loading}
         />
       </div>
-      <div className="flex gap-2 justify-end pt-2">
-        <Button type="submit" disabled={form.loading}>
-          {form.loading ? "Saving..." : form.isEditing ? "Save" : "Create"}
-        </Button>
-        <Button type="button" variant="outline" onClick={props.onClose} disabled={form.loading}>
-          Cancel
-        </Button>
-      </div>
+      
+      <RecipeFormActions 
+        onClose={props.onClose}
+        loading={form.loading}
+        isEditing={form.isEditing}
+      />
     </form>
   )
 }

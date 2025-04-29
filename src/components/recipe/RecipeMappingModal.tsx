@@ -8,18 +8,10 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import RecipeMappingForm from "./RecipeMappingForm";
-import type { CustomProduct } from "@/pages/quote-detail/components/CustomProductInput";
+import type { CustomProduct } from "@/pages/quote-detail/components/custom-product/types";
+import type { RecipeFormProps } from "./form/RecipeFormTypes";
 
-interface RecipeMappingModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-  initialRecipe?: any;
-  customProduct?: CustomProduct;
-  returnToQuote?: boolean;
-}
-
-export default function RecipeMappingModal(props: RecipeMappingModalProps) {
+export default function RecipeMappingModal(props: RecipeFormProps) {
   return (
     <Dialog open={props.open} onOpenChange={props.onClose}>
       <DialogContent className="max-w-3xl w-full">
