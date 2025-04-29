@@ -1,18 +1,12 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, X, Upload, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import RecipeMappingModal from "@/components/recipe/RecipeMappingModal";
-
-export interface CustomProduct {
-  id?: string;
-  name: string;
-  description?: string;
-  documents?: any[];
-}
+import { ProductHeader } from "./custom-product/ProductHeader";
+import { ProductDescription } from "./custom-product/ProductDescription";
+import { RecipeButton } from "./custom-product/RecipeButton";
+import { FileUpload } from "./custom-product/FileUpload";
+import { CustomProduct } from "./custom-product/types";
 
 interface CustomProductInputProps {
   product: CustomProduct;
@@ -101,99 +95,30 @@ export const CustomProductInput: React.FC<CustomProductInputProps> = ({
   
   return (
     <div className="space-y-3 p-3 border rounded bg-gray-50">
-      <div className="flex items-start gap-3">
-        <div className="flex-1">
-          <Input
-            placeholder="Custom product name"
-            value={product.name}
-            onChange={handleNameChange}
-            className="font-medium"
-          />
-          
-          {showDescription && (
-            <Textarea
-              placeholder="Product description"
-              value={product.description || ""}
-              onChange={handleDescriptionChange}
-              className="mt-2"
-              rows={3}
-            />
-          )}
-        </div>
-        
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowDescription(!showDescription)}
-        >
-          <FileText className="h-4 w-4 mr-1" />
-          {showDescription ? "Hide" : "Add"} Description
-        </Button>
-        
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="text-red-500"
-          onClick={onRemove}
-        >
-          <X className="h-4 w-4" />
-          Remove
-        </Button>
-      </div>
-
-      {/* Recipe mapping button */}
-      <div className="flex justify-start">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowRecipeModal(true)}
-          className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-        >
-          <ClipboardList className="h-4 w-4 mr-1" />
-          Recipe/Material Mapping
-        </Button>
-      </div>
+      <ProductHeader
+        name={product.name}
+        showDescription={showDescription}
+        onNameChange={handleNameChange}
+        onToggleDescription={() => setShowDescription(!showDescription)}
+        onRemove={onRemove}
+      />
       
-      {/* File upload section */}
-      <div className="border-t pt-2 mt-2">
-        <div className="flex flex-wrap gap-2 mb-2">
-          {uploadedFiles.map((file, idx) => (
-            <div key={idx} className="flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">
-              <span>{file.name}</span>
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => handleRemoveUploadedFile(idx)}
-              />
-            </div>
-          ))}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            onChange={handleFileChange}
-            multiple
-            className="text-sm"
-          />
-          {files.length > 0 && (
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleFileUpload}
-              variant="outline"
-              className="whitespace-nowrap"
-            >
-              <Upload className="h-4 w-4 mr-1" />
-              Upload {files.length} {files.length === 1 ? 'file' : 'files'}
-            </Button>
-          )}
-        </div>
-      </div>
+      <ProductDescription
+        description={product.description || ""}
+        onChange={handleDescriptionChange}
+        show={showDescription}
+      />
 
-      {/* Recipe mapping modal */}
+      <RecipeButton onClick={() => setShowRecipeModal(true)} />
+      
+      <FileUpload
+        files={files}
+        uploadedFiles={uploadedFiles}
+        onFileChange={handleFileChange}
+        onUpload={handleFileUpload}
+        onRemoveFile={handleRemoveUploadedFile}
+      />
+
       {showRecipeModal && (
         <RecipeMappingModal
           open={showRecipeModal}
@@ -207,3 +132,5 @@ export const CustomProductInput: React.FC<CustomProductInputProps> = ({
     </div>
   );
 };
+
+export type { CustomProduct };
