@@ -23,7 +23,7 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
     try {
       console.log(`Creating order product for: ${productName} (${productId})`);
       
-      // Find or create the product
+      // Find product reference (doesn't create new products in catalog)
       const actualProductId = await findOrCreateProduct(productName, productId, orderId);
       console.log(`Using product ID: ${actualProductId}`);
       

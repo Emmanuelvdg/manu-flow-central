@@ -11,7 +11,7 @@ export const useProductManagement = () => {
     // Clean product name by removing quantity information (e.g., "Wooden Table x 6" -> "Wooden Table")
     const cleanProductName = productName.replace(/\s+x\s+\d+$/, '').trim();
     
-    console.log(`Finding or creating product: "${cleanProductName}" (original: "${productName}") with ID: "${productId}"`);
+    console.log(`Finding product: "${cleanProductName}" (original: "${productName}") with ID: "${productId}"`);
     
     try {
       // First, check if the product exists by ID
@@ -40,34 +40,16 @@ export const useProductManagement = () => {
         return existingProduct.id;
       }
       
-      // Create a new product if it doesn't exist
-      console.log(`Product "${cleanProductName}" doesn't exist, creating a new product`);
-      
-      // Generate a product ID if none was provided
-      const finalProductId = productId || cleanProductName
+      // If we get here, the product doesn't exist in the catalog
+      // Instead of creating a product, we'll use a normalized ID for reference only
+      const referenceId = productId || cleanProductName
         .replace(/[^a-zA-Z0-9]/g, '_')
         .replace(/_+/g, '_')
         .toUpperCase()
         .substring(0, 20);
       
-      const { data: newProduct, error: createError } = await supabase
-        .from('products')
-        .insert({
-          id: finalProductId,
-          name: cleanProductName,
-          description: `Auto-generated from order ${orderId}`,
-          category: 'General'
-        })
-        .select()
-        .single();
-        
-      if (createError) {
-        console.error(`Failed to create product for "${cleanProductName}":`, createError);
-        throw createError;
-      }
-      
-      console.log(`Created new product with ID ${newProduct.id}`);
-      return newProduct.id;
+      console.log(`Product "${cleanProductName}" doesn't exist in catalog, using reference ID: ${referenceId}`);
+      return referenceId;
       
     } catch (err) {
       console.error(`Error in findOrCreateProduct for "${cleanProductName}":`, err);

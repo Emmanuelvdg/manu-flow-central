@@ -8,6 +8,12 @@ export const createOrderProducts = async (orderId: string, products: any[]) => {
       // Skip if no product name/id
       if (!product.name && !product.id) continue;
       
+      // Extract quantity if included in product name
+      const productName = product.name || product.id;
+      const quantityMatch = productName.match(/\s+x\s+(\d+)$/);
+      const explicitQuantity = quantityMatch ? parseInt(quantityMatch[1], 10) : null;
+      const cleanProductName = productName.replace(/\s+x\s+\d+$/, '').trim();
+      
       // Find recipe for this product if exists
       let recipeId = null;
       
@@ -23,10 +29,23 @@ export const createOrderProducts = async (orderId: string, products: any[]) => {
         }
       }
       
+      // Look for existing product but don't create if not found
+      const { data: existingProduct } = await supabase
+        .from('products')
+        .select('id')
+        .eq('name', cleanProductName)
+        .maybeSingle();
+      
+      const productId = product.id || (existingProduct?.id || cleanProductName
+        .replace(/[^a-zA-Z0-9]/g, '_')
+        .replace(/_+/g, '_')
+        .toUpperCase()
+        .substring(0, 20));
+      
       const productEntry = {
         order_id: orderId,
-        product_id: product.id || product.name,
-        quantity: parseInt(product.quantity) || 1,
+        product_id: productId,
+        quantity: explicitQuantity || parseInt(product.quantity) || 1,
         unit: product.unit || 'pcs',
         status: 'pending',
         materials_status: 'Not booked',
