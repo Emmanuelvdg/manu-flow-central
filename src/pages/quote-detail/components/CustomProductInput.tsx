@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, X, Upload, Recipe } from "lucide-react";
+import { Plus, FileText, X, Upload, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import RecipeMappingModal from "@/components/recipe/RecipeMappingModal";
 
@@ -152,7 +152,7 @@ export const CustomProductInput: React.FC<CustomProductInputProps> = ({
           onClick={() => setShowRecipeModal(true)}
           className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
         >
-          <Recipe className="h-4 w-4 mr-1" />
+          <ClipboardList className="h-4 w-4 mr-1" />
           Recipe/Material Mapping
         </Button>
       </div>
