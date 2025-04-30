@@ -68,10 +68,33 @@ const RFQCreate = () => {
     
     setLoading(true);
     try {
+      // Parse the products to handle quantity notation consistently
+      const parsedProducts = productsInput.split(",").map(productString => {
+        const productStr = productString.trim();
+        // Look for "x N" pattern at the end of the string
+        const quantityMatch = productStr.match(/\s+x\s+(\d+)$/);
+        
+        if (quantityMatch) {
+          // Extract the clean name and quantity
+          const cleanName = productStr.replace(/\s+x\s+\d+$/, '').trim();
+          const quantity = parseInt(quantityMatch[1], 10);
+          
+          // Return a structured object with name and quantity
+          return {
+            name: cleanName,
+            quantity: quantity
+          };
+        }
+        
+        // If no quantity pattern found, just return the string
+        return productStr;
+      });
+      
       await createRFQ({
         ...fields,
-        products: productsInput.split(",").map(s => s.trim()),
+        products: parsedProducts,
       });
+      
       toast({
         title: "RFQ Created",
         description: `RFQ ${fields.rfq_number} created successfully.`,

@@ -36,11 +36,15 @@ export const createOrderProducts = async (orderId: string, products: any[]) => {
         .eq('name', cleanProductName)
         .maybeSingle();
       
-      const productId = product.id || (existingProduct?.id || cleanProductName
-        .replace(/[^a-zA-Z0-9]/g, '_')
-        .replace(/_+/g, '_')
-        .toUpperCase()
-        .substring(0, 20));
+      // Use existing product ID if found, otherwise use a reference ID with REF_ prefix
+      // to clearly indicate it's not a real product ID
+      const productId = product.id || 
+        (existingProduct?.id || 
+         `REF_${cleanProductName
+           .replace(/[^a-zA-Z0-9]/g, '_')
+           .replace(/_+/g, '_')
+           .toUpperCase()
+           .substring(0, 15)}`);
       
       const productEntry = {
         order_id: orderId,

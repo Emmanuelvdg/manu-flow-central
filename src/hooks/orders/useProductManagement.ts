@@ -41,16 +41,16 @@ export const useProductManagement = () => {
       }
       
       // If we get here, the product doesn't exist in the catalog
-      // Instead of creating a product, we'll use a normalized ID for reference only
-      const referenceId = productId || cleanProductName
-        .replace(/[^a-zA-Z0-9]/g, '_')
-        .replace(/_+/g, '_')
-        .toUpperCase()
-        .substring(0, 20);
+      // We'll use a normalized ID for reference only, BUT WE WON'T CREATE A NEW PRODUCT
+      const referenceId = productId || 
+        `REF_${cleanProductName
+          .replace(/[^a-zA-Z0-9]/g, '_')
+          .replace(/_+/g, '_')
+          .toUpperCase()
+          .substring(0, 15)}`;
       
       console.log(`Product "${cleanProductName}" doesn't exist in catalog, using reference ID: ${referenceId}`);
       return referenceId;
-      
     } catch (err) {
       console.error(`Error in findOrCreateProduct for "${cleanProductName}":`, err);
       throw err;
