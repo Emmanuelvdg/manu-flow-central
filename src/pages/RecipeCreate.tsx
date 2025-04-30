@@ -41,7 +41,7 @@ const RecipeCreate = () => {
   
   const handleSave = () => {
     toast({
-      title: "Recipe Saved",
+      title: "BOM Saved",
       description: `Created BOM for ${recipeName || 'PFP_5L Packaged Food Product, 5L Canister'}`,
     });
     navigate('/recipes');
@@ -69,7 +69,7 @@ const RecipeCreate = () => {
   ];
 
   return (
-    <MainLayout title="Create Recipe">
+    <MainLayout title="Create Bill of Materials">
       <div className="space-y-6">
         <div className="text-2xl font-bold">
           Create a BOM for PFP_5L Packaged Food Product, 5L Canister
@@ -99,7 +99,7 @@ const RecipeCreate = () => {
                 <Input 
                   value={recipeName} 
                   onChange={(e) => setRecipeName(e.target.value)} 
-                  placeholder="Recipe name"
+                  placeholder="BOM name"
                 />
               </div>
               

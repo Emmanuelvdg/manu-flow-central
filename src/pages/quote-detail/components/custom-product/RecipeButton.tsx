@@ -18,7 +18,7 @@ export const RecipeButton: React.FC<RecipeButtonProps> = ({ onClick }) => {
         className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
       >
         <ClipboardList className="h-4 w-4 mr-1" />
-        Recipe/Material Mapping
+        BOM/Material Mapping
       </Button>
     </div>
   );

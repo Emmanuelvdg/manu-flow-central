@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -172,8 +171,8 @@ const Recipe = () => {
 
   const handleEdit = () => {
     toast({
-      title: "Edit Recipe",
-      description: "Recipe editing feature coming soon.",
+      title: "Edit Bill of Materials",
+      description: "BOM editing feature coming soon.",
     });
   };
   
@@ -200,9 +199,9 @@ const Recipe = () => {
 
   if (loading) {
     return (
-      <MainLayout title="Loading Recipe...">
+      <MainLayout title="Loading Bill of Materials...">
         <div className="flex justify-center items-center h-64">
-          <div className="animate-pulse">Loading recipe information...</div>
+          <div className="animate-pulse">Loading BOM information...</div>
         </div>
       </MainLayout>
     );
@@ -210,24 +209,24 @@ const Recipe = () => {
 
   if (!recipe) {
     return (
-      <MainLayout title="Recipe Not Found">
+      <MainLayout title="Bill of Materials Not Found">
         <div className="space-y-5">
           <Button variant="outline" size="sm" asChild>
             <Link to="/recipes">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Recipes
+              Back to Bill of Materials
             </Link>
           </Button>
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="text-amber-500 mb-4 text-6xl">⚠️</div>
-                <h2 className="text-2xl font-semibold mb-2">Recipe Not Found</h2>
+                <h2 className="text-2xl font-semibold mb-2">Bill of Materials Not Found</h2>
                 <p className="text-muted-foreground mb-6">
-                  We couldn't find a recipe for the ID: {id}
+                  We couldn't find a BOM for the ID: {id}
                 </p>
                 <Button asChild>
-                  <Link to="/recipes">View All Recipes</Link>
+                  <Link to="/recipes">View All BOMs</Link>
                 </Button>
               </div>
             </CardContent>
@@ -238,18 +237,18 @@ const Recipe = () => {
   }
 
   return (
-    <MainLayout title="Product Recipe Mapping">
+    <MainLayout title="Product BOM Mapping">
       <div className="space-y-5">
         <div className="flex justify-between items-center">
           <Button variant="outline" size="sm" asChild>
             <Link to="/recipes">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Recipes
+              Back to Bill of Materials
             </Link>
           </Button>
           <Button variant="default" size="sm" onClick={handleEdit}>
             <Edit className="mr-2 h-4 w-4" />
-            Edit Recipe
+            Edit BOM
           </Button>
         </div>
 

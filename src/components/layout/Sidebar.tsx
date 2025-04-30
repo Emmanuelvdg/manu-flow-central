@@ -10,7 +10,7 @@ import {
   FlaskConical,
   Warehouse,
   Home,
-  Truck  // Adding truck icon for shipments
+  Truck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,9 +28,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, setOpen }) => {
     { name: 'Quotes', href: '/quotes', icon: ClipboardList },
     { name: 'Orders', href: '/orders', icon: ShoppingCart },
     { name: 'Invoices', href: '/invoices', icon: Receipt },
-    { name: 'Recipes', href: '/recipes', icon: FlaskConical },
+    { name: 'Bill of Materials', href: '/recipes', icon: FlaskConical },
     { name: 'Resources', href: '/resources', icon: Warehouse },
-    { name: 'Shipments', href: '/shipments', icon: Truck },  // New shipments link
+    { name: 'Shipments', href: '/shipments', icon: Truck },
   ];
 
   return (

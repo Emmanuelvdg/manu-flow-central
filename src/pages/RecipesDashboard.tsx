@@ -125,7 +125,7 @@ const RecipesDashboard = () => {
   };
 
   return (
-    <MainLayout title="Recipe Management">
+    <MainLayout title="Bill of Materials Management">
       <RecipeMappingModal
         open={modalOpen}
         onClose={() => { setModalOpen(false); setEditRecipe(null); }}
@@ -134,7 +134,7 @@ const RecipesDashboard = () => {
       />
       <div className="space-y-5">
         <div className="flex justify-between items-center">
-          <div className="text-2xl font-bold">Recipe/Product Mapping</div>
+          <div className="text-2xl font-bold">BOM/Product Mapping</div>
           <div>
             <Button variant="default" onClick={() => { setEditRecipe(null); setModalOpen(true); }}>
               <Plus className="mr-2 h-4 w-4" />
