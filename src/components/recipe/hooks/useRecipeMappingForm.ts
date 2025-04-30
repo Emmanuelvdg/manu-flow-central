@@ -1,10 +1,15 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Material } from '@/types/material';
-import { parseJsonField } from '@/components/dashboard/utils/productUtils';
-import { useNavigate } from 'react-router-dom';
+import { useRecipeForm } from './useRecipeForm';
+import { useRecipeSubmission } from './useRecipeSubmission';
+import { useRecipeReferenceData } from './useRecipeReferenceData';
+import { useMaterialsManagement } from './useMaterialsManagement';
+import { usePersonnelManagement } from './usePersonnelManagement';
+import { useMachineManagement } from './useMachineManagement';
+import { useRoutingStagesManagement } from './useRoutingStagesManagement';
 import type { CustomProduct } from '@/pages/quote-detail/components/CustomProductInput';
+import type { RecipeMappingFormData } from '../types/recipeMappingTypes';
 
 export const useRecipeMappingForm = (
   open: boolean, 
@@ -14,336 +19,62 @@ export const useRecipeMappingForm = (
   customProduct?: CustomProduct,
   returnToQuote?: boolean
 ) => {
-  const navigate = useNavigate();
-  const [productId, setProductId] = useState<string>(initialRecipe?.product_id || '');
-  const [name, setName] = useState<string>(initialRecipe?.name || '');
-  const [description, setDescription] = useState<string>(initialRecipe?.description || '');
-  const [variantId, setVariantId] = useState<string>(initialRecipe?.variantId || '');
-  const [productList, setProductList] = useState<any[]>([]);
-  const [materialList, setMaterialList] = useState<Material[]>([]);
-  const [personnelRoleList, setPersonnelRoleList] = useState<any[]>([]);
-  const [routingStagesList, setRoutingStagesList] = useState<any[]>([]);
-  const [materials, setMaterials] = useState<any[]>(initialRecipe?.materials || []);
-  const [personnel, setPersonnel] = useState<any[]>(initialRecipe?.personnel || []);
-  const [machines, setMachines] = useState<any[]>(initialRecipe?.machines || []);
-  const [routingStages, setRoutingStages] = useState<any[]>(initialRecipe?.routing_stages || []);
-  const [showMaterials, setShowMaterials] = useState<boolean>(false);
-  const [showPersonnel, setShowPersonnel] = useState<boolean>(false);
-  const [showMachines, setShowMachines] = useState<boolean>(false);
-  const [showRoutingStages, setShowRoutingStages] = useState<boolean>(false);
-  const [editingMaterial, setEditingMaterial] = useState<any | null>(null);
-  const [editingPersonnel, setEditingPersonnel] = useState<any | null>(null);
-  const [editingMachine, setEditingMachine] = useState<any | null>(null);
-  const [editingRoutingStage, setEditingRoutingStage] = useState<any | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const isEditing = !!initialRecipe?.id;
-
-  // Load reference data when the form opens
+  const formState = useRecipeForm(initialRecipe, customProduct);
+  const { handleSubmit, loading, isEditing } = useRecipeSubmission(
+    initialRecipe, 
+    onSuccess, 
+    onClose, 
+    returnToQuote, 
+    customProduct
+  );
+  const referenceData = useRecipeReferenceData(open);
+  
+  // Resource management hooks
+  const materialsMgmt = useMaterialsManagement();
+  const personnelMgmt = usePersonnelManagement();
+  const machinesMgmt = useMachineManagement();
+  const routingStagesMgmt = useRoutingStagesManagement();
+  
+  // Set initial values from existing recipe
   useEffect(() => {
-    if (open) {
-      fetchReferenceData();
+    if (initialRecipe) {
+      materialsMgmt.setMaterials(initialRecipe.materials || []);
+      personnelMgmt.setPersonnel(initialRecipe.personnel || []);
+      machinesMgmt.setMachines(initialRecipe.machines || []);
+      routingStagesMgmt.setRoutingStages(initialRecipe.routing_stages || []);
     }
-  }, [open]);
+  }, [initialRecipe]);
 
-  // Fetch reference data from Supabase
-  const fetchReferenceData = async () => {
-    setLoading(true);
-    try {
-      // Load products
-      const { data: productsData } = await supabase.from('products').select('*');
-      if (productsData) {
-        setProductList(productsData.map(p => ({ id: p.id, name: p.name })));
-      }
-
-      // Load materials
-      const { data: materialsData } = await supabase.from('materials').select('*');
-      if (materialsData) {
-        // Transform the materials data to match our Material type
-        const transformedMaterials = materialsData.map(m => ({
-          id: m.id,
-          name: m.name,
-          category: m.category || '',
-          unit: m.unit,
-          status: m.status || '',
-          vendor: m.vendor || '',
-          stock: 0, // Default value
-          costPerUnit: 0, // Default value
-        }));
-        setMaterialList(transformedMaterials);
-      }
-
-      // Load personnel roles
-      const { data: rolesData } = await supabase.from('personnel_roles').select('*');
-      if (rolesData) {
-        setPersonnelRoleList(rolesData);
-      }
-
-      // Load routing stages
-      const { data: routingData } = await supabase.from('routing_stages').select('*');
-      if (routingData) {
-        setRoutingStagesList(routingData);
-      }
-    } catch (error) {
-      console.error('Error fetching reference data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle form submit
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Form submission handler
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
-
-    setLoading(true);
-    try {
-      let recipeData: any = {
-        name,
-        description,
-        materials,
-        personnel,
-        machines,
-        routing_stages: routingStages,
-      };
-      
-      // Handle custom product case
-      if (customProduct) {
-        recipeData.custom_product = true;
-        recipeData.custom_product_name = customProduct.name;
-        recipeData.custom_product_id = customProduct.id;
-      }
-      // Handle regular product case
-      else if (productId) {
-        recipeData.product_id = productId;
-        recipeData.product_name = productList.find(p => p.id === productId)?.name || '';
-        if (variantId) {
-          recipeData.variantId = variantId;
-        }
-      }
-
-      if (isEditing) {
-        await supabase
-          .from('recipes')
-          .update(recipeData)
-          .eq('id', initialRecipe.id);
-      } else {
-        await supabase.from('recipes').insert([recipeData]);
-      }
-      
-      onSuccess();
-      
-      // If returnToQuote is true and we're on a quote page, stay there
-      if (returnToQuote) {
-        onClose();
-      } else {
-        // Otherwise, navigate to recipes dashboard
-        navigate('/recipes');
-      }
-      
-    } catch (error) {
-      console.error('Error saving recipe:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Functions to handle routing stage operations
-  const handleAddRoutingStage = () => {
-    setEditingRoutingStage({
-      id: `temp-${Date.now()}`,
-      stage_id: '',
-      hours: 1,
-      isNew: true,
-    });
-    setShowRoutingStages(true);
-  };
-
-  const handleEditRoutingStage = (routingStage: any) => {
-    setEditingRoutingStage({ ...routingStage });
-    setShowRoutingStages(true);
-  };
-
-  const handleSaveRoutingStage = () => {
-    if (!editingRoutingStage) return;
     
-    // Find the selected stage from the list to include its name
-    const selectedStage = routingStagesList.find(
-      stage => stage.id === editingRoutingStage.stage_id
-    );
-    
-    if (!selectedStage) return;
-    
-    const updatedStage = {
-      ...editingRoutingStage,
-      stage_name: selectedStage.stage_name,
-      isNew: undefined
+    // Combine all form data
+    const formData: RecipeMappingFormData = {
+      productId: formState.productId,
+      productName: referenceData.productList.find(p => p.id === formState.productId)?.name || '',
+      name: formState.name,
+      description: formState.description,
+      materials: materialsMgmt.materials,
+      personnel: personnelMgmt.personnel,
+      machines: machinesMgmt.machines,
+      routingStages: routingStagesMgmt.routingStages,
+      variantId: formState.variantId
     };
     
-    if (editingRoutingStage.isNew) {
-      setRoutingStages([...routingStages, updatedStage]);
-    } else {
-      setRoutingStages(
-        routingStages.map(s => s.id === updatedStage.id ? updatedStage : s)
-      );
-    }
-    
-    setEditingRoutingStage(null);
+    handleSubmit(formData);
   };
 
-  const handleDeleteRoutingStage = (id: string) => {
-    setRoutingStages(routingStages.filter(s => s.id !== id));
-  };
-
-  // Functions to handle material operations
-  const handleAddMaterial = () => {
-    setEditingMaterial({
-      id: `temp-${Date.now()}`,
-      material_id: '',
-      quantity: 1,
-      unit: '',
-      isNew: true,
-    });
-    setShowMaterials(true);
-  };
-
-  const handleEditMaterial = (material: any) => {
-    setEditingMaterial({ ...material });
-  };
-
-  const handleSaveMaterial = (material: any) => {
-    if (material.isNew) {
-      setMaterials([...materials, { ...material, isNew: undefined }]);
-    } else {
-      setMaterials(materials.map(m => m.id === material.id ? { ...material } : m));
-    }
-    setEditingMaterial(null);
-  };
-
-  const handleDeleteMaterial = (id: string) => {
-    setMaterials(materials.filter(m => m.id !== id));
-  };
-
-  // Functions to handle personnel operations
-  const handleAddPersonnel = () => {
-    setEditingPersonnel({
-      id: `temp-${Date.now()}`,
-      role: '',
-      quantity: 1,
-      hours: 1,
-      isNew: true,
-    });
-    setShowPersonnel(true);
-  };
-
-  const handleEditPersonnel = (personnelItem: any) => {
-    setEditingPersonnel({ ...personnelItem });
-  };
-
-  const handleSavePersonnel = (personnelItem: any) => {
-    if (personnelItem.isNew) {
-      setPersonnel([...personnel, { ...personnelItem, isNew: undefined }]);
-    } else {
-      setPersonnel(personnel.map(p => p.id === personnelItem.id ? { ...personnelItem } : p));
-    }
-    setEditingPersonnel(null);
-  };
-
-  const handleDeletePersonnel = (id: string) => {
-    setPersonnel(personnel.filter(p => p.id !== id));
-  };
-
-  // Functions to handle machine operations
-  const handleAddMachine = () => {
-    setEditingMachine({
-      id: `temp-${Date.now()}`,
-      name: '',
-      setup_time: 0,
-      run_time: 0,
-      isNew: true,
-    });
-    setShowMachines(true);
-  };
-
-  const handleEditMachine = (machine: any) => {
-    setEditingMachine({ ...machine });
-  };
-
-  const handleSaveMachine = (machine: any) => {
-    if (machine.isNew) {
-      setMachines([...machines, { ...machine, isNew: undefined }]);
-    } else {
-      setMachines(machines.map(m => m.id === machine.id ? { ...machine } : m));
-    }
-    setEditingMachine(null);
-  };
-
-  const handleDeleteMachine = (id: string) => {
-    setMachines(machines.filter(m => m.id !== id));
-  };
-
-  // Handle product selection
-  const handleProductChange = (productId: string) => {
-    setProductId(productId);
-    // Reset variant selection when product changes
-    setVariantId('');
-  };
-
+  // Return combined state and handlers from all hooks
   return {
-    productId,
-    name,
-    description,
-    variantId,
-    productList,
-    materialList,
-    personnelRoleList,
-    routingStagesList,
-    materials,
-    personnel,
-    machines,
-    routingStages,
-    showMaterials,
-    showPersonnel,
-    showMachines,
-    showRoutingStages,
-    editingMaterial,
-    editingPersonnel,
-    editingMachine,
-    editingRoutingStage,
+    ...formState,
+    ...referenceData,
+    ...materialsMgmt,
+    ...personnelMgmt,
+    ...machinesMgmt,
+    ...routingStagesMgmt,
     loading,
     isEditing,
-    setProductId,
-    setName,
-    setDescription,
-    setVariantId,
-    setMaterials,
-    setPersonnel,
-    setMachines,
-    setRoutingStages,
-    setShowMaterials,
-    setShowPersonnel,
-    setShowMachines,
-    setShowRoutingStages,
-    setEditingMaterial,
-    setEditingPersonnel,
-    setEditingMachine,
-    setEditingRoutingStage,
-    handleSubmit,
-    handleProductChange,
-    handleAddMaterial,
-    handleEditMaterial,
-    handleSaveMaterial,
-    handleDeleteMaterial,
-    handleAddPersonnel,
-    handleEditPersonnel,
-    handleSavePersonnel,
-    handleDeletePersonnel,
-    handleAddMachine,
-    handleEditMachine,
-    handleSaveMachine,
-    handleDeleteMachine,
-    handleAddRoutingStage,
-    handleEditRoutingStage,
-    handleSaveRoutingStage,
-    handleDeleteRoutingStage,
+    handleSubmit: handleFormSubmit
   };
 };
