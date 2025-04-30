@@ -895,6 +895,30 @@ export type Database = {
         }
         Relationships: []
       }
+      routing_stages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          stage_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          stage_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          stage_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shipments: {
         Row: {
           carrier: string | null
