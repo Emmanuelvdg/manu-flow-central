@@ -104,6 +104,10 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
     }
   };
 
+  const handleSaveRoutingStage = () => {
+    form.handleSaveRoutingStage();
+  };
+
   // Props for resource sections
   const materialsProps = {
     materials: form.materials,
@@ -147,6 +151,20 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
     disabled: form.loading
   };
 
+  const routingStagesProps = {
+    routingStages: form.routingStages,
+    routingStagesList: form.routingStagesList,
+    showRoutingStages: form.showRoutingStages,
+    setShowRoutingStages: form.setShowRoutingStages,
+    editingRoutingStage: form.editingRoutingStage,
+    setEditingRoutingStage: form.setEditingRoutingStage,
+    handleAddRoutingStage: form.handleAddRoutingStage,
+    handleEditRoutingStage: form.handleEditRoutingStage,
+    handleSaveRoutingStage,
+    handleDeleteRoutingStage: form.handleDeleteRoutingStage,
+    disabled: form.loading
+  };
+
   return (
     <form onSubmit={form.handleSubmit} className="space-y-3">
       <RecipeProductSelector
@@ -173,6 +191,7 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
         materialsProps={materialsProps}
         personnelProps={personnelProps}
         machinesProps={machinesProps}
+        routingStagesProps={routingStagesProps}
       />
       
       <RecipeFormActions 

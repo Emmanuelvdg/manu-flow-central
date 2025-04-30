@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Material } from '@/types/material';
@@ -21,15 +22,19 @@ export const useRecipeMappingForm = (
   const [productList, setProductList] = useState<any[]>([]);
   const [materialList, setMaterialList] = useState<Material[]>([]);
   const [personnelRoleList, setPersonnelRoleList] = useState<any[]>([]);
+  const [routingStagesList, setRoutingStagesList] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>(initialRecipe?.materials || []);
   const [personnel, setPersonnel] = useState<any[]>(initialRecipe?.personnel || []);
   const [machines, setMachines] = useState<any[]>(initialRecipe?.machines || []);
+  const [routingStages, setRoutingStages] = useState<any[]>(initialRecipe?.routing_stages || []);
   const [showMaterials, setShowMaterials] = useState<boolean>(false);
   const [showPersonnel, setShowPersonnel] = useState<boolean>(false);
   const [showMachines, setShowMachines] = useState<boolean>(false);
+  const [showRoutingStages, setShowRoutingStages] = useState<boolean>(false);
   const [editingMaterial, setEditingMaterial] = useState<any | null>(null);
   const [editingPersonnel, setEditingPersonnel] = useState<any | null>(null);
   const [editingMachine, setEditingMachine] = useState<any | null>(null);
+  const [editingRoutingStage, setEditingRoutingStage] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const isEditing = !!initialRecipe?.id;
 
@@ -72,6 +77,12 @@ export const useRecipeMappingForm = (
       if (rolesData) {
         setPersonnelRoleList(rolesData);
       }
+
+      // Load routing stages
+      const { data: routingData } = await supabase.from('routing_stages').select('*');
+      if (routingData) {
+        setRoutingStagesList(routingData);
+      }
     } catch (error) {
       console.error('Error fetching reference data:', error);
     } finally {
@@ -92,6 +103,7 @@ export const useRecipeMappingForm = (
         materials,
         personnel,
         machines,
+        routing_stages: routingStages,
       };
       
       // Handle custom product case
@@ -133,6 +145,53 @@ export const useRecipeMappingForm = (
     } finally {
       setLoading(false);
     }
+  };
+
+  // Functions to handle routing stage operations
+  const handleAddRoutingStage = () => {
+    setEditingRoutingStage({
+      id: `temp-${Date.now()}`,
+      stage_id: '',
+      hours: 1,
+      isNew: true,
+    });
+    setShowRoutingStages(true);
+  };
+
+  const handleEditRoutingStage = (routingStage: any) => {
+    setEditingRoutingStage({ ...routingStage });
+    setShowRoutingStages(true);
+  };
+
+  const handleSaveRoutingStage = () => {
+    if (!editingRoutingStage) return;
+    
+    // Find the selected stage from the list to include its name
+    const selectedStage = routingStagesList.find(
+      stage => stage.id === editingRoutingStage.stage_id
+    );
+    
+    if (!selectedStage) return;
+    
+    const updatedStage = {
+      ...editingRoutingStage,
+      stage_name: selectedStage.stage_name,
+      isNew: undefined
+    };
+    
+    if (editingRoutingStage.isNew) {
+      setRoutingStages([...routingStages, updatedStage]);
+    } else {
+      setRoutingStages(
+        routingStages.map(s => s.id === updatedStage.id ? updatedStage : s)
+      );
+    }
+    
+    setEditingRoutingStage(null);
+  };
+
+  const handleDeleteRoutingStage = (id: string) => {
+    setRoutingStages(routingStages.filter(s => s.id !== id));
   };
 
   // Functions to handle material operations
@@ -237,15 +296,19 @@ export const useRecipeMappingForm = (
     productList,
     materialList,
     personnelRoleList,
+    routingStagesList,
     materials,
     personnel,
     machines,
+    routingStages,
     showMaterials,
     showPersonnel,
     showMachines,
+    showRoutingStages,
     editingMaterial,
     editingPersonnel,
     editingMachine,
+    editingRoutingStage,
     loading,
     isEditing,
     setProductId,
@@ -255,12 +318,15 @@ export const useRecipeMappingForm = (
     setMaterials,
     setPersonnel,
     setMachines,
+    setRoutingStages,
     setShowMaterials,
     setShowPersonnel,
     setShowMachines,
+    setShowRoutingStages,
     setEditingMaterial,
     setEditingPersonnel,
     setEditingMachine,
+    setEditingRoutingStage,
     handleSubmit,
     handleProductChange,
     handleAddMaterial,
@@ -275,5 +341,9 @@ export const useRecipeMappingForm = (
     handleEditMachine,
     handleSaveMachine,
     handleDeleteMachine,
+    handleAddRoutingStage,
+    handleEditRoutingStage,
+    handleSaveRoutingStage,
+    handleDeleteRoutingStage,
   };
 };

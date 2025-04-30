@@ -78,3 +78,18 @@ export interface RecipeMachinesSectionProps {
   handleDeleteMachine: (id: string) => void;
   disabled?: boolean;
 }
+
+// Props for the routing stages section component
+export interface RecipeRoutingStagesSectionProps {
+  routingStages: any[];
+  routingStagesList: any[];
+  showRoutingStages: boolean;
+  setShowRoutingStages: (show: boolean) => void;
+  editingRoutingStage: any | null;
+  setEditingRoutingStage: (r: any | null) => void;
+  handleAddRoutingStage: () => void;
+  handleEditRoutingStage: (r: any) => void;
+  handleSaveRoutingStage: () => void;
+  handleDeleteRoutingStage: (id: string) => void;
+  disabled?: boolean;
+}

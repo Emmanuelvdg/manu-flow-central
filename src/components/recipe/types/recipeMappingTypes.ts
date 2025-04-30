@@ -18,6 +18,13 @@ export interface Machine {
   hours: number;
 }
 
+export interface RoutingStage {
+  id: string;
+  stage_id: string;
+  stage_name: string;
+  hours: number;
+}
+
 export interface RecipeMappingFormData {
   productId: string;
   productName: string;
@@ -26,6 +33,7 @@ export interface RecipeMappingFormData {
   materials: Material[];
   personnel: Personnel[];
   machines: Machine[];
+  routingStages: RoutingStage[];
   variantId?: string; // Adding support for variant-specific recipes
 }
 
