@@ -23,6 +23,7 @@ export interface RoutingStage {
   stage_id: string;
   stage_name: string;
   hours: number;
+  _isNew?: boolean; // Temporary flag to track new entries
 }
 
 export interface RecipeMappingFormData {

@@ -8,12 +8,15 @@ export function useRoutingStagesManagement() {
   const [editingRoutingStage, setEditingRoutingStage] = useState<Partial<RoutingStage> | null>(null);
 
   const handleAddRoutingStage = () => {
+    // Create a temporary ID for the new stage until it's saved
     setEditingRoutingStage({
       id: `temp-${Date.now()}`,
       stage_id: '',
       stage_name: '',
       hours: 1,
-      isNew: true,
+      // Using a custom property to track new entries that won't be saved to database
+      // We'll remove this before saving
+      _isNew: true,
     });
     setShowRoutingStages(true);
   };
@@ -27,11 +30,13 @@ export function useRoutingStagesManagement() {
     if (!editingRoutingStage || !editingRoutingStage.stage_id) return;
     
     const updatedStage = {
-      ...editingRoutingStage,
-      isNew: undefined
+      id: editingRoutingStage.id || `temp-${Date.now()}`,
+      stage_id: editingRoutingStage.stage_id,
+      stage_name: editingRoutingStage.stage_name || '',
+      hours: editingRoutingStage.hours || 1
     } as RoutingStage;
     
-    if (editingRoutingStage.isNew) {
+    if (editingRoutingStage._isNew) {
       setRoutingStages([...routingStages, updatedStage]);
     } else {
       setRoutingStages(

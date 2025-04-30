@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,7 +36,7 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
   disabled
 }) => {
   // Modal State
-  const isEditing = editingRoutingStage && !editingRoutingStage.isNew;
+  const isEditing = editingRoutingStage && !editingRoutingStage._isNew;
 
   const handleSave = () => {
     handleSaveRoutingStage();
@@ -51,6 +51,15 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
   const updateRoutingStage = (key: string, value: any) => {
     if (!editingRoutingStage) return;
     setEditingRoutingStage({ ...editingRoutingStage, [key]: value });
+  };
+
+  // When stage_id changes, we also need to update stage_name
+  const handleStageIdChange = (stageId: string) => {
+    const selectedStage = routingStagesList.find(stage => stage.id === stageId);
+    if (selectedStage) {
+      updateRoutingStage('stage_id', stageId);
+      updateRoutingStage('stage_name', selectedStage.stage_name);
+    }
   };
 
   return (
@@ -106,7 +115,7 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
               </Label>
               <Select
                 value={editingRoutingStage?.stage_id || ""}
-                onValueChange={(value) => updateRoutingStage('stage_id', value)}
+                onValueChange={handleStageIdChange}
                 disabled={disabled}
               >
                 <SelectTrigger className="col-span-3">

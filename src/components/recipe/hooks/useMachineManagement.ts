@@ -7,26 +7,44 @@ export function useMachineManagement() {
   const [showMachines, setShowMachines] = useState(false);
   const [editingMachine, setEditingMachine] = useState<Partial<Machine> | null>(null);
 
-  const handleAddMachine = () => setEditingMachine({ id: "", machine: "", hours: 1 });
-  
-  const handleEditMachine = (m: Machine) => setEditingMachine({ ...m });
-  
+  const handleAddMachine = () => {
+    setEditingMachine({
+      id: `temp-${Date.now()}`,
+      machine: '',
+      hours: 1,
+      _isNew: true,
+    });
+    setShowMachines(true);
+  };
+
+  const handleEditMachine = (machine: Machine) => {
+    setEditingMachine({ ...machine });
+    setShowMachines(true);
+  };
+
   const handleSaveMachine = () => {
-    if (!editingMachine?.machine) return;
-    if (editingMachine.id) {
-      setMachines(arr => 
-        arr.map(m => m.id === editingMachine.id ? { ...editingMachine, id: editingMachine.id } as Machine : m)
-      );
+    if (!editingMachine || !editingMachine.machine) return;
+    
+    const updatedMachine = {
+      id: editingMachine.id || `temp-${Date.now()}`,
+      machine: editingMachine.machine,
+      hours: editingMachine.hours || 1
+    } as Machine;
+    
+    if (editingMachine._isNew) {
+      setMachines([...machines, updatedMachine]);
     } else {
-      setMachines(arr => [
-        ...arr,
-        { ...editingMachine, id: Date.now().toString() } as Machine
-      ]);
+      setMachines(
+        machines.map(m => m.id === updatedMachine.id ? updatedMachine : m)
+      );
     }
+    
     setEditingMachine(null);
   };
-  
-  const handleDeleteMachine = (id: string) => setMachines(arr => arr.filter(m => m.id !== id));
+
+  const handleDeleteMachine = (id: string) => {
+    setMachines(machines.filter(m => m.id !== id));
+  };
 
   return {
     machines,

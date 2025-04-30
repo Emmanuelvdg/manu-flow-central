@@ -85,22 +85,22 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
     form.setVariantId(selectedVariantId);
   }, [selectedVariantId]);
 
-  // Create wrapper functions to fix the function signature issues
+  // Wrapper functions with corrected implementations
   const handleSaveMaterial = () => {
     if (form.editingMaterial) {
-      form.handleSaveMaterial(form.editingMaterial);
+      form.handleSaveMaterial();
     }
   };
 
   const handleSavePersonnel = () => {
     if (form.editingPersonnel) {
-      form.handleSavePersonnel(form.editingPersonnel);
+      form.handleSavePersonnel();
     }
   };
 
   const handleSaveMachine = () => {
     if (form.editingMachine) {
-      form.handleSaveMachine(form.editingMachine);
+      form.handleSaveMachine();
     }
   };
 

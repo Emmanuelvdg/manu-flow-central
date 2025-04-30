@@ -7,26 +7,44 @@ export function usePersonnelManagement() {
   const [showPersonnel, setShowPersonnel] = useState(false);
   const [editingPersonnel, setEditingPersonnel] = useState<Partial<Personnel> | null>(null);
 
-  const handleAddPersonnel = () => setEditingPersonnel({ id: "", role: "", hours: 1 });
-  
-  const handleEditPersonnel = (p: Personnel) => setEditingPersonnel({ ...p });
-  
+  const handleAddPersonnel = () => {
+    setEditingPersonnel({
+      id: `temp-${Date.now()}`,
+      role: '',
+      hours: 1,
+      _isNew: true,
+    });
+    setShowPersonnel(true);
+  };
+
+  const handleEditPersonnel = (person: Personnel) => {
+    setEditingPersonnel({ ...person });
+    setShowPersonnel(true);
+  };
+
   const handleSavePersonnel = () => {
-    if (!editingPersonnel?.role) return;
-    if (editingPersonnel.id) {
-      setPersonnel(arr => 
-        arr.map(p => p.id === editingPersonnel.id ? { ...editingPersonnel, id: editingPersonnel.id } as Personnel : p)
-      );
+    if (!editingPersonnel || !editingPersonnel.role) return;
+    
+    const updatedPersonnel = {
+      id: editingPersonnel.id || `temp-${Date.now()}`,
+      role: editingPersonnel.role,
+      hours: editingPersonnel.hours || 1
+    } as Personnel;
+    
+    if (editingPersonnel._isNew) {
+      setPersonnel([...personnel, updatedPersonnel]);
     } else {
-      setPersonnel(arr => [
-        ...arr,
-        { ...editingPersonnel, id: Date.now().toString() } as Personnel
-      ]);
+      setPersonnel(
+        personnel.map(p => p.id === updatedPersonnel.id ? updatedPersonnel : p)
+      );
     }
+    
     setEditingPersonnel(null);
   };
-  
-  const handleDeletePersonnel = (id: string) => setPersonnel(arr => arr.filter(p => p.id !== id));
+
+  const handleDeletePersonnel = (id: string) => {
+    setPersonnel(personnel.filter(p => p.id !== id));
+  };
 
   return {
     personnel,
