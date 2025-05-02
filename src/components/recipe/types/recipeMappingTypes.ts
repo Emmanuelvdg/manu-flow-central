@@ -4,18 +4,21 @@ export interface Material {
   name: string;
   quantity: number;
   unit: string;
+  _isNew?: boolean; // Added for tracking new entries
 }
 
 export interface Personnel {
   id: string;
   role: string;
   hours: number;
+  _isNew?: boolean; // Added for tracking new entries
 }
 
 export interface Machine {
   id: string;
   machine: string;
   hours: number;
+  _isNew?: boolean; // Added for tracking new entries
 }
 
 export interface RoutingStage {
