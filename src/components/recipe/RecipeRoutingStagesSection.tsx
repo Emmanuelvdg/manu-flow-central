@@ -1,12 +1,14 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash, Pencil, Users, Factory, Clock } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Minus } from "lucide-react";
 import type { RecipeRoutingStagesSectionProps } from "./form/RecipeFormTypes";
-import type { Personnel, Machine as MachineType } from "./types/recipeMappingTypes";
+import type { Personnel, Machine } from "./types/recipeMappingTypes";
+import StageList from "./routing-stages/StageList";
+import StageDetailPanel from "./routing-stages/StageDetailPanel";
+import StageEditor from "./routing-stages/StageEditor";
+import PersonnelEditor from "./routing-stages/PersonnelEditor";
+import MachineEditor from "./routing-stages/MachineEditor";
+import AddStageButton from "./routing-stages/AddStageButton";
 
 export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProps> = ({
   routingStages,
@@ -60,7 +62,7 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
   };
 
   // Get machines for a specific stage
-  const getStageMachines = (stageId: string): MachineType[] => {
+  const getStageMachines = (stageId: string): Machine[] => {
     return routingStages
       .find(stage => stage.id === stageId)?.machines || [];
   };
@@ -96,311 +98,77 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
       </button>
       {showRoutingStages && (
         <div className="mb-4 border rounded-lg bg-gray-50 p-2 space-y-2">
-          <table className="w-full text-xs mb-1">
-            <thead>
-              <tr>
-                <th className="text-left py-1 px-2">Stage</th>
-                <th className="text-left py-1 px-2">
-                  <div className="flex items-center">
-                    <Clock size={14} className="mr-1" />
-                    Hours
-                  </div>
-                </th>
-                <th className="text-left py-1 px-2">
-                  <div className="flex items-center">
-                    <Users size={14} className="mr-1" />
-                    Personnel
-                  </div>
-                </th>
-                <th className="text-left py-1 px-2">
-                  <div className="flex items-center">
-                    <Factory size={14} className="mr-1" />
-                    Machines
-                  </div>
-                </th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {routingStages.map((stage) => (
-                <tr key={stage.id} onClick={() => handleSelectStage(stage.id)} className="hover:bg-gray-100 cursor-pointer">
-                  <td className="px-2 py-1">{stage.stage_name}</td>
-                  <td className="px-2 py-1">{stage.hours}</td>
-                  <td className="px-2 py-1">
-                    <div className="flex items-center">
-                      <span className="mr-1">{(stage.personnel || []).length}</span>
-                      {getTotalPersonnelHours(stage.id) > 0 && (
-                        <span className="text-gray-500">({getTotalPersonnelHours(stage.id)} hrs)</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-2 py-1">
-                    <div className="flex items-center">
-                      <span className="mr-1">{(stage.machines || []).length}</span>
-                      {getTotalMachineHours(stage.id) > 0 && (
-                        <span className="text-gray-500">({getTotalMachineHours(stage.id)} hrs)</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-2 py-1 flex gap-1">
-                    <Button variant="ghost" size="icon" type="button" onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditRoutingStage(stage);
-                    }} disabled={disabled}>
-                      <Pencil className="w-3 h-3" />
-                    </Button>
-                    <Button variant="ghost" size="icon" type="button" onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteRoutingStage(stage.id);
-                    }} disabled={disabled}>
-                      <Trash className="w-3 h-3" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <StageList 
+            routingStages={routingStages}
+            handleEditRoutingStage={handleEditRoutingStage}
+            handleDeleteRoutingStage={handleDeleteRoutingStage}
+            handleSelectStage={handleSelectStage}
+            getTotalPersonnelHours={getTotalPersonnelHours}
+            getTotalMachineHours={getTotalMachineHours}
+            disabled={disabled}
+          />
           
           {activeStageId && !editingRoutingStage && !editingPersonnel && !editingMachine && (
-            <div className="border-t pt-2 mt-2">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-medium text-sm">
-                  {routingStages.find(s => s.id === activeStageId)?.stage_name || "Stage Details"}
-                </span>
-                <Button variant="ghost" size="sm" onClick={() => setActiveStageId(null)}>Close</Button>
-              </div>
-              
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid grid-cols-3 mb-2">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="personnel">
-                    <div className="flex items-center">
-                      <Users size={14} className="mr-1" />
-                      Personnel
-                      <span className="ml-1 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">
-                        {getStagePersonnel(activeStageId).length}
-                      </span>
-                    </div>
-                  </TabsTrigger>
-                  <TabsTrigger value="machines">
-                    <div className="flex items-center">
-                      <Factory size={14} className="mr-1" />
-                      Machines
-                      <span className="ml-1 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">
-                        {getStageMachines(activeStageId).length}
-                      </span>
-                    </div>
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="details" className="space-y-2">
-                  <div className="text-xs text-gray-600">
-                    <p><strong>Stage Hours:</strong> {routingStages.find(s => s.id === activeStageId)?.hours}</p>
-                    <p><strong>Personnel Hours:</strong> {getTotalPersonnelHours(activeStageId)}</p>
-                    <p><strong>Machine Hours:</strong> {getTotalMachineHours(activeStageId)}</p>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="personnel" className="space-y-2">
-                  <table className="w-full text-xs mb-1">
-                    <thead>
-                      <tr>
-                        <th className="text-left py-1 px-2">Role</th>
-                        <th className="text-left py-1 px-2">Hours</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getStagePersonnel(activeStageId).map((person) => (
-                        <tr key={person.id}>
-                          <td className="px-2 py-1">{person.role}</td>
-                          <td className="px-2 py-1">{person.hours}</td>
-                          <td className="px-2 py-1 flex gap-1">
-                            <Button variant="ghost" size="icon" type="button" onClick={() => {
-                              handleEditPersonnel({...person, stageId: activeStageId});
-                            }} disabled={disabled}>
-                              <Pencil className="w-3 h-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" type="button" onClick={() => handleDeletePersonnel(person.id, activeStageId)} disabled={disabled}>
-                              <Trash className="w-3 h-3" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    className="text-xs mt-1"
-                    onClick={() => handleAddPersonnel(activeStageId)}
-                    disabled={disabled}
-                  >
-                    <Plus className="w-3 h-3 mr-1" /> Add Personnel
-                  </Button>
-                </TabsContent>
-                
-                <TabsContent value="machines" className="space-y-2">
-                  <table className="w-full text-xs mb-1">
-                    <thead>
-                      <tr>
-                        <th className="text-left py-1 px-2">Machine</th>
-                        <th className="text-left py-1 px-2">Hours</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getStageMachines(activeStageId).map((machine) => (
-                        <tr key={machine.id}>
-                          <td className="px-2 py-1">{machine.machine}</td>
-                          <td className="px-2 py-1">{machine.hours}</td>
-                          <td className="px-2 py-1 flex gap-1">
-                            <Button variant="ghost" size="icon" type="button" onClick={() => {
-                              handleEditMachine({...machine, stageId: activeStageId});
-                            }} disabled={disabled}>
-                              <Pencil className="w-3 h-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" type="button" onClick={() => handleDeleteMachine(machine.id, activeStageId)} disabled={disabled}>
-                              <Trash className="w-3 h-3" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    className="text-xs mt-1"
-                    onClick={() => handleAddMachine(activeStageId)}
-                    disabled={disabled}
-                  >
-                    <Plus className="w-3 h-3 mr-1" /> Add Machine
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </div>
+            <StageDetailPanel 
+              activeStageId={activeStageId}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              setActiveStageId={setActiveStageId}
+              routingStages={routingStages}
+              getTotalPersonnelHours={getTotalPersonnelHours}
+              getTotalMachineHours={getTotalMachineHours}
+              getStagePersonnel={getStagePersonnel}
+              getStageMachines={getStageMachines}
+              handleEditPersonnel={handleEditPersonnel}
+              handleDeletePersonnel={handleDeletePersonnel}
+              handleAddPersonnel={handleAddPersonnel}
+              handleEditMachine={handleEditMachine}
+              handleDeleteMachine={handleDeleteMachine}
+              handleAddMachine={handleAddMachine}
+              disabled={disabled}
+            />
           )}
           
           {editingRoutingStage && (
-            <div className="flex gap-2 items-end">
-              <Select
-                value={editingRoutingStage.stage_id || ""}
-                onValueChange={handleStageIdChange}
-                disabled={disabled}
-              >
-                <SelectTrigger className="text-xs">
-                  <SelectValue placeholder="Select stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  {routingStagesList.map((stage) => (
-                    <SelectItem key={stage.id} value={stage.id}>
-                      {stage.stage_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Hours"
-                type="number"
-                min={0.1}
-                step={0.1}
-                className="w-16 text-xs"
-                value={editingRoutingStage.hours ?? 1}
-                onChange={e => setEditingRoutingStage({ ...editingRoutingStage, hours: Number(e.target.value) })}
-                disabled={disabled}
-              />
-              <Button variant="outline" size="sm" type="button" onClick={handleSaveRoutingStage} disabled={disabled}>
-                Save
-              </Button>
-              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingRoutingStage(null)} disabled={disabled}>
-                Cancel
-              </Button>
-            </div>
+            <StageEditor 
+              editingRoutingStage={editingRoutingStage}
+              routingStagesList={routingStagesList}
+              handleStageIdChange={handleStageIdChange}
+              setEditingRoutingStage={setEditingRoutingStage}
+              handleSaveRoutingStage={handleSaveRoutingStage}
+              disabled={disabled}
+            />
           )}
           
           {editingPersonnel && (
-            <div className="flex gap-2 items-end border-t pt-2 mt-2">
-              <Select
-                value={editingPersonnel.role || ""}
-                onValueChange={v => setEditingPersonnel({ ...editingPersonnel, role: v })}
-                disabled={disabled}
-              >
-                <SelectTrigger className="w-48 text-xs">
-                  <SelectValue placeholder="Personnel role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {personnelRoleList.map(role => (
-                    <SelectItem key={role.id} value={role.role}>{role.role}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Hours"
-                type="number"
-                min={0.1}
-                step={0.1}
-                className="w-16 text-xs"
-                value={editingPersonnel.hours ?? 1}
-                onChange={e => setEditingPersonnel({ ...editingPersonnel, hours: Number(e.target.value) })}
-                disabled={disabled}
-              />
-              <Button variant="outline" size="sm" type="button" onClick={handleSavePersonnel} disabled={disabled}>
-                Save
-              </Button>
-              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingPersonnel(null)} disabled={disabled}>
-                Cancel
-              </Button>
-            </div>
+            <PersonnelEditor 
+              editingPersonnel={editingPersonnel}
+              personnelRoleList={personnelRoleList}
+              setEditingPersonnel={setEditingPersonnel}
+              handleSavePersonnel={handleSavePersonnel}
+              disabled={disabled}
+            />
           )}
           
           {editingMachine && (
-            <div className="flex gap-2 items-end border-t pt-2 mt-2">
-              <Input
-                placeholder="Machine Name"
-                value={editingMachine.machine ?? ""}
-                className="text-xs"
-                onChange={e => setEditingMachine({ ...editingMachine, machine: e.target.value })}
-                autoFocus
-                disabled={disabled}
-              />
-              <Input
-                placeholder="Hours"
-                type="number"
-                min={0.1}
-                step={0.1}
-                className="w-16 text-xs"
-                value={editingMachine.hours ?? 1}
-                onChange={e => setEditingMachine({ ...editingMachine, hours: Number(e.target.value) })}
-                disabled={disabled}
-              />
-              <Button variant="outline" size="sm" type="button" onClick={handleSaveMachine} disabled={disabled}>
-                Save
-              </Button>
-              <Button variant="ghost" size="sm" type="button" onClick={() => setEditingMachine(null)} disabled={disabled}>
-                Cancel
-              </Button>
-            </div>
+            <MachineEditor 
+              editingMachine={editingMachine}
+              setEditingMachine={setEditingMachine}
+              handleSaveMachine={handleSaveMachine}
+              disabled={disabled}
+            />
           )}
           
           {!editingRoutingStage && !editingPersonnel && !editingMachine && !activeStageId && (
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              className="text-xs mt-1"
-              onClick={handleAddRoutingStage}
+            <AddStageButton 
+              handleAddRoutingStage={handleAddRoutingStage}
               disabled={disabled}
-            >
-              <Plus className="w-3 h-3 mr-1" /> Add Routing Stage
-            </Button>
+            />
           )}
         </div>
       )}
     </div>
   );
 };
+
+export default RecipeRoutingStagesSection;
