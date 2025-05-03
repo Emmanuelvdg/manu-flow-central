@@ -28,17 +28,10 @@ const Recipe = () => {
     });
   };
   
-  const handleAddPersonnel = () => {
+  const handleAddRoutingStage = () => {
     toast({
-      title: "Add Personnel",
-      description: "Personnel addition feature coming soon.",
-    });
-  };
-  
-  const handleAddMachine = () => {
-    toast({
-      title: "Add Machine",
-      description: "Machine addition feature coming soon.",
+      title: "Add Routing Stage",
+      description: "Routing stage addition feature coming soon.",
     });
   };
 
@@ -74,8 +67,7 @@ const Recipe = () => {
           recipe={recipe}
           handleEdit={handleEdit}
           handleAddMaterial={handleAddMaterial}
-          handleAddPersonnel={handleAddPersonnel}
-          handleAddMachine={handleAddMachine}
+          handleAddRoutingStage={handleAddRoutingStage}
         />
       </div>
     </MainLayout>

@@ -10,17 +10,32 @@ interface RecipeDetailsProps {
   recipe: any;
   handleEdit: () => void;
   handleAddMaterial: () => void;
-  handleAddPersonnel: () => void;
-  handleAddMachine: () => void;
+  handleAddRoutingStage: () => void;
 }
 
 const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   recipe,
   handleEdit,
   handleAddMaterial,
-  handleAddPersonnel,
-  handleAddMachine,
+  handleAddRoutingStage,
 }) => {
+  // Make sure we have the expected structure, with backward compatibility
+  const routingStages = recipe.routing_stages || [];
+  const materials = recipe.materials || [];
+  
+  // Extract all personnel and machines from routing stages for backward compatibility
+  const extractPersonnelFromStages = () => {
+    return routingStages.flatMap(stage => stage.personnel || []);
+  };
+  
+  const extractMachinesFromStages = () => {
+    return routingStages.flatMap(stage => stage.machines || []);
+  };
+  
+  // Handle legacy format where personnel and machines are at root level
+  const personnel = recipe.personnel || extractPersonnelFromStages();
+  const machines = recipe.machines || extractMachinesFromStages();
+
   return (
     <Card>
       <CardHeader>
@@ -37,17 +52,16 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
       </CardHeader>
       <CardContent>
         <RequirementsSection
-          materials={recipe.materials}
-          personnel={recipe.personnel}
-          machines={recipe.machines}
+          materials={materials}
+          personnel={personnel}
+          machines={machines}
+          routingStages={routingStages}
           onAddMaterial={handleAddMaterial}
-          onAddPersonnel={handleAddPersonnel}
-          onAddMachine={handleAddMachine}
+          onAddRoutingStage={handleAddRoutingStage}
         />
         <RecipeFullTable
-          materials={recipe.materials}
-          personnel={recipe.personnel}
-          machines={recipe.machines}
+          materials={materials}
+          routingStages={routingStages}
         />
       </CardContent>
     </Card>

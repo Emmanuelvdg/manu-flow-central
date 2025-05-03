@@ -32,16 +32,44 @@ export const useRecipeMappingForm = (
   // Resource management hooks
   const materialsMgmt = useMaterialsManagement();
   const personnelMgmt = usePersonnelManagement();
-  const machinesMgmt = useMachineManagement();
+  const machineMgmt = useMachineManagement();
   const routingStagesMgmt = useRoutingStagesManagement();
   
   // Set initial values from existing recipe
   useEffect(() => {
     if (initialRecipe) {
       materialsMgmt.setMaterials(initialRecipe.materials || []);
-      personnelMgmt.setPersonnel(initialRecipe.personnel || []);
-      machinesMgmt.setMachines(initialRecipe.machines || []);
-      routingStagesMgmt.setRoutingStages(initialRecipe.routing_stages || []);
+      
+      // For backwards compatibility, map existing personnel and machines to stages if needed
+      let existingStages = initialRecipe.routing_stages || [];
+      const existingPersonnel = initialRecipe.personnel || [];
+      const existingMachines = initialRecipe.machines || [];
+      
+      // If we have stages but no personnel/machines inside them, distribute the existing ones
+      if (existingStages.length > 0 && existingPersonnel.length > 0) {
+        if (!existingStages[0].personnel) {
+          // Old format - personnel is at root level, not in stages
+          // Put all personnel in the first stage for now
+          existingStages = existingStages.map((stage, index) => ({
+            ...stage,
+            personnel: index === 0 ? existingPersonnel : [],
+            machines: index === 0 ? existingMachines : []
+          }));
+        }
+      } else if (existingStages.length === 0 && (existingPersonnel.length > 0 || existingMachines.length > 0)) {
+        // No stages but we have personnel/machines
+        // Create a default stage to hold them
+        existingStages = [{
+          id: `temp-${Date.now()}`,
+          stage_id: 'default',
+          stage_name: 'Production',
+          hours: 1,
+          personnel: existingPersonnel,
+          machines: existingMachines
+        }];
+      }
+      
+      routingStagesMgmt.setRoutingStages(existingStages);
     }
   }, [initialRecipe]);
 
@@ -56,8 +84,8 @@ export const useRecipeMappingForm = (
       name: formState.name,
       description: formState.description,
       materials: materialsMgmt.materials,
-      personnel: personnelMgmt.personnel,
-      machines: machinesMgmt.machines,
+      personnel: [], // Now managed within stages
+      machines: [], // Now managed within stages
       routingStages: routingStagesMgmt.routingStages,
       variantId: formState.variantId
     };
@@ -65,14 +93,26 @@ export const useRecipeMappingForm = (
     handleSubmit(formData);
   };
 
-  // Return combined state and handlers from all hooks
+  // Extract all personnel from stages for compatibility with existing code
+  const getAllPersonnel = () => {
+    return routingStagesMgmt.routingStages.flatMap(stage => stage.personnel || []);
+  };
+
+  // Extract all machines from stages for compatibility with existing code
+  const getAllMachines = () => {
+    return routingStagesMgmt.routingStages.flatMap(stage => stage.machines || []);
+  };
+
   return {
     ...formState,
     ...referenceData,
     ...materialsMgmt,
     ...personnelMgmt,
-    ...machinesMgmt,
+    ...machineMgmt,
     ...routingStagesMgmt,
+    // Virtual properties for compatibility
+    personnel: getAllPersonnel(),
+    machines: getAllMachines(),
     loading,
     isEditing,
     handleSubmit: handleFormSubmit

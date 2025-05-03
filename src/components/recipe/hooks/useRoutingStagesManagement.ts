@@ -17,6 +17,9 @@ export function useRoutingStagesManagement() {
       // Using a custom property to track new entries that won't be saved to database
       // We'll remove this before saving
       _isNew: true,
+      // Initialize empty arrays for personnel and machines
+      personnel: [],
+      machines: []
     });
     setShowRoutingStages(true);
   };
@@ -33,7 +36,9 @@ export function useRoutingStagesManagement() {
       id: editingRoutingStage.id || `temp-${Date.now()}`,
       stage_id: editingRoutingStage.stage_id,
       stage_name: editingRoutingStage.stage_name || '',
-      hours: editingRoutingStage.hours || 1
+      hours: editingRoutingStage.hours || 1,
+      personnel: editingRoutingStage.personnel || [],
+      machines: editingRoutingStage.machines || []
     } as RoutingStage;
     
     if (editingRoutingStage._isNew) {

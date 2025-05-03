@@ -91,5 +91,20 @@ export interface RecipeRoutingStagesSectionProps {
   handleEditRoutingStage: (r: any) => void;
   handleSaveRoutingStage: () => void;
   handleDeleteRoutingStage: (id: string) => void;
+  // Personnel management props
+  personnelRoleList: any[];
+  handleAddPersonnel: (stageId: string) => void;
+  handleEditPersonnel: (p: any) => void;
+  handleSavePersonnel: () => void;
+  handleDeletePersonnel: (id: string, stageId: string) => void;
+  editingPersonnel: any | null;
+  setEditingPersonnel: (p: any | null) => void;
+  // Machine management props
+  handleAddMachine: (stageId: string) => void;
+  handleEditMachine: (m: any) => void;
+  handleSaveMachine: () => void;
+  handleDeleteMachine: (id: string, stageId: string) => void;
+  editingMachine: any | null;
+  setEditingMachine: (m: any | null) => void;
   disabled?: boolean;
 }

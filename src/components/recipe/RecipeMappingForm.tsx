@@ -6,7 +6,8 @@ import { useRecipeMappingForm } from "./hooks/useRecipeMappingForm";
 import { RecipeBasicInfoSection } from "./form/RecipeBasicInfoSection";
 import { RecipeFormActions } from "./form/RecipeFormActions";
 import { RecipeProductSelector } from "./form/RecipeProductSelector";
-import { RecipeResourceSections } from "./form/RecipeResourceSections";
+import { RecipeMaterialsSection } from "./RecipeMaterialsSection";
+import { RecipeRoutingStagesSection } from "./RecipeRoutingStagesSection";
 import type { RecipeFormProps } from "./form/RecipeFormTypes";
 
 export default function RecipeMappingForm(props: RecipeFormProps) {
@@ -85,84 +86,25 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
     form.setVariantId(selectedVariantId);
   }, [selectedVariantId]);
 
-  // Wrapper functions with corrected implementations
-  const handleSaveMaterial = () => {
-    if (form.editingMaterial) {
-      form.handleSaveMaterial();
-    }
-  };
-
+  // Custom save handlers that integrate with the routing stage structure
   const handleSavePersonnel = () => {
     if (form.editingPersonnel) {
-      form.handleSavePersonnel();
+      form.handleSavePersonnel(form.routingStages, form.setRoutingStages);
     }
   };
-
+  
   const handleSaveMachine = () => {
     if (form.editingMachine) {
-      form.handleSaveMachine();
+      form.handleSaveMachine(form.routingStages, form.setRoutingStages);
     }
   };
 
-  const handleSaveRoutingStage = () => {
-    form.handleSaveRoutingStage();
+  const handleDeletePersonnel = (id: string, stageId: string) => {
+    form.handleDeletePersonnel(id, stageId, form.routingStages, form.setRoutingStages);
   };
-
-  // Props for resource sections
-  const materialsProps = {
-    materials: form.materials,
-    setMaterials: form.setMaterials,
-    materialList: form.materialList,
-    showMaterials: form.showMaterials,
-    setShowMaterials: form.setShowMaterials,
-    editingMaterial: form.editingMaterial,
-    setEditingMaterial: form.setEditingMaterial,
-    handleAddMaterial: form.handleAddMaterial,
-    handleEditMaterial: form.handleEditMaterial,
-    handleSaveMaterial,
-    handleDeleteMaterial: form.handleDeleteMaterial,
-    disabled: form.loading
-  };
-
-  const personnelProps = {
-    personnel: form.personnel,
-    personnelRoleList: form.personnelRoleList,
-    showPersonnel: form.showPersonnel,
-    setShowPersonnel: form.setShowPersonnel,
-    editingPersonnel: form.editingPersonnel,
-    setEditingPersonnel: form.setEditingPersonnel,
-    handleAddPersonnel: form.handleAddPersonnel,
-    handleEditPersonnel: form.handleEditPersonnel,
-    handleSavePersonnel,
-    handleDeletePersonnel: form.handleDeletePersonnel,
-    disabled: form.loading
-  };
-
-  const machinesProps = {
-    machines: form.machines,
-    showMachines: form.showMachines,
-    setShowMachines: form.setShowMachines,
-    editingMachine: form.editingMachine,
-    setEditingMachine: form.setEditingMachine,
-    handleAddMachine: form.handleAddMachine,
-    handleEditMachine: form.handleEditMachine,
-    handleSaveMachine,
-    handleDeleteMachine: form.handleDeleteMachine,
-    disabled: form.loading
-  };
-
-  const routingStagesProps = {
-    routingStages: form.routingStages,
-    routingStagesList: form.routingStagesList,
-    showRoutingStages: form.showRoutingStages,
-    setShowRoutingStages: form.setShowRoutingStages,
-    editingRoutingStage: form.editingRoutingStage,
-    setEditingRoutingStage: form.setEditingRoutingStage,
-    handleAddRoutingStage: form.handleAddRoutingStage,
-    handleEditRoutingStage: form.handleEditRoutingStage,
-    handleSaveRoutingStage,
-    handleDeleteRoutingStage: form.handleDeleteRoutingStage,
-    disabled: form.loading
+  
+  const handleDeleteMachine = (id: string, stageId: string) => {
+    form.handleDeleteMachine(id, stageId, form.routingStages, form.setRoutingStages);
   };
 
   return (
@@ -187,12 +129,51 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
         disabled={form.loading}
       />
       
-      <RecipeResourceSections 
-        materialsProps={materialsProps}
-        personnelProps={personnelProps}
-        machinesProps={machinesProps}
-        routingStagesProps={routingStagesProps}
-      />
+      <div className="pt-2">
+        <RecipeMaterialsSection
+          materials={form.materials}
+          setMaterials={form.setMaterials}
+          materialList={form.materialList}
+          showMaterials={form.showMaterials}
+          setShowMaterials={form.setShowMaterials}
+          editingMaterial={form.editingMaterial}
+          setEditingMaterial={form.setEditingMaterial}
+          handleAddMaterial={form.handleAddMaterial}
+          handleEditMaterial={form.handleEditMaterial}
+          handleSaveMaterial={form.handleSaveMaterial}
+          handleDeleteMaterial={form.handleDeleteMaterial}
+          disabled={form.loading}
+        />
+        
+        <RecipeRoutingStagesSection 
+          routingStages={form.routingStages}
+          routingStagesList={form.routingStagesList}
+          showRoutingStages={form.showRoutingStages}
+          setShowRoutingStages={form.setShowRoutingStages}
+          editingRoutingStage={form.editingRoutingStage}
+          setEditingRoutingStage={form.setEditingRoutingStage}
+          handleAddRoutingStage={form.handleAddRoutingStage}
+          handleEditRoutingStage={form.handleEditRoutingStage}
+          handleSaveRoutingStage={form.handleSaveRoutingStage}
+          handleDeleteRoutingStage={form.handleDeleteRoutingStage}
+          // Personnel management
+          personnelRoleList={form.personnelRoleList}
+          handleAddPersonnel={form.handleAddPersonnel}
+          handleEditPersonnel={form.handleEditPersonnel}
+          handleSavePersonnel={handleSavePersonnel}
+          handleDeletePersonnel={handleDeletePersonnel}
+          editingPersonnel={form.editingPersonnel}
+          setEditingPersonnel={form.setEditingPersonnel}
+          // Machine management
+          handleAddMachine={form.handleAddMachine}
+          handleEditMachine={form.handleEditMachine}
+          handleSaveMachine={handleSaveMachine}
+          handleDeleteMachine={handleDeleteMachine}
+          editingMachine={form.editingMachine}
+          setEditingMachine={form.setEditingMachine}
+          disabled={form.loading}
+        />
+      </div>
       
       <RecipeFormActions 
         onClose={props.onClose}

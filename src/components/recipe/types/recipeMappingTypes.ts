@@ -12,6 +12,7 @@ export interface Personnel {
   role: string;
   hours: number;
   _isNew?: boolean; // Added for tracking new entries
+  stageId?: string; // Reference to the routing stage
 }
 
 export interface Machine {
@@ -19,6 +20,7 @@ export interface Machine {
   machine: string;
   hours: number;
   _isNew?: boolean; // Added for tracking new entries
+  stageId?: string; // Reference to the routing stage
 }
 
 export interface RoutingStage {
@@ -27,6 +29,8 @@ export interface RoutingStage {
   stage_name: string;
   hours: number;
   _isNew?: boolean; // Temporary flag to track new entries
+  personnel?: Personnel[]; // Personnel assigned to this stage
+  machines?: Machine[]; // Machines used in this stage
 }
 
 export interface RecipeMappingFormData {
