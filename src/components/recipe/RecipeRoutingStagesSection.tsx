@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash, Pencil, Users, Machine } from "lucide-react";
+import { Plus, Minus, Trash, Pencil, Users, Factory } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { RecipeRoutingStagesSectionProps } from "./form/RecipeFormTypes";
