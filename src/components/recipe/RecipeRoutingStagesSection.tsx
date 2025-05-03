@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash, Pencil, Users, Factory } from "lucide-react";
+import { Plus, Minus, Trash, Pencil, Users, Factory, Clock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { RecipeRoutingStagesSectionProps } from "./form/RecipeFormTypes";
@@ -71,6 +71,18 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
     setActiveTab("details");
   };
 
+  // Calculate total hours for personnel in a stage
+  const getTotalPersonnelHours = (stageId: string): number => {
+    const personnel = getStagePersonnel(stageId);
+    return personnel.reduce((sum, p) => sum + (p.hours || 0), 0);
+  };
+
+  // Calculate total hours for machines in a stage
+  const getTotalMachineHours = (stageId: string): number => {
+    const machines = getStageMachines(stageId);
+    return machines.reduce((sum, m) => sum + (m.hours || 0), 0);
+  };
+
   return (
     <div>
       <button
@@ -88,9 +100,24 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
             <thead>
               <tr>
                 <th className="text-left py-1 px-2">Stage</th>
-                <th className="text-left py-1 px-2">Hours</th>
-                <th className="text-left py-1 px-2">Personnel</th>
-                <th className="text-left py-1 px-2">Machines</th>
+                <th className="text-left py-1 px-2">
+                  <div className="flex items-center">
+                    <Clock size={14} className="mr-1" />
+                    Hours
+                  </div>
+                </th>
+                <th className="text-left py-1 px-2">
+                  <div className="flex items-center">
+                    <Users size={14} className="mr-1" />
+                    Personnel
+                  </div>
+                </th>
+                <th className="text-left py-1 px-2">
+                  <div className="flex items-center">
+                    <Factory size={14} className="mr-1" />
+                    Machines
+                  </div>
+                </th>
                 <th />
               </tr>
             </thead>
@@ -99,8 +126,22 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
                 <tr key={stage.id} onClick={() => handleSelectStage(stage.id)} className="hover:bg-gray-100 cursor-pointer">
                   <td className="px-2 py-1">{stage.stage_name}</td>
                   <td className="px-2 py-1">{stage.hours}</td>
-                  <td className="px-2 py-1">{(stage.personnel || []).length}</td>
-                  <td className="px-2 py-1">{(stage.machines || []).length}</td>
+                  <td className="px-2 py-1">
+                    <div className="flex items-center">
+                      <span className="mr-1">{(stage.personnel || []).length}</span>
+                      {getTotalPersonnelHours(stage.id) > 0 && (
+                        <span className="text-gray-500">({getTotalPersonnelHours(stage.id)} hrs)</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-2 py-1">
+                    <div className="flex items-center">
+                      <span className="mr-1">{(stage.machines || []).length}</span>
+                      {getTotalMachineHours(stage.id) > 0 && (
+                        <span className="text-gray-500">({getTotalMachineHours(stage.id)} hrs)</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-2 py-1 flex gap-1">
                     <Button variant="ghost" size="icon" type="button" onClick={(e) => {
                       e.stopPropagation();
@@ -132,13 +173,31 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid grid-cols-3 mb-2">
                   <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="personnel">Personnel</TabsTrigger>
-                  <TabsTrigger value="machines">Machines</TabsTrigger>
+                  <TabsTrigger value="personnel">
+                    <div className="flex items-center">
+                      <Users size={14} className="mr-1" />
+                      Personnel
+                      <span className="ml-1 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">
+                        {getStagePersonnel(activeStageId).length}
+                      </span>
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger value="machines">
+                    <div className="flex items-center">
+                      <Factory size={14} className="mr-1" />
+                      Machines
+                      <span className="ml-1 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">
+                        {getStageMachines(activeStageId).length}
+                      </span>
+                    </div>
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details" className="space-y-2">
                   <div className="text-xs text-gray-600">
-                    Hours: {routingStages.find(s => s.id === activeStageId)?.hours}
+                    <p><strong>Stage Hours:</strong> {routingStages.find(s => s.id === activeStageId)?.hours}</p>
+                    <p><strong>Personnel Hours:</strong> {getTotalPersonnelHours(activeStageId)}</p>
+                    <p><strong>Machine Hours:</strong> {getTotalMachineHours(activeStageId)}</p>
                   </div>
                 </TabsContent>
                 
@@ -283,7 +342,8 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
               <Input
                 placeholder="Hours"
                 type="number"
-                min={1}
+                min={0.1}
+                step={0.1}
                 className="w-16 text-xs"
                 value={editingPersonnel.hours ?? 1}
                 onChange={e => setEditingPersonnel({ ...editingPersonnel, hours: Number(e.target.value) })}
@@ -311,7 +371,8 @@ export const RecipeRoutingStagesSection: React.FC<RecipeRoutingStagesSectionProp
               <Input
                 placeholder="Hours"
                 type="number"
-                min={1}
+                min={0.1}
+                step={0.1}
                 className="w-16 text-xs"
                 value={editingMachine.hours ?? 1}
                 onChange={e => setEditingMachine({ ...editingMachine, hours: Number(e.target.value) })}
