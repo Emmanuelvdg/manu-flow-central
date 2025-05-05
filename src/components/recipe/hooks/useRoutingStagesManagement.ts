@@ -4,7 +4,7 @@ import type { RoutingStage } from "../types/recipeMappingTypes";
 
 export function useRoutingStagesManagement() {
   const [routingStages, setRoutingStages] = useState<RoutingStage[]>([]);
-  const [showRoutingStages, setShowRoutingStages] = useState(false);
+  const [showRoutingStages, setShowRoutingStages] = useState(true); // Default to showing routing stages
   const [editingRoutingStage, setEditingRoutingStage] = useState<Partial<RoutingStage> | null>(null);
 
   const handleAddRoutingStage = () => {

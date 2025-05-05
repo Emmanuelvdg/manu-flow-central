@@ -148,7 +148,7 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
         <RecipeRoutingStagesSection 
           routingStages={form.routingStages}
           routingStagesList={form.routingStagesList}
-          showRoutingStages={form.showRoutingStages}
+          showRoutingStages={true} // Always show routing stages
           setShowRoutingStages={form.setShowRoutingStages}
           editingRoutingStage={form.editingRoutingStage}
           setEditingRoutingStage={form.setEditingRoutingStage}

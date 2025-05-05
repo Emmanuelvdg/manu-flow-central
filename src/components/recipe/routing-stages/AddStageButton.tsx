@@ -17,7 +17,7 @@ const AddStageButton: React.FC<AddStageButtonProps> = ({
       variant="outline"
       size="sm"
       type="button"
-      className="text-xs mt-1"
+      className="text-xs mt-3 w-full bg-purple-50 hover:bg-purple-100 border-purple-200"
       onClick={handleAddRoutingStage}
       disabled={disabled}
     >
