@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { OrderMetaForm } from "./OrderMetaForm";
 import { OrderProductsProgress } from "./OrderProductsProgress";
+import { OrderRoutingStages } from "./components/OrderRoutingStages";
 import { OrderDetailState } from "./components/OrderDetailState";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,15 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
           }))}
           orderId={orderId}
         />
+        
+        {/* Add the OrderRoutingStages component */}
+        {!hasNoProducts && (
+          <OrderRoutingStages 
+            orderId={orderId} 
+            orderProducts={orderProducts} 
+            refetch={refetch}
+          />
+        )}
       </CardContent>
     </Card>
   );
