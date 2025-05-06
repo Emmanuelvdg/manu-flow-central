@@ -1,13 +1,12 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { OrderDetailHeader } from "./order-detail/OrderDetailHeader";
 import { OrderDetailContent } from "./order-detail/OrderDetailContent";
 import { useOrderDetail } from "@/hooks/useOrderDetail";
 import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatches";
-import { useMaterials } from "@/components/resources/hooks/useMaterials";
-import { checkMaterialAvailability, updateOrderMaterialStatus } from "@/services/materialReservationService";
+import { checkMaterialAvailability } from "@/services/materialReservationService";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,6 +17,9 @@ const OrderDetail = () => {
   
   // Special case for quote-order mapping view
   const isQuoteOrderMapping = orderId === "quote-order-mapping";
+  
+  // Track whether initial status check has run
+  const statusCheckCompleted = useRef(false);
   
   const { 
     order,
@@ -33,8 +35,9 @@ const OrderDetail = () => {
   // Fetch materials and their batches
   const { data: batches } = useMaterialBatches();
 
-  React.useEffect(() => {
-    if (!orderProducts || !batches || orderProducts.length === 0 || !order) return;
+  // Run material availability check only once when data is available
+  useEffect(() => {
+    if (statusCheckCompleted.current || !orderProducts || !batches || orderProducts.length === 0 || !order) return;
 
     // Group batches by material ID
     const materialBatches = batches.reduce((acc: any, batch) => {
@@ -63,14 +66,16 @@ const OrderDetail = () => {
           
           console.log(`Status updated from ${order?.parts_status} to ${newStatus}`);
         }
+        
+        // Mark status check as completed to prevent repeated runs
+        statusCheckCompleted.current = true;
       } catch (err) {
         console.error("Error updating order status:", err);
       }
     };
 
-    // Only run this on initial load or when batches/products change
     updateStatus();
-  }, [orderProducts, batches, order?.id]);
+  }, [orderProducts, batches, order?.id, order?.parts_status, refetch]);
 
   return (
     <MainLayout title={isQuoteOrderMapping ? "Quote-Order Mappings" : `Order Detail - ${orderId}`}>

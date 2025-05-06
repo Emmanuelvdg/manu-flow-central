@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { RoutingStage } from "@/components/recipe/types/recipeMappingTypes";
@@ -13,8 +13,19 @@ export const useRoutingStages = (orderProducts: any[], uniqueRecipeIds: string[]
   const [stageProgress, setStageProgress] = useState<Record<string, Record<string, number>>>({});
   const [loading, setLoading] = useState(true);
   const [loadingErrorMessage, setLoadingErrorMessage] = useState<string | null>(null);
+  
+  // Add refs to prevent unnecessary refetching
+  const prevUniqueRecipeIdsRef = useRef<string[]>([]);
 
+  // Fetch routing stages only when uniqueRecipeIds change
   useEffect(() => {
+    // Skip if the recipe IDs are the same as last time
+    if (JSON.stringify(prevUniqueRecipeIdsRef.current) === JSON.stringify(uniqueRecipeIds)) {
+      return;
+    }
+    
+    prevUniqueRecipeIdsRef.current = [...uniqueRecipeIds];
+    
     const fetchRoutingStages = async () => {
       setLoading(true);
       setLoadingErrorMessage(null);
@@ -93,34 +104,46 @@ export const useRoutingStages = (orderProducts: any[], uniqueRecipeIds: string[]
     fetchRoutingStages();
   }, [uniqueRecipeIds, toast]);
 
-  // Pre-populate progress values from order products when available
+  // Separate effect for updating progress values to prevent loops
   useEffect(() => {
-    if (orderProducts.length > 0 && Object.keys(routingStages).length > 0) {
-      const newProgress = { ...stageProgress };
-      
-      orderProducts.forEach(product => {
-        if (product.recipe_id && routingStages[product.recipe_id]) {
-          // For each stage in the recipe, set the progress based on the product's progress fields
-          routingStages[product.recipe_id].forEach(stage => {
-            if (!newProgress[product.recipe_id]) {
-              newProgress[product.recipe_id] = {};
-            }
-            
-            // Set progress based on selected tab
-            if (tabValue === 'materials') {
-              newProgress[product.recipe_id][stage.id] = product.materials_progress || 0;
-            } else if (tabValue === 'personnel') {
-              newProgress[product.recipe_id][stage.id] = product.personnel_progress || 0;
-            } else if (tabValue === 'machines') {
-              newProgress[product.recipe_id][stage.id] = product.machines_progress || 0;
-            } else {
-              // Default to materials progress for the "stages" tab
-              newProgress[product.recipe_id][stage.id] = product.materials_progress || 0;
-            }
-          });
-        }
-      });
-      
+    if (orderProducts.length === 0 || Object.keys(routingStages).length === 0) {
+      return;
+    }
+    
+    const newProgress = { ...stageProgress };
+    let hasChanges = false;
+    
+    orderProducts.forEach(product => {
+      if (product.recipe_id && routingStages[product.recipe_id]) {
+        // For each stage in the recipe, set the progress based on the product's progress fields
+        routingStages[product.recipe_id].forEach(stage => {
+          if (!newProgress[product.recipe_id]) {
+            newProgress[product.recipe_id] = {};
+          }
+          
+          // Set progress based on selected tab
+          let currentProgress = 0;
+          if (tabValue === 'materials') {
+            currentProgress = product.materials_progress || 0;
+          } else if (tabValue === 'personnel') {
+            currentProgress = product.personnel_progress || 0;
+          } else if (tabValue === 'machines') {
+            currentProgress = product.machines_progress || 0;
+          } else {
+            // Default to materials progress for the "stages" tab
+            currentProgress = product.materials_progress || 0;
+          }
+          
+          if (newProgress[product.recipe_id][stage.id] !== currentProgress) {
+            newProgress[product.recipe_id][stage.id] = currentProgress;
+            hasChanges = true;
+          }
+        });
+      }
+    });
+    
+    // Only update state if there are actual changes
+    if (hasChanges) {
       setStageProgress(newProgress);
     }
   }, [orderProducts, routingStages, tabValue]);
