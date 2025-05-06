@@ -95,12 +95,11 @@ export const useRecipeSubmission = (
       if (customProduct?.id && recipe) {
         console.log(`Associating recipe ${recipe.id} with custom product ${customProduct.id}`);
         
-        // Update custom product with recipe ID
-        const updateData = { recipe_id: recipe.id };
-        
+        // We need to add the recipe_id field to the custom_products table
+        // Since TypeScript doesn't know about it yet, we'll use a more generic approach
         const { error: updateError } = await supabase
           .from('custom_products')
-          .update(updateData)
+          .update({ recipe_id: recipe.id } as any)
           .eq('id', customProduct.id);
           
         if (updateError) {
@@ -110,9 +109,10 @@ export const useRecipeSubmission = (
       
       onSuccess();
       
-      if (returnToQuote && customProduct && customProduct.quote_id) {
-        // Return to quote detail page
-        navigate(`/quotes/${customProduct.quote_id}`);
+      // Check if we should return to quote detail page
+      if (returnToQuote && customProduct && 'quote_id' in customProduct) {
+        // Return to quote detail page using type assertion
+        navigate(`/quotes/${(customProduct as any).quote_id}`);
       }
     } catch (error) {
       console.error("Error saving recipe:", error);
