@@ -4,7 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import type { RecipeMappingFormData } from '../types/recipeMappingTypes';
-import type { CustomProduct } from '@/pages/quote-detail/components/CustomProductInput';
+import type { CustomProduct } from '@/pages/quote-detail/components/custom-product/types';
 
 export const useRecipeSubmission = (
   initialRecipe: any,
@@ -42,13 +42,15 @@ export const useRecipeSubmission = (
     try {
       console.log("Submitting recipe with data:", formData);
       
+      // Serialize arrays to JSON-compatible objects for Supabase
       const recipeData = {
         product_id: formData.productId || 'custom',
-        product_name: formData.productName || customProduct?.name || 'Custom Product',
+        product_name: formData.productName || (customProduct?.name || 'Custom Product'),
         name: formData.name,
         description: formData.description,
-        materials: formData.materials,
-        routing_stages: formData.routingStages,
+        // Convert arrays to JSON-compatible format
+        materials: JSON.parse(JSON.stringify(formData.materials || [])),
+        routing_stages: JSON.parse(JSON.stringify(formData.routingStages || [])),
         // Include saved empty arrays as null for better DB storage
         personnel: null, // Now managed in routing stages
         machines: null,  // Now managed in routing stages
@@ -93,9 +95,12 @@ export const useRecipeSubmission = (
       if (customProduct?.id && recipe) {
         console.log(`Associating recipe ${recipe.id} with custom product ${customProduct.id}`);
         
+        // Update custom product with recipe ID
+        const updateData = { recipe_id: recipe.id };
+        
         const { error: updateError } = await supabase
           .from('custom_products')
-          .update({ recipe_id: recipe.id })
+          .update(updateData)
           .eq('id', customProduct.id);
           
         if (updateError) {
@@ -105,7 +110,7 @@ export const useRecipeSubmission = (
       
       onSuccess();
       
-      if (returnToQuote && customProduct?.quote_id) {
+      if (returnToQuote && customProduct && customProduct.quote_id) {
         // Return to quote detail page
         navigate(`/quotes/${customProduct.quote_id}`);
       }

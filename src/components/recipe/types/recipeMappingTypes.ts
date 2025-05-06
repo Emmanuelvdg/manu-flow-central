@@ -1,8 +1,10 @@
+
 export interface Material {
   id: string;
   name: string;
   quantity: number;
   unit: string;
+  _isNew?: boolean;
 }
 
 export interface Personnel {
@@ -10,6 +12,7 @@ export interface Personnel {
   role: string;
   hours: number;
   stageId?: string;
+  _isNew?: boolean;
 }
 
 export interface Machine {
@@ -17,6 +20,7 @@ export interface Machine {
   machine: string;
   hours: number;
   stageId?: string;
+  _isNew?: boolean;
 }
 
 export interface RoutingStage {

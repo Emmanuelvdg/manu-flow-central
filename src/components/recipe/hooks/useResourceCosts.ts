@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import type { Material } from '@/types/material';
+import type { Material } from '../types/recipeMappingTypes';
 
 interface MaterialWithCost extends Material {
   costPerUnit: number;
@@ -18,13 +18,13 @@ interface MaterialCosts {
   totalCost: number;
 }
 
-export function useResourceCosts(materialList: Material[]) {
+export function useResourceCosts(materialList: any[]) {
   const [materialCosts, setMaterialCosts] = useState<MaterialCosts>({
     individualCosts: [],
     totalCost: 0
   });
 
-  const calculateMaterialsCost = useCallback((materials: any[]) => {
+  const calculateMaterialsCost = useCallback((materials: Material[]) => {
     if (!materials.length || !materialList.length) {
       setMaterialCosts({ individualCosts: [], totalCost: 0 });
       return;
