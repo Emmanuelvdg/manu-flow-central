@@ -1,7 +1,9 @@
 
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { debugRecipeMapping } from "./debugRecipeMapping";
+import { needsRecipeUpdate } from "./utils/needsRecipeUpdate";
+import { findMatchingRecipe } from "./utils/findMatchingRecipe";
+import { updateRecipeMapping } from "./utils/updateRecipeMapping";
 
 /**
  * Fixes recipe mappings for order products
@@ -19,65 +21,21 @@ export const createFixRecipeMappingHook = () => {
       let updatesNeeded = 0;
       let updatesPerformed = 0;
 
+      // Check each product to see if it needs a recipe update
       for (const product of orderProducts || []) {
-        // Check if there's a mismatch or missing recipe
-        const needsUpdate = !product.recipe_id || product.recipes?.product_id !== product.product_id;
-        
-        if (needsUpdate) {
+        if (needsRecipeUpdate(product)) {
           updatesNeeded++;
-          console.log(`Fixing recipe for product ${product.product_id} (${product.products?.name || 'Unknown'})`);
           
-          // Find the correct recipe - first try exact match
-          let correctRecipe = allRecipes?.find(r => r.product_id === product.product_id);
-          
-          // If no exact match, try matching by name
-          if (!correctRecipe && product.products?.name) {
-            console.log(`No exact product_id match, trying name match for: ${product.products.name}`);
-            correctRecipe = allRecipes?.find(r => 
-              r.product_name && product.products?.name &&
-              (r.product_name.toLowerCase().includes(product.products.name.toLowerCase()) ||
-              product.products.name.toLowerCase().includes(r.product_name.toLowerCase()))
-            );
-          }
-          
-          // If still no match, try partial ID match for "x quantity" cases
-          if (!correctRecipe && product.product_id.includes('x ')) {
-            const baseId = product.product_id.split('x ')[0].trim();
-            console.log(`Trying base ID match for: ${baseId}`);
-            correctRecipe = allRecipes?.find(r => r.product_id.startsWith(baseId));
-            
-            if (!correctRecipe) {
-              // Try base name match
-              const { data: baseProduct } = await supabase
-                .from('products')
-                .select('name')
-                .eq('id', baseId)
-                .maybeSingle();
-                
-              if (baseProduct?.name) {
-                correctRecipe = allRecipes?.find(r => 
-                  r.product_name && baseProduct.name &&
-                  (r.product_name.toLowerCase().includes(baseProduct.name.toLowerCase()) ||
-                   baseProduct.name.toLowerCase().includes(r.product_name.toLowerCase()))
-                );
-              }
-            }
-          }
+          // Find the correct recipe using multiple matching strategies
+          const correctRecipe = await findMatchingRecipe(product, allRecipes);
           
           if (correctRecipe) {
             console.log(`  Found correct recipe: ${correctRecipe.id} (${correctRecipe.name})`);
             
-            // Update the order product
-            const { error } = await supabase
-              .from('order_products')
-              .update({ recipe_id: correctRecipe.id })
-              .eq('id', product.id);
-              
-            if (error) {
-              console.error("  Failed to update recipe mapping:", error);
-            } else {
+            // Update the order product with the correct recipe
+            const updateSuccess = await updateRecipeMapping(product, correctRecipe.id);
+            if (updateSuccess) {
               updatesPerformed++;
-              console.log(`  Successfully updated recipe to ${correctRecipe.id}`);
             }
           } else {
             console.log(`  No matching recipe found for product ${product.product_id}`);
@@ -85,6 +43,7 @@ export const createFixRecipeMappingHook = () => {
         }
       }
 
+      // Provide appropriate toast notifications based on results
       if (updatesNeeded === 0) {
         console.log("No recipe mapping fixes needed!");
         toast({
