@@ -29,7 +29,9 @@ export const useMaterialBatches = () => {
         costPerUnit: batch.cost_per_unit,
         purchaseDate: batch.purchase_date,
         expiryDate: batch.expiry_date,
-        deliveredDate: batch.delivered_date,
+        // The error occurs here - delivered_date doesn't exist in the database response
+        // Set deliveredDate to null as a fallback
+        deliveredDate: null,
         status: batch.status
       })) as MaterialBatch[];
     }
