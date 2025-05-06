@@ -54,11 +54,11 @@ const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({
   };
 
   return (
-    <div className="mb-4 p-3 bg-gray-50 border rounded-md">
-      <div className="text-sm font-medium mb-2">Filter Materials</div>
+    <div className="p-4 bg-white border rounded-lg shadow-sm">
+      <div className="text-sm font-medium mb-3 text-gray-700">Filter Materials</div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="materialFilter">Material Name</Label>
+          <Label htmlFor="materialFilter" className="text-sm text-gray-600">Material Name</Label>
           <div className="relative">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -66,14 +66,16 @@ const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({
               placeholder="Filter by name..."
               value={materialNameFilter}
               onChange={handleNameFilterChange}
-              className="pl-8"
+              className="pl-8 border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
             />
           </div>
         </div>
         
         <div className="space-y-2 md:col-span-1">
           <div className="flex justify-between">
-            <Label htmlFor="costThreshold">Min Cost: ${minCostThreshold}</Label>
+            <Label htmlFor="costThreshold" className="text-sm text-gray-600">
+              Min Cost: <span className="font-medium text-blue-600">${minCostThreshold}</span>
+            </Label>
           </div>
           <Slider
             id="costThreshold"
@@ -89,7 +91,7 @@ const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({
           <Button 
             variant="outline" 
             onClick={handleClearFilters}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 border-gray-300 hover:bg-gray-50"
           >
             <FilterX className="h-4 w-4" />
             Clear Filters

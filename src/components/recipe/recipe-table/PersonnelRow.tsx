@@ -11,14 +11,14 @@ interface PersonnelRowProps {
 
 const PersonnelRow: React.FC<PersonnelRowProps> = ({ personnel, stageName }) => {
   return (
-    <TableRow className="bg-green-50">
+    <TableRow className="bg-green-50 hover:bg-green-100 transition-colors">
       <TableCell className="text-green-800 pl-6">
         <div className="flex items-center">
-          <Users size={14} className="mr-1" /> Personnel
+          <Users size={14} className="mr-2 text-green-600" /> Personnel
         </div>
       </TableCell>
-      <TableCell>{stageName}</TableCell>
-      <TableCell>{personnel.role}</TableCell>
+      <TableCell className="text-gray-500">{stageName}</TableCell>
+      <TableCell className="font-medium">{personnel.role}</TableCell>
       <TableCell className="text-center">{personnel.hours}</TableCell>
       <TableCell>hr</TableCell>
       <TableCell>-</TableCell>

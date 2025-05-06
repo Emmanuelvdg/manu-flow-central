@@ -11,9 +11,11 @@ const TotalCostRow: React.FC<TotalCostRowProps> = ({ totalCost }) => {
   if (totalCost <= 0) return null;
   
   return (
-    <TableRow className="bg-red-50 font-medium">
-      <TableCell colSpan={5} className="text-right">Total COGS:</TableCell>
-      <TableCell colSpan={2}>{formatCurrency(totalCost)}</TableCell>
+    <TableRow className="font-bold">
+      <TableCell colSpan={5} className="text-right text-gray-800">Total Cost of Goods:</TableCell>
+      <TableCell colSpan={2} className="text-red-700 text-lg">
+        {formatCurrency(totalCost)}
+      </TableCell>
     </TableRow>
   );
 };
