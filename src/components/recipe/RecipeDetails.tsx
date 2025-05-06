@@ -36,6 +36,18 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   const personnel = recipe.personnel || extractPersonnelFromStages();
   const machines = recipe.machines || extractMachinesFromStages();
 
+  // Get material costs if available in the recipe
+  const materialCosts = recipe.totalCost 
+    ? {
+        individualCosts: materials.map((m: any) => ({
+          ...m,
+          cost: 0, // We don't have individual costs in the saved recipe
+          costPerUnit: 0
+        })),
+        totalCost: recipe.totalCost
+      }
+    : undefined;
+
   return (
     <Card>
       <CardHeader>
@@ -43,6 +55,14 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
           <div>
             <CardTitle className="text-lg">{recipe.productName} ({recipe.id})</CardTitle>
             <div className="text-sm text-muted-foreground">{recipe.group}</div>
+            {recipe.totalCost > 0 && (
+              <div className="text-sm font-medium text-red-600 mt-1">
+                COGS: {new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD'
+                }).format(recipe.totalCost)}
+              </div>
+            )}
           </div>
           <Button variant="default" size="sm" onClick={handleEdit}>
             <Edit className="mr-2 h-4 w-4" />
@@ -62,6 +82,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
         <RecipeFullTable
           materials={materials}
           routingStages={routingStages}
+          materialCosts={materialCosts}
         />
       </CardContent>
     </Card>

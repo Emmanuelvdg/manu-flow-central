@@ -8,6 +8,7 @@ import { RecipeFormActions } from "./form/RecipeFormActions";
 import { RecipeProductSelector } from "./form/RecipeProductSelector";
 import { RecipeMaterialsSection } from "./RecipeMaterialsSection";
 import { RecipeRoutingStagesSection } from "./RecipeRoutingStagesSection";
+import RecipeFullTable from "./RecipeFullTable";
 import type { RecipeFormProps } from "./form/RecipeFormTypes";
 
 export default function RecipeMappingForm(props: RecipeFormProps) {
@@ -174,6 +175,18 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
           disabled={form.loading}
         />
       </div>
+      
+      {/* Preview of recipe table with COGS */}
+      {form.materials.length > 0 && (
+        <div className="mt-4 border-t pt-4">
+          <h3 className="text-sm font-semibold mb-2">Recipe Cost Preview</h3>
+          <RecipeFullTable 
+            materials={form.materials}
+            routingStages={form.routingStages}
+            materialCosts={form.materialCosts}
+          />
+        </div>
+      )}
       
       <RecipeFormActions 
         onClose={props.onClose}

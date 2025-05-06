@@ -37,14 +37,28 @@ interface RoutingStage {
   machines?: Machine[];
 }
 
+interface MaterialCost {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  cost: number;
+  costPerUnit: number;
+}
+
 interface RecipeFullTableProps {
   materials: Material[];
   routingStages: RoutingStage[];
+  materialCosts?: {
+    individualCosts: MaterialCost[];
+    totalCost: number;
+  };
 }
 
 const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
   materials,
   routingStages,
+  materialCosts = { individualCosts: [], totalCost: 0 }
 }) => {
   // Calculate totals
   const totalMaterialItems = materials.length;
@@ -54,13 +68,22 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
   const totalMachineHours = routingStages.reduce((sum, stage) => 
     sum + (stage.machines || []).reduce((s, m) => s + (m.hours || 0), 0), 0);
   
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
+  };
+  
   return (
     <div className="mt-4">
       <div className="mb-2 font-semibold text-gray-700 text-sm">
         Full Recipe Table
       </div>
       
-      <div className="mb-4 grid grid-cols-4 gap-2 text-xs">
+      <div className="mb-4 grid grid-cols-5 gap-2 text-xs">
         <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
           <div className="font-medium">Materials</div>
           <div>{totalMaterialItems} items</div>
@@ -81,6 +104,10 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
           </div>
           <div>{totalMachineHours} hours</div>
         </div>
+        <div className="bg-red-50 p-2 rounded border border-red-200">
+          <div className="font-medium">Total COGS</div>
+          <div>{formatCurrency(materialCosts.totalCost)}</div>
+        </div>
       </div>
       
       <Table>
@@ -91,18 +118,25 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
             <TableHead>Name / Role / Machine</TableHead>
             <TableHead className="text-center">Qty / Hrs</TableHead>
             <TableHead>Unit</TableHead>
+            <TableHead>Unit Cost</TableHead>
+            <TableHead>Total Cost</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {materials.map((m) => (
-            <TableRow key={m.id + "_mat"}>
-              <TableCell className="text-yellow-800">Material</TableCell>
-              <TableCell>-</TableCell>
-              <TableCell>{m.name}</TableCell>
-              <TableCell className="text-center">{m.quantity}</TableCell>
-              <TableCell>{m.unit}</TableCell>
-            </TableRow>
-          ))}
+          {materials.map((m) => {
+            const materialCost = materialCosts.individualCosts.find(cost => cost.id === m.id);
+            return (
+              <TableRow key={m.id + "_mat"}>
+                <TableCell className="text-yellow-800">Material</TableCell>
+                <TableCell>-</TableCell>
+                <TableCell>{m.name}</TableCell>
+                <TableCell className="text-center">{m.quantity}</TableCell>
+                <TableCell>{m.unit}</TableCell>
+                <TableCell>{materialCost ? formatCurrency(materialCost.costPerUnit) : '-'}</TableCell>
+                <TableCell>{materialCost ? formatCurrency(materialCost.cost) : '-'}</TableCell>
+              </TableRow>
+            );
+          })}
           
           {routingStages.map((stage) => (
             <React.Fragment key={stage.id}>
@@ -117,6 +151,8 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
                 <TableCell>-</TableCell>
                 <TableCell className="text-center">{stage.hours}</TableCell>
                 <TableCell>hr</TableCell>
+                <TableCell>-</TableCell>
+                <TableCell>-</TableCell>
               </TableRow>
               
               {/* Personnel for this stage */}
@@ -131,6 +167,8 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
                   <TableCell>{p.role}</TableCell>
                   <TableCell className="text-center">{p.hours}</TableCell>
                   <TableCell>hr</TableCell>
+                  <TableCell>-</TableCell>
+                  <TableCell>-</TableCell>
                 </TableRow>
               ))}
               
@@ -146,10 +184,20 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
                   <TableCell>{m.machine}</TableCell>
                   <TableCell className="text-center">{m.hours}</TableCell>
                   <TableCell>hr</TableCell>
+                  <TableCell>-</TableCell>
+                  <TableCell>-</TableCell>
                 </TableRow>
               ))}
             </React.Fragment>
           ))}
+          
+          {/* Total Cost Summary Row */}
+          {materialCosts.totalCost > 0 && (
+            <TableRow className="bg-red-50 font-medium">
+              <TableCell colSpan={5} className="text-right">Total COGS:</TableCell>
+              <TableCell colSpan={2}>{formatCurrency(materialCosts.totalCost)}</TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

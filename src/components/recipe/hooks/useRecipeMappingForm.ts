@@ -8,6 +8,7 @@ import { useMaterialsManagement } from './useMaterialsManagement';
 import { usePersonnelManagement } from './usePersonnelManagement';
 import { useMachineManagement } from './useMachineManagement';
 import { useRoutingStagesManagement } from './useRoutingStagesManagement';
+import { useResourceCosts } from './useResourceCosts';
 import type { CustomProduct } from '@/pages/quote-detail/components/CustomProductInput';
 import type { RecipeMappingFormData } from '../types/recipeMappingTypes';
 
@@ -34,6 +35,9 @@ export const useRecipeMappingForm = (
   const personnelMgmt = usePersonnelManagement();
   const machineMgmt = useMachineManagement();
   const routingStagesMgmt = useRoutingStagesManagement();
+  
+  // Resource costs management
+  const { calculateMaterialsCost, materialCosts } = useResourceCosts(referenceData.materialList);
   
   // Set initial values from existing recipe
   useEffect(() => {
@@ -73,6 +77,11 @@ export const useRecipeMappingForm = (
     }
   }, [initialRecipe]);
 
+  // Calculate material costs when materials change
+  useEffect(() => {
+    calculateMaterialsCost(materialsMgmt.materials);
+  }, [materialsMgmt.materials, referenceData.materialList]);
+
   // Form submission handler
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +96,8 @@ export const useRecipeMappingForm = (
       personnel: [], // Now managed within stages
       machines: [], // Now managed within stages
       routingStages: routingStagesMgmt.routingStages,
-      variantId: formState.variantId
+      variantId: formState.variantId,
+      totalCost: materialCosts.totalCost
     };
     
     handleSubmit(formData);
@@ -113,6 +123,8 @@ export const useRecipeMappingForm = (
     // Virtual properties for compatibility
     personnel: getAllPersonnel(),
     machines: getAllMachines(),
+    // COGS-related properties
+    materialCosts,
     loading,
     isEditing,
     handleSubmit: handleFormSubmit
