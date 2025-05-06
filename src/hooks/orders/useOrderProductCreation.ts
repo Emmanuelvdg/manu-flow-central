@@ -23,8 +23,52 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
     try {
       console.log(`Creating order product for: ${productName} (${productId})`);
       
-      // Find product reference (doesn't create new products in catalog)
-      const actualProductId = await findOrCreateProduct(productName, productId, orderId);
+      // First check if this is a custom product that needs to be created
+      const isCustomProduct = product.isCustom === true;
+      let actualProductId;
+      
+      if (isCustomProduct) {
+        // For custom products, first create an entry in the products table
+        const cleanProductName = productName.replace(/\s+x\s+\d+$/, '').trim();
+        const { data: newProduct, error: productError } = await supabase
+          .from('products')
+          .insert({
+            id: cleanProductName.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 20),
+            name: cleanProductName,
+            description: product.description || `Custom product: ${cleanProductName}`,
+            category: 'Custom',
+            price: product.price || 0
+          })
+          .select('id')
+          .single();
+          
+        if (productError) {
+          console.error("Error creating custom product:", productError);
+          
+          // If error is duplicate key, try to fetch the existing product
+          if (productError.code === '23505') {
+            const { data: existingProduct } = await supabase
+              .from('products')
+              .select('id')
+              .eq('name', cleanProductName)
+              .maybeSingle();
+              
+            if (existingProduct) {
+              actualProductId = existingProduct.id;
+            } else {
+              throw productError;
+            }
+          } else {
+            throw productError;
+          }
+        } else {
+          actualProductId = newProduct.id;
+        }
+      } else {
+        // For regular products, find or reference the product
+        actualProductId = await findOrCreateProduct(productName, productId, orderId);
+      }
+      
       console.log(`Using product ID: ${actualProductId}`);
       
       // Find recipe if exists
@@ -105,3 +149,4 @@ export const useOrderProductCreation = (orderId: string | undefined, refetchProd
 
   return { syncOrderProducts, debugRecipeMapping };
 };
+
