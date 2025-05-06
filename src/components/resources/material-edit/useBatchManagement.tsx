@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Material, MaterialBatch } from "@/types/material";
 
 export const useBatchManagement = (material: Material) => {
@@ -15,8 +15,9 @@ export const useBatchManagement = (material: Material) => {
     remainingStock: 0,
     costPerUnit: 0,
     purchaseDate: new Date().toISOString().split('T')[0],
-    deliveredDate: null, // Add the deliveredDate field
-    status: 'received' // Default status
+    expiryDate: null,
+    deliveredDate: null,
+    status: 'received'
   });
 
   useEffect(() => {
@@ -37,8 +38,9 @@ export const useBatchManagement = (material: Material) => {
       remainingStock: 0,
       costPerUnit: 0,
       purchaseDate: new Date().toISOString().split('T')[0],
-      deliveredDate: null, // Add the deliveredDate field
-      status: 'received' // Default status
+      expiryDate: null,
+      deliveredDate: null,
+      status: 'received'
     });
   }, [material]);
 
@@ -122,8 +124,9 @@ export const useBatchManagement = (material: Material) => {
       remainingStock: 0,
       costPerUnit: 0,
       purchaseDate: new Date().toISOString().split('T')[0],
-      deliveredDate: null, // Add the deliveredDate field
-      status: 'received' // Default status
+      expiryDate: null,
+      deliveredDate: null,
+      status: 'received'
     });
 
     toast({

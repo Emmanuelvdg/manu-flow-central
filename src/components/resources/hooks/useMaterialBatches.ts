@@ -28,7 +28,9 @@ export const useMaterialBatches = () => {
         remainingStock: batch.remaining_stock,
         costPerUnit: batch.cost_per_unit,
         purchaseDate: batch.purchase_date,
-        status: batch.status  // Include the new status field
+        expiryDate: batch.expiry_date,
+        deliveredDate: batch.delivered_date,
+        status: batch.status
       })) as MaterialBatch[];
     }
   });

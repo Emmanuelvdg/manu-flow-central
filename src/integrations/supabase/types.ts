@@ -278,6 +278,7 @@ export type Database = {
           batch_number: string
           cost_per_unit: number
           created_at: string
+          expiry_date: string | null
           id: string
           initial_stock: number
           material_id: string
@@ -290,6 +291,7 @@ export type Database = {
           batch_number: string
           cost_per_unit: number
           created_at?: string
+          expiry_date?: string | null
           id?: string
           initial_stock: number
           material_id: string
@@ -302,6 +304,7 @@ export type Database = {
           batch_number?: string
           cost_per_unit?: number
           created_at?: string
+          expiry_date?: string | null
           id?: string
           initial_stock?: number
           material_id?: string

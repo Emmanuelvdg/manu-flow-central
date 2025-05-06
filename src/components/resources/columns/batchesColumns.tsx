@@ -1,104 +1,158 @@
 
-import React from 'react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import React from "react";
 import { Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MaterialBatch } from "@/types/material";
-import { Column } from "@/components/ui/DataTable";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export const createBatchColumns = (
   onBatchChange: (id: string, field: keyof MaterialBatch, value: any) => void,
   onDeleteBatch: (id: string) => void
-): Column<MaterialBatch>[] => [
-  { header: 'Batch #', accessorKey: 'batchNumber' },
-  { 
-    header: 'Purchase Date',
-    accessorKey: 'purchaseDate',
-    cell: ({ getValue, row }) => (
-      <Input
-        type="date"
-        value={getValue()}
-        onChange={(e) => onBatchChange(row.original.id, 'purchaseDate', e.target.value)}
-      />
-    )
+) => [
+  {
+    accessorKey: "batchNumber",
+    header: "Batch #",
+    cell: ({ getValue, row }: { getValue: () => any, row: { original: MaterialBatch } }) => {
+      const value = getValue();
+      const { id } = row.original;
+      
+      if (!id) return <span className="text-muted-foreground italic">Auto-generated</span>;
+      
+      return (
+        <Input
+          className="w-20 h-8 text-xs"
+          defaultValue={value || ""}
+          onChange={(e) => onBatchChange(id, "batchNumber", e.target.value)}
+        />
+      );
+    }
   },
   {
-    header: 'Initial Stock',
-    accessorKey: 'initialStock',
-    cell: ({ getValue, row }) => (
-      <Input
-        type="number"
-        value={getValue()}
-        onChange={(e) => onBatchChange(row.original.id, 'initialStock', Number(e.target.value))}
-      />
-    )
+    accessorKey: "initialStock",
+    header: "Initial Qty",
+    cell: ({ getValue, row }: { getValue: () => any, row: { original: MaterialBatch } }) => {
+      const value = getValue();
+      const { id } = row.original;
+      
+      return (
+        <Input
+          type="number"
+          className="w-20 h-8 text-xs"
+          value={value || ""}
+          onChange={(e) => onBatchChange(id || "", "initialStock", Number(e.target.value))}
+        />
+      );
+    }
   },
   {
-    header: 'Remaining',
-    accessorKey: 'remainingStock',
-    cell: ({ getValue }) => (
-      <Input
-        type="number"
-        value={getValue()}
-        readOnly
-      />
-    )
+    accessorKey: "remainingStock",
+    header: "Remaining",
+    cell: ({ getValue, row }: { getValue: () => any, row: { original: MaterialBatch } }) => {
+      const value = getValue();
+      const { id } = row.original;
+      
+      return (
+        <Input
+          type="number"
+          className="w-20 h-8 text-xs"
+          value={value || ""}
+          onChange={(e) => onBatchChange(id || "", "remainingStock", Number(e.target.value))}
+        />
+      );
+    }
   },
   {
-    header: 'Cost/Unit',
-    accessorKey: 'costPerUnit',
-    cell: ({ getValue, row }) => (
-      <Input
-        type="number"
-        step="0.01"
-        value={getValue()}
-        onChange={(e) => onBatchChange(row.original.id, 'costPerUnit', Number(e.target.value))}
-      />
-    )
+    accessorKey: "costPerUnit",
+    header: "Cost/Unit",
+    cell: ({ getValue, row }: { getValue: () => any, row: { original: MaterialBatch } }) => {
+      const value = getValue();
+      const { id } = row.original;
+      
+      return (
+        <Input
+          type="number"
+          step="0.01"
+          className="w-20 h-8 text-xs"
+          value={value || ""}
+          onChange={(e) => onBatchChange(id || "", "costPerUnit", Number(e.target.value))}
+        />
+      );
+    }
   },
   {
-    header: 'Status',
-    accessorKey: 'status',
-    cell: ({ getValue, row }) => (
-      <Select
-        value={getValue() as string}
-        onValueChange={(value) => onBatchChange(row.original.id, 'status', value)}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="requested">Requested</SelectItem>
-          <SelectItem value="expected">Expected</SelectItem>
-          <SelectItem value="delayed">Delayed</SelectItem>
-          <SelectItem value="received">Received</SelectItem>
-        </SelectContent>
-      </Select>
-    )
+    accessorKey: "purchaseDate",
+    header: "Purchase Date",
+    cell: ({ getValue, row }: { getValue: () => any, row: { original: MaterialBatch } }) => {
+      const value = getValue();
+      const { id } = row.original;
+      
+      return (
+        <DatePicker
+          date={value ? new Date(value) : undefined}
+          onSelect={(date) => onBatchChange(id || "", "purchaseDate", date?.toISOString().split('T')[0] || null)}
+          className="w-28 h-8 text-xs"
+        />
+      );
+    }
   },
   {
-    header: 'Delivered Date',
-    accessorKey: 'deliveredDate',
-    cell: ({ getValue, row }) => (
-      <Input
-        type="date"
-        value={getValue() || ''}
-        onChange={(e) => onBatchChange(row.original.id, 'deliveredDate', e.target.value)}
-      />
-    )
+    accessorKey: "expiryDate",
+    header: "Expiry Date",
+    cell: ({ getValue, row }: { getValue: () => any, row: { original: MaterialBatch } }) => {
+      const value = getValue();
+      const { id } = row.original;
+      
+      return (
+        <DatePicker
+          date={value ? new Date(value) : undefined}
+          onSelect={(date) => onBatchChange(id || "", "expiryDate", date?.toISOString().split('T')[0] || null)}
+          className="w-28 h-8 text-xs"
+        />
+      );
+    }
   },
   {
-    header: 'Actions',
-    accessorKey: 'actions',
-    cell: ({ row }) => (
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => onDeleteBatch(row.original.id)}
-      >
-        <Trash className="h-4 w-4" />
-      </Button>
-    )
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ getValue, row }: { getValue: () => any, row: { original: MaterialBatch } }) => {
+      const value = getValue();
+      const { id } = row.original;
+      
+      if (!id) return <span className="text-muted-foreground italic">New</span>;
+      
+      return (
+        <select 
+          className="w-24 h-8 text-xs border rounded"
+          value={value || "received"}
+          onChange={(e) => onBatchChange(id, "status", e.target.value)}
+        >
+          <option value="requested">Requested</option>
+          <option value="expected">Expected</option>
+          <option value="delayed">Delayed</option>
+          <option value="received">Received</option>
+        </select>
+      );
+    }
+  },
+  {
+    accessorKey: "actions",
+    header: "",
+    cell: ({ row }: { row: { original: MaterialBatch } }) => {
+      const { id } = row.original;
+      
+      if (!id) return null;
+      
+      return (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => onDeleteBatch(id)}
+        >
+          <Trash className="h-4 w-4" />
+        </Button>
+      );
+    }
   }
 ];
