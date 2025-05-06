@@ -781,6 +781,7 @@ export type Database = {
           personnel: Json | null
           product_id: string
           product_name: string
+          routing_stages: Json | null
           updated_at: string
         }
         Insert: {
@@ -793,6 +794,7 @@ export type Database = {
           personnel?: Json | null
           product_id: string
           product_name: string
+          routing_stages?: Json | null
           updated_at?: string
         }
         Update: {
@@ -805,6 +807,7 @@ export type Database = {
           personnel?: Json | null
           product_id?: string
           product_name?: string
+          routing_stages?: Json | null
           updated_at?: string
         }
         Relationships: []
