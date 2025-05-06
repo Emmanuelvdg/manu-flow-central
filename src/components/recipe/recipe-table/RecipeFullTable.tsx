@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -12,6 +12,7 @@ import RecipeStats from "./RecipeStats";
 import MaterialsTableRows from "./MaterialsTableRows";
 import StageGroupRows from "./StageGroupRows";
 import TotalCostRow from "./TotalCostRow";
+import RecipeTableFilters, { RecipeFilters } from "./RecipeTableFilters";
 import type { RecipeFullTableProps } from "./types";
 
 const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
@@ -19,6 +20,17 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
   routingStages,
   materialCosts = { individualCosts: [], totalCost: 0 }
 }) => {
+  const [filters, setFilters] = useState<RecipeFilters>({
+    materialNameFilter: "",
+    minCostThreshold: 0
+  });
+
+  // Determine the maximum cost for the slider
+  const maxCost = Math.max(
+    ...materialCosts.individualCosts.map(cost => cost.cost), 
+    1 // Ensure a minimum of 1 to avoid slider issues
+  );
+
   return (
     <div className="mt-4">
       <div className="mb-2 font-semibold text-gray-700 text-sm">
@@ -29,6 +41,11 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
         materials={materials} 
         routingStages={routingStages} 
         totalCost={materialCosts.totalCost} 
+      />
+
+      <RecipeTableFilters 
+        onFilterChange={setFilters}
+        maxPossibleCost={maxCost}
       />
       
       <Table>
@@ -46,14 +63,14 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
         <TableBody>
           <MaterialsTableRows 
             materials={materials} 
-            materialCosts={materialCosts.individualCosts} 
+            materialCosts={materialCosts.individualCosts}
+            filters={filters}
           />
           
           {routingStages.map((stage) => (
             <StageGroupRows key={stage.id} stage={stage} />
           ))}
           
-          {/* Total Cost Summary Row */}
           <TotalCostRow totalCost={materialCosts.totalCost} />
         </TableBody>
       </Table>
