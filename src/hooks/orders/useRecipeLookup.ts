@@ -149,15 +149,16 @@ export const useRecipeLookup = () => {
         console.log(`  Current Recipe: ${product.recipe_id || 'None'} (${product.recipes?.name || 'None'})`);
         
         if (product.recipe_id) {
-          // Check if recipe has routing stages
+          // Check if recipe has routing stages - fix the type checking here
           const hasRoutingStages = product.recipes?.routing_stages && 
             Array.isArray(product.recipes.routing_stages) && 
             product.recipes.routing_stages.length > 0;
           
           console.log(`  Recipe has routing stages: ${hasRoutingStages ? 'Yes' : 'No'}`);
           
-          if (hasRoutingStages) {
+          if (hasRoutingStages && Array.isArray(product.recipes.routing_stages)) {
             console.log(`  Number of routing stages: ${product.recipes.routing_stages.length}`);
+            // Type safety check - only iterate if it's an array
             product.recipes.routing_stages.forEach((stage: any, index: number) => {
               console.log(`    Stage ${index + 1}: ${stage.stage_name} (${stage.hours} hrs)`);
             });
