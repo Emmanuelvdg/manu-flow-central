@@ -8,6 +8,7 @@ import { OrderDetailState } from "./components/OrderDetailState";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { Button } from "@/components/ui/button";
 import { CircleAlert, Wrench } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface OrderDetailContentProps {
   order: any;
@@ -35,6 +36,7 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
   const { formData, handleChange, handleSaveOrder } = useOrderForm(order, orderId, refetch);
   const [syncing, setSyncing] = React.useState(false);
   const [fixing, setFixing] = React.useState(false);
+  const { toast } = useToast();
 
   const showMappings = orderId === "quote-order-mapping";
 
@@ -44,6 +46,11 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
 
   const hasNoProducts = !productsLoading && orderProducts.length === 0;
   const hasProductsWithNoRecipes = orderProducts.some(product => !product.recipe_id);
+  
+  // Track if we have any products with recipes that have routing stages
+  const hasProductsWithRoutingStages = orderProducts.some(product => 
+    product.recipe_id && product.recipes?.id
+  );
 
   const handleSyncProducts = async () => {
     if (!syncOrderProducts) return;
@@ -51,6 +58,17 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
     try {
       setSyncing(true);
       await syncOrderProducts();
+      toast({
+        title: "Products synced",
+        description: "Order products have been successfully synced",
+      });
+    } catch (error) {
+      console.error("Error syncing products:", error);
+      toast({
+        title: "Sync error",
+        description: "Failed to sync order products",
+        variant: "destructive"
+      });
     } finally {
       setSyncing(false);
     }
@@ -62,6 +80,17 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
     try {
       setFixing(true);
       await fixOrderProductMapping();
+      toast({
+        title: "Recipe mappings checked",
+        description: "Recipe mappings have been verified and fixed if needed",
+      });
+    } catch (error) {
+      console.error("Error fixing mappings:", error);
+      toast({
+        title: "Mapping error",
+        description: "Failed to fix recipe mappings",
+        variant: "destructive"
+      });
     } finally {
       setFixing(false);
     }
@@ -144,7 +173,6 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
           orderId={orderId}
         />
         
-        {/* Add the OrderRoutingStages component */}
         {!hasNoProducts && (
           <OrderRoutingStages 
             orderId={orderId} 
