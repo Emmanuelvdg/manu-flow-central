@@ -9,6 +9,7 @@ import { RecipeProductSelector } from "./form/RecipeProductSelector";
 import { RecipeMaterialsSection } from "./RecipeMaterialsSection";
 import { RecipeRoutingStagesSection } from "./RecipeRoutingStagesSection";
 import RecipeFullTable from "./RecipeFullTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { RecipeFormProps } from "./form/RecipeFormTypes";
 
 export default function RecipeMappingForm(props: RecipeFormProps) {
@@ -109,7 +110,8 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
   };
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-3">
+    <form onSubmit={form.handleSubmit} className="space-y-4">
+      {/* Product selection at the top (outside tabs) */}
       <RecipeProductSelector
         customProduct={props.customProduct}
         productList={form.productList}
@@ -122,6 +124,7 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
         setSelectedVariantId={setSelectedVariantId}
       />
       
+      {/* Basic recipe info at the top (outside tabs) */}
       <RecipeBasicInfoSection
         name={form.name}
         description={form.description}
@@ -130,64 +133,91 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
         disabled={form.loading}
       />
       
-      <div className="pt-2">
-        <RecipeMaterialsSection
-          materials={form.materials}
-          setMaterials={form.setMaterials}
-          materialList={form.materialList}
-          showMaterials={form.showMaterials}
-          setShowMaterials={form.setShowMaterials}
-          editingMaterial={form.editingMaterial}
-          setEditingMaterial={form.setEditingMaterial}
-          handleAddMaterial={form.handleAddMaterial}
-          handleEditMaterial={form.handleEditMaterial}
-          handleSaveMaterial={form.handleSaveMaterial}
-          handleDeleteMaterial={form.handleDeleteMaterial}
-          disabled={form.loading}
-        />
+      {/* Tabs for the rest of the form */}
+      <Tabs defaultValue="materials" className="w-full mt-6">
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="materials">Materials & Production</TabsTrigger>
+          <TabsTrigger value="preview">Recipe Cost Preview</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
         
-        <RecipeRoutingStagesSection 
-          routingStages={form.routingStages}
-          routingStagesList={form.routingStagesList}
-          showRoutingStages={true} // Always show routing stages
-          setShowRoutingStages={form.setShowRoutingStages}
-          editingRoutingStage={form.editingRoutingStage}
-          setEditingRoutingStage={form.setEditingRoutingStage}
-          handleAddRoutingStage={form.handleAddRoutingStage}
-          handleEditRoutingStage={form.handleEditRoutingStage}
-          handleSaveRoutingStage={form.handleSaveRoutingStage}
-          handleDeleteRoutingStage={form.handleDeleteRoutingStage}
-          // Personnel management
-          personnelRoleList={form.personnelRoleList}
-          handleAddPersonnel={form.handleAddPersonnel}
-          handleEditPersonnel={form.handleEditPersonnel}
-          handleSavePersonnel={handleSavePersonnel}
-          handleDeletePersonnel={handleDeletePersonnel}
-          editingPersonnel={form.editingPersonnel}
-          setEditingPersonnel={form.setEditingPersonnel}
-          // Machine management
-          handleAddMachine={form.handleAddMachine}
-          handleEditMachine={form.handleEditMachine}
-          handleSaveMachine={handleSaveMachine}
-          handleDeleteMachine={handleDeleteMachine}
-          editingMachine={form.editingMachine}
-          setEditingMachine={form.setEditingMachine}
-          disabled={form.loading}
-        />
-      </div>
-      
-      {/* Preview of recipe table with COGS */}
-      {form.materials.length > 0 && (
-        <div className="mt-4 border-t pt-4">
-          <h3 className="text-sm font-semibold mb-2">Recipe Cost Preview</h3>
-          <RecipeFullTable 
+        {/* Materials & Production Tab */}
+        <TabsContent value="materials" className="space-y-4 pt-2">
+          <RecipeMaterialsSection
             materials={form.materials}
-            routingStages={form.routingStages}
-            materialCosts={form.materialCosts}
+            setMaterials={form.setMaterials}
+            materialList={form.materialList}
+            showMaterials={form.showMaterials}
+            setShowMaterials={form.setShowMaterials}
+            editingMaterial={form.editingMaterial}
+            setEditingMaterial={form.setEditingMaterial}
+            handleAddMaterial={form.handleAddMaterial}
+            handleEditMaterial={form.handleEditMaterial}
+            handleSaveMaterial={form.handleSaveMaterial}
+            handleDeleteMaterial={form.handleDeleteMaterial}
+            disabled={form.loading}
           />
-        </div>
-      )}
+          
+          <RecipeRoutingStagesSection 
+            routingStages={form.routingStages}
+            routingStagesList={form.routingStagesList}
+            showRoutingStages={true}
+            setShowRoutingStages={form.setShowRoutingStages}
+            editingRoutingStage={form.editingRoutingStage}
+            setEditingRoutingStage={form.setEditingRoutingStage}
+            handleAddRoutingStage={form.handleAddRoutingStage}
+            handleEditRoutingStage={form.handleEditRoutingStage}
+            handleSaveRoutingStage={form.handleSaveRoutingStage}
+            handleDeleteRoutingStage={form.handleDeleteRoutingStage}
+            // Personnel management
+            personnelRoleList={form.personnelRoleList}
+            handleAddPersonnel={form.handleAddPersonnel}
+            handleEditPersonnel={form.handleEditPersonnel}
+            handleSavePersonnel={handleSavePersonnel}
+            handleDeletePersonnel={handleDeletePersonnel}
+            editingPersonnel={form.editingPersonnel}
+            setEditingPersonnel={form.setEditingPersonnel}
+            // Machine management
+            handleAddMachine={form.handleAddMachine}
+            handleEditMachine={form.handleEditMachine}
+            handleSaveMachine={handleSaveMachine}
+            handleDeleteMachine={handleDeleteMachine}
+            editingMachine={form.editingMachine}
+            setEditingMachine={form.setEditingMachine}
+            disabled={form.loading}
+          />
+        </TabsContent>
+        
+        {/* Recipe Cost Preview Tab */}
+        <TabsContent value="preview" className="space-y-4">
+          {form.materials.length > 0 ? (
+            <div className="border rounded-lg p-4 bg-white">
+              <h3 className="text-lg font-medium mb-4">Recipe Cost Preview</h3>
+              <RecipeFullTable 
+                materials={form.materials}
+                routingStages={form.routingStages}
+                materialCosts={form.materialCosts}
+              />
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              Add materials to see the recipe cost preview
+            </div>
+          )}
+        </TabsContent>
+        
+        {/* Settings Tab (placeholder for future settings) */}
+        <TabsContent value="settings" className="space-y-4">
+          <div className="border rounded-lg p-4 bg-white">
+            <h3 className="text-lg font-medium mb-4">Additional Settings</h3>
+            <p className="text-gray-500">
+              Additional recipe settings and configurations will appear here in future updates.
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
       
+      {/* Form Actions */}
       <RecipeFormActions 
         onClose={props.onClose}
         loading={form.loading}

@@ -14,7 +14,7 @@ import type { RecipeFormProps } from "./form/RecipeFormTypes";
 export default function RecipeMappingModal(props: RecipeFormProps) {
   return (
     <Dialog open={props.open} onOpenChange={props.onClose}>
-      <DialogContent className="max-w-3xl w-full">
+      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {props.initialRecipe ? "Edit Recipe Mapping" : "Create Recipe Mapping"}
