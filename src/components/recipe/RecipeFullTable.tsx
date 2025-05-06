@@ -139,6 +139,7 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
           })}
           
           {routingStages.map((stage) => (
+            // Using React.Fragment properly without any additional props
             <React.Fragment key={stage.id}>
               {/* Stage row */}
               <TableRow className="bg-gray-100">

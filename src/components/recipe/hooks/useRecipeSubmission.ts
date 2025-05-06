@@ -54,7 +54,7 @@ export const useRecipeSubmission = (
         // Include saved empty arrays as null for better DB storage
         personnel: null, // Now managed in routing stages
         machines: null,  // Now managed in routing stages
-        totalCost: formData.totalCost || 0
+        "totalCost": formData.totalCost || 0
       };
       
       let recipe;

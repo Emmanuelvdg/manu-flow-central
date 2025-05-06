@@ -785,6 +785,7 @@ export type Database = {
           product_id: string
           product_name: string
           routing_stages: Json | null
+          totalCost: number | null
           updated_at: string
         }
         Insert: {
@@ -798,6 +799,7 @@ export type Database = {
           product_id: string
           product_name: string
           routing_stages?: Json | null
+          totalCost?: number | null
           updated_at?: string
         }
         Update: {
@@ -811,6 +813,7 @@ export type Database = {
           product_id?: string
           product_name?: string
           routing_stages?: Json | null
+          totalCost?: number | null
           updated_at?: string
         }
         Relationships: []
