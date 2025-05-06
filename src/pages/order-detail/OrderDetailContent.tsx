@@ -43,6 +43,7 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
   }
 
   const hasNoProducts = !productsLoading && orderProducts.length === 0;
+  const hasProductsWithNoRecipes = orderProducts.some(product => !product.recipe_id);
 
   const handleSyncProducts = async () => {
     if (!syncOrderProducts) return;
@@ -100,17 +101,35 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
             </div>
           )}
 
-          {!hasNoProducts && fixOrderProductMapping && (
+          {hasProductsWithNoRecipes && fixOrderProductMapping && (
+            <div className="w-full p-4 bg-blue-50 border border-blue-200 rounded-md flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <CircleAlert className="h-5 w-4 text-blue-500" />
+                <span>Some products are missing recipe mappings. Fix recipe mappings to enable production tracking.</span>
+              </div>
+              <Button 
+                onClick={handleFixMappings} 
+                variant="outline" 
+                className="bg-blue-100 hover:bg-blue-200"
+                disabled={fixing}
+              >
+                <Wrench className="h-4 w-4 mr-2" />
+                {fixing ? "Fixing Mappings..." : "Fix Recipe Mappings"}
+              </Button>
+            </div>
+          )}
+
+          {!hasNoProducts && !hasProductsWithNoRecipes && fixOrderProductMapping && (
             <div className="w-full flex justify-end">
               <Button 
                 onClick={handleFixMappings} 
                 variant="outline" 
-                className="bg-blue-50 hover:bg-blue-100"
+                className="bg-slate-50 hover:bg-slate-100"
                 disabled={fixing}
                 size="sm"
               >
                 <Wrench className="h-4 w-4 mr-2" />
-                {fixing ? "Fixing Mappings..." : "Fix Recipe Mappings"}
+                {fixing ? "Checking Mappings..." : "Verify Recipe Mappings"}
               </Button>
             </div>
           )}

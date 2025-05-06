@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -8,22 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronUp, Clock, Users, Factory } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-interface RoutingStage {
-  id: string;
-  stage_name: string;
-  hours: number;
-  personnel?: {
-    id: string;
-    role: string;
-    hours: number;
-  }[];
-  machines?: {
-    id: string;
-    machine: string;
-    hours: number;
-  }[];
-}
+import { RoutingStage } from "@/components/recipe/types/recipeMappingTypes";
 
 interface OrderRoutingStagesProps {
   orderId: string;
@@ -78,11 +62,22 @@ export const OrderRoutingStages: React.FC<OrderRoutingStagesProps> = ({
         
         recipes.forEach(recipe => {
           if (recipe.routing_stages && Array.isArray(recipe.routing_stages)) {
-            stagesMap[recipe.id] = recipe.routing_stages;
+            // Ensure proper typing for routing stages by explicitly casting
+            const typedStages: RoutingStage[] = recipe.routing_stages.map((stage: any) => ({
+              id: stage.id || '',
+              stage_id: stage.stage_id || '',
+              stage_name: stage.stage_name || '',
+              hours: stage.hours || 0,
+              personnel: stage.personnel || [],
+              machines: stage.machines || [],
+              _isNew: stage._isNew || false
+            }));
+            
+            stagesMap[recipe.id] = typedStages;
             
             // Initialize progress for each stage (default to 0)
             progressMap[recipe.id] = {};
-            recipe.routing_stages.forEach(stage => {
+            typedStages.forEach(stage => {
               progressMap[recipe.id][stage.id] = 0;
             });
           }

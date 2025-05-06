@@ -31,7 +31,60 @@ export const useRecipeLookup = () => {
         return recipes.id;
       } else {
         // If no recipe found, log more details to help debug
-        console.log(`No recipe found with exact product_id match for ${productId}, checking all recipes`);
+        console.log(`No recipe found with exact product_id match for ${productId}, checking product name match`);
+        
+        // Try to find by product name (for cases where product_id might be different but name matches)
+        const { data: productNameMatch, error: productNameError } = await supabase
+          .from('products')
+          .select('name')
+          .eq('id', productId)
+          .maybeSingle();
+          
+        if (!productNameError && productNameMatch) {
+          console.log(`Found product name: ${productNameMatch.name}, searching for recipe with matching product_name`);
+          
+          const { data: nameRecipes, error: nameError } = await supabase
+            .from('recipes')
+            .select('id, name, product_name, product_id')
+            .ilike('product_name', productNameMatch.name)
+            .maybeSingle();
+            
+          if (!nameError && nameRecipes) {
+            console.log(`Found recipe ${nameRecipes.id} by product name match for ${productId}`);
+            return nameRecipes.id;
+          }
+        }
+        
+        // If still no match, check for partial matches in case of "Wooden Table x 11" type product IDs
+        if (productId.includes('x ')) {
+          const baseProductId = productId.split('x ')[0].trim();
+          console.log(`Checking for base product ID match: ${baseProductId}`);
+          
+          const { data: baseRecipes, error: baseError } = await supabase
+            .from('recipes')
+            .select('id, name, product_name, product_id')
+            .ilike('product_id', `${baseProductId}%`)
+            .order('created_at', { ascending: false })
+            .maybeSingle();
+            
+          if (!baseError && baseRecipes) {
+            console.log(`Found recipe ${baseRecipes.id} by base product ID match for ${productId}`);
+            return baseRecipes.id;
+          }
+          
+          // Last resort - check if there's a base name match
+          const { data: baseNameMatch, error: baseNameError } = await supabase
+            .from('recipes')
+            .select('id, name, product_name, product_id')
+            .ilike('product_name', `${baseProductId}%`)
+            .order('created_at', { ascending: false })
+            .maybeSingle();
+            
+          if (!baseNameError && baseNameMatch) {
+            console.log(`Found recipe ${baseNameMatch.id} by base product name match for ${productId}`);
+            return baseNameMatch.id;
+          }
+        }
         
         // Fetch all recipes to help with debugging
         const { data: allRecipes } = await supabase
@@ -131,8 +184,24 @@ export const useRecipeLookup = () => {
           updatesNeeded++;
           console.log(`Fixing recipe for product ${product.product_id} (${product.products?.name || 'Unknown'})`);
           
-          // Find the correct recipe
-          const correctRecipe = allRecipes?.find(r => r.product_id === product.product_id);
+          // Find the correct recipe - first try exact match
+          let correctRecipe = allRecipes?.find(r => r.product_id === product.product_id);
+          
+          // If no exact match, try matching by name
+          if (!correctRecipe && product.products?.name) {
+            console.log(`No exact product_id match, trying name match for: ${product.products.name}`);
+            correctRecipe = allRecipes?.find(r => 
+              r.product_name.toLowerCase().includes(product.products.name.toLowerCase()) ||
+              product.products.name.toLowerCase().includes(r.product_name.toLowerCase())
+            );
+          }
+          
+          // If still no match, try partial ID match for "x quantity" cases
+          if (!correctRecipe && product.product_id.includes('x ')) {
+            const baseId = product.product_id.split('x ')[0].trim();
+            console.log(`Trying base ID match for: ${baseId}`);
+            correctRecipe = allRecipes?.find(r => r.product_id.startsWith(baseId));
+          }
           
           if (correctRecipe) {
             console.log(`  Found correct recipe: ${correctRecipe.id} (${correctRecipe.name})`);
