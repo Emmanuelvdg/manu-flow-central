@@ -20,7 +20,8 @@ const RoutingStageRow: React.FC<RoutingStageRowProps> = ({
     <TableRow className="bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer">
       <TableCell className="text-purple-800 font-medium">
         <div className="flex items-center">
-          <Clock size={14} className="mr-2 text-purple-600" /> Stage
+          <Clock size={14} className="mr-2 text-purple-600" />
+          Stage
         </div>
       </TableCell>
       <TableCell className="font-medium">{stageName}</TableCell>

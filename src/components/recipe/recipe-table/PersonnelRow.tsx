@@ -14,7 +14,8 @@ const PersonnelRow: React.FC<PersonnelRowProps> = ({ personnel, stageName }) => 
     <TableRow className="bg-green-50 hover:bg-green-100 transition-colors">
       <TableCell className="text-green-800 pl-6">
         <div className="flex items-center">
-          <Users size={14} className="mr-2 text-green-600" /> Personnel
+          <Users size={14} className="mr-2 text-green-600" />
+          Personnel
         </div>
       </TableCell>
       <TableCell className="text-gray-500">{stageName}</TableCell>
