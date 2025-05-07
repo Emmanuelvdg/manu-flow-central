@@ -1,15 +1,14 @@
+
 import React from "react";
-import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { checkMaterialAvailability, updateOrderMaterialStatus } from "@/services/materialReservationService";
 import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatches";
-import { ProductRoutingStages } from "./components/routing-stages/ProductRoutingStages";
-import { createInvoiceFromOrder, checkInvoiceExistsForOrder } from "@/services/invoiceService";
-import { useNavigate } from "react-router-dom";
+
+// Import our new components
+import { MaterialStatusSection } from "./components/MaterialStatusSection";
+import { InvoiceButton } from "./components/InvoiceButton";
+import { ProductsList } from "./components/ProductsList";
+import { getStatusBadgeColor } from "./components/StatusBadgeUtils";
 
 // Types for normalized order product
 type OrderProductRow = {
@@ -48,11 +47,8 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
   refetch
 }) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { data: batches = [] } = useMaterialBatches();
   const [checking, setChecking] = React.useState(false);
-  const [creatingInvoice, setCreatingInvoice] = React.useState(false);
-  const [invoiceExists, setInvoiceExists] = React.useState(false);
 
   // Group batches by material ID
   const materialBatches = React.useMemo(() => {
@@ -70,18 +66,6 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
     return orderProducts.length > 0 && 
            orderProducts.every(product => product.status === "completed");
   }, [orderProducts]);
-
-  // Check if an invoice already exists for this order
-  React.useEffect(() => {
-    const checkInvoice = async () => {
-      const exists = await checkInvoiceExistsForOrder(orderId);
-      setInvoiceExists(exists);
-    };
-    
-    if (allProductsCompleted) {
-      checkInvoice();
-    }
-  }, [orderId, allProductsCompleted]);
 
   const handleCheckMaterials = async () => {
     try {
@@ -105,46 +89,6 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
     }
   };
 
-  const handleCreateInvoice = async () => {
-    try {
-      setCreatingInvoice(true);
-      const invoice = await createInvoiceFromOrder(orderId);
-      
-      if (invoice) {
-        toast({
-          title: "Invoice Created",
-          description: `Invoice #${invoice.invoice_number} has been created.`,
-        });
-        setInvoiceExists(true);
-        // Navigate to the invoice detail page
-        navigate(`/invoices/${invoice.id}`);
-      }
-    } catch (error) {
-      console.error("Error creating invoice:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create invoice",
-        variant: "destructive",
-      });
-    } finally {
-      setCreatingInvoice(false);
-    }
-  };
-
-  // Helper function to get status badge color
-  const getStatusBadgeColor = (status: string) => {
-    const normalizedStatus = status.toLowerCase();
-    switch (normalizedStatus) {
-      case 'booked': return 'bg-green-100 text-green-800';
-      case 'expected': return 'bg-blue-100 text-blue-800';
-      case 'requested': return 'bg-yellow-100 text-yellow-800';
-      case 'delayed': return 'bg-orange-100 text-orange-800';
-      case 'not enough': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   // Get the order level material status
   const orderPartsStatus = orderProducts[0]?.materials_status || 'not booked';
   
@@ -153,89 +97,27 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
       <div className="flex justify-between items-center">
         <h3 className="font-semibold">Products & Progress</h3>
         <div className="flex items-center gap-4">
-          <Badge 
-            variant="outline" 
-            className={getStatusBadgeColor(orderPartsStatus)}
-          >
-            {orderPartsStatus}
-          </Badge>
-          <Button
-            onClick={handleCheckMaterials}
-            disabled={checking || productsLoading}
-            className="gap-2"
-          >
-            <CheckCircle className="h-4 w-4" />
-            {checking ? 'Checking...' : 'Check Materials'}
-          </Button>
+          <MaterialStatusSection
+            orderPartsStatus={orderPartsStatus}
+            getStatusBadgeColor={getStatusBadgeColor}
+            handleCheckMaterials={handleCheckMaterials}
+            checking={checking}
+            productsLoading={productsLoading}
+          />
           
-          {allProductsCompleted && (
-            <Button
-              onClick={handleCreateInvoice}
-              disabled={creatingInvoice || invoiceExists}
-              variant={invoiceExists ? "outline" : "default"}
-              className="gap-2 bg-blue-600 hover:bg-blue-700"
-            >
-              <FileText className="h-4 w-4" />
-              {invoiceExists 
-                ? 'Already Invoiced' 
-                : creatingInvoice 
-                  ? 'Creating Invoice...' 
-                  : 'Create Invoice'}
-            </Button>
-          )}
+          <InvoiceButton 
+            orderId={orderId} 
+            allProductsCompleted={allProductsCompleted} 
+          />
         </div>
       </div>
 
-      {productsLoading ? (
-        <div className="text-muted-foreground italic text-center py-2">Loading products...</div>
-      ) : orderProducts.length === 0 ? (
-        <div className="text-gray-500 italic text-center py-2">No products found for this order</div>
-      ) : (
-        orderProducts.map((product) => (
-          <div key={product.id} className="border rounded-lg last:border-0 p-4 mb-4">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h4 className="font-medium">{product.product_name || "Unknown Product"}</h4>
-                <p className="text-sm text-gray-600">
-                  Quantity: {product.quantity} {product.unit} | Group: {product.group || "General"}
-                </p>
-                {product.product_description && (
-                  <p className="text-xs text-muted-foreground mt-1">{product.product_description}</p>
-                )}
-                {product.notes && (
-                  <p className="text-xs text-muted-foreground mt-1 italic">Notes: {product.notes}</p>
-                )}
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <Badge variant="outline" className={getStatusBadgeColor(product.status)}>
-                  {product.status.replace('_', ' ')}
-                </Badge>
-                {product.recipe_id ? (
-                  <Link 
-                    to={`/recipes/${product.recipe_id}`}
-                    className="text-sm text-blue-600 hover:underline hover:text-blue-800"
-                  >
-                    View Recipe
-                  </Link>
-                ) : (
-                  <span className="text-sm text-gray-400">No Recipe</span>
-                )}
-              </div>
-            </div>
-            
-            {/* Removed the progress bars for Materials, Personnel, and Machines */}
-            
-            {/* Production stages for this product */}
-            {product.recipe_id && (
-              <ProductRoutingStages 
-                recipeId={product.recipe_id}
-                orderProduct={product}
-                refetch={refetch}
-              />
-            )}
-          </div>
-        ))
-      )}
+      <ProductsList
+        productsLoading={productsLoading}
+        orderProducts={orderProducts}
+        getStatusBadgeColor={getStatusBadgeColor}
+        refetch={refetch}
+      />
     </div>
   );
 };
