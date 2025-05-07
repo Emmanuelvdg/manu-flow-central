@@ -4,11 +4,13 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, FileInvoice } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { checkMaterialAvailability, updateOrderMaterialStatus } from "@/services/materialReservationService";
 import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatches";
 import { ProductRoutingStages } from "./components/routing-stages/ProductRoutingStages";
+import { createInvoiceFromOrder, checkInvoiceExistsForOrder } from "@/services/invoiceService";
+import { useNavigate } from "react-router-dom";
 
 // Types for normalized order product
 type OrderProductRow = {
@@ -47,8 +49,11 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
   refetch
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { data: batches = [] } = useMaterialBatches();
   const [checking, setChecking] = React.useState(false);
+  const [creatingInvoice, setCreatingInvoice] = React.useState(false);
+  const [invoiceExists, setInvoiceExists] = React.useState(false);
 
   // Group batches by material ID
   const materialBatches = React.useMemo(() => {
@@ -60,6 +65,24 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
       return acc;
     }, {});
   }, [batches]);
+
+  // Check if all products are completed
+  const allProductsCompleted = React.useMemo(() => {
+    return orderProducts.length > 0 && 
+           orderProducts.every(product => product.status === "completed");
+  }, [orderProducts]);
+
+  // Check if an invoice already exists for this order
+  React.useEffect(() => {
+    const checkInvoice = async () => {
+      const exists = await checkInvoiceExistsForOrder(orderId);
+      setInvoiceExists(exists);
+    };
+    
+    if (allProductsCompleted) {
+      checkInvoice();
+    }
+  }, [orderId, allProductsCompleted]);
 
   const handleCheckMaterials = async () => {
     try {
@@ -80,6 +103,32 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
       });
     } finally {
       setChecking(false);
+    }
+  };
+
+  const handleCreateInvoice = async () => {
+    try {
+      setCreatingInvoice(true);
+      const invoice = await createInvoiceFromOrder(orderId);
+      
+      if (invoice) {
+        toast({
+          title: "Invoice Created",
+          description: `Invoice #${invoice.invoice_number} has been created.`,
+        });
+        setInvoiceExists(true);
+        // Navigate to the invoice detail page
+        navigate(`/invoices/${invoice.id}`);
+      }
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create invoice",
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingInvoice(false);
     }
   };
 
@@ -119,6 +168,22 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
             <CheckCircle className="h-4 w-4" />
             {checking ? 'Checking...' : 'Check Materials'}
           </Button>
+          
+          {allProductsCompleted && (
+            <Button
+              onClick={handleCreateInvoice}
+              disabled={creatingInvoice || invoiceExists}
+              variant={invoiceExists ? "outline" : "default"}
+              className="gap-2 bg-blue-600 hover:bg-blue-700"
+            >
+              <FileInvoice className="h-4 w-4" />
+              {invoiceExists 
+                ? 'Already Invoiced' 
+                : creatingInvoice 
+                  ? 'Creating Invoice...' 
+                  : 'Create Invoice'}
+            </Button>
+          )}
         </div>
       </div>
 

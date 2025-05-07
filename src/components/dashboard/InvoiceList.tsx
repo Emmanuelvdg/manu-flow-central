@@ -1,72 +1,74 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DataTable, Column, ColumnCellProps } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
-import { Eye, Plus, Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Eye, Plus, Download, FileInvoice } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the Invoice type
 interface Invoice {
   id: string;
-  orderId: string;
-  customerName: string;
-  issueDate: string;
-  dueDate: string;
+  order_id: string;
+  amount: number;
+  due_date: string;
   status: string;
-  total: number;
-  paymentMethod: string;
-  paymentDate: string | null;
+  invoice_number: string;
+  created_at: string;
+  paid: boolean;
+  payment_date: string | null;
+  order?: {
+    customer_name: string;
+    order_number: string;
+  };
 }
-
-// Mock Invoices data
-const mockInvoices: Invoice[] = [
-  { 
-    id: 'INV00123', 
-    orderId: 'ORD00126',
-    customerName: 'European Motors', 
-    issueDate: '2025-04-15', 
-    dueDate: '2025-05-15',
-    status: 'paid',
-    total: 5050,
-    paymentMethod: 'Bank Transfer',
-    paymentDate: '2025-04-20'
-  },
-  { 
-    id: 'INV00124', 
-    orderId: 'ORD00125',
-    customerName: 'Quantum Mechanics', 
-    issueDate: '2025-04-14', 
-    dueDate: '2025-05-14',
-    status: 'pending',
-    total: 6500,
-    paymentMethod: 'Credit Card',
-    paymentDate: null
-  },
-  { 
-    id: 'INV00125', 
-    orderId: 'ORD00124',
-    customerName: 'Acme Industries', 
-    issueDate: '2025-04-12', 
-    dueDate: '2025-05-12',
-    status: 'overdue',
-    total: 8000,
-    paymentMethod: 'Bank Transfer',
-    paymentDate: null
-  }
-];
 
 export const InvoiceList = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const downloadInvoice = (invoiceId: string) => {
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          order:order_id (
+            customer_name,
+            order_number
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setInvoices(data || []);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load invoices",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadInvoice = (invoiceId: string, invoiceNumber: string) => {
     toast({
       title: "Invoice Downloaded",
-      description: `Invoice ${invoiceId} PDF has been generated and downloaded.`,
+      description: `Invoice ${invoiceNumber} PDF has been generated and downloaded.`,
     });
   };
 
@@ -83,25 +85,35 @@ export const InvoiceList = () => {
   const columns: Column<Invoice>[] = [
     {
       header: 'Invoice ID',
-      accessorKey: 'id',
+      accessorKey: 'invoice_number',
     },
     {
       header: 'Customer',
-      accessorKey: 'customerName',
+      accessorKey: 'order.customer_name',
+      cell: (props: ColumnCellProps<Invoice>) => {
+        return props.row.original.order?.customer_name || 'N/A';
+      }
+    },
+    {
+      header: 'Order Number',
+      accessorKey: 'order.order_number',
+      cell: (props: ColumnCellProps<Invoice>) => {
+        return props.row.original.order?.order_number || 'N/A';
+      }
     },
     {
       header: 'Issue Date',
-      accessorKey: 'issueDate',
+      accessorKey: 'created_at',
       cell: (props: ColumnCellProps<Invoice>) => formatDate(props.getValue())
     },
     {
       header: 'Due Date',
-      accessorKey: 'dueDate',
+      accessorKey: 'due_date',
       cell: (props: ColumnCellProps<Invoice>) => formatDate(props.getValue())
     },
     {
-      header: 'Total',
-      accessorKey: 'total',
+      header: 'Amount',
+      accessorKey: 'amount',
       cell: (props: ColumnCellProps<Invoice>) => {
         const value = props.getValue();
         return typeof value === 'number' ? `$${value.toLocaleString()}` : '$0';
@@ -114,7 +126,8 @@ export const InvoiceList = () => {
         const statusMap: Record<string, any> = {
           'paid': 'completed',
           'pending': 'submitted',
-          'overdue': 'rejected'
+          'overdue': 'rejected',
+          'draft': 'draft'
         };
         const status = props.getValue();
         return <StatusBadge status={statusMap[status] || status} />;
@@ -136,7 +149,7 @@ export const InvoiceList = () => {
             </Button>
             <Button variant="outline" size="sm" onClick={(e) => {
               e.stopPropagation();
-              downloadInvoice(row.id);
+              downloadInvoice(row.id, row.invoice_number);
             }}>
               <Download className="mr-2 h-4 w-4" />
               Download
@@ -157,11 +170,15 @@ export const InvoiceList = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        <DataTable 
-          columns={columns} 
-          data={invoices}
-          onRowClick={(row) => navigate(`/invoices/${row.id}`)}
-        />
+        {loading ? (
+          <div className="text-center py-4">Loading invoices...</div>
+        ) : (
+          <DataTable 
+            columns={columns} 
+            data={invoices}
+            onRowClick={(row) => navigate(`/invoices/${row.id}`)}
+          />
+        )}
       </CardContent>
     </Card>
   );
