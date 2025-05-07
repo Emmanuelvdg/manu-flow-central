@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceData } from '../types';
 
-export const useInvoiceData = (invoiceId: string) => {
+export const useInvoiceData = (invoiceId: string | null) => {
   const { toast } = useToast();
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +98,8 @@ export const useInvoiceData = (invoiceId: string) => {
   useEffect(() => {
     if (invoiceId) {
       fetchInvoiceDetails(invoiceId);
+    } else {
+      setLoading(false);
     }
   }, [invoiceId]);
 

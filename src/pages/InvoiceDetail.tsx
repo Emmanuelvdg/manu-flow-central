@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -9,11 +9,29 @@ import { InvoiceHeader } from './invoice-detail/InvoiceHeader';
 import { InvoiceDetailCard } from './invoice-detail/InvoiceDetailCard';
 import { useInvoiceData } from './invoice-detail/hooks/useInvoiceData';
 import { useInvoiceItems } from './invoice-detail/hooks/useInvoiceItems';
+import { CreateInvoiceForm } from './invoice-detail/CreateInvoiceForm';
 
 const InvoiceDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { invoice, loading, handleMarkAsPaid } = useInvoiceData(id || '');
+  const isCreateMode = id === 'create';
+  
+  // Only fetch invoice data if not in create mode
+  const { invoice, loading, handleMarkAsPaid } = useInvoiceData(isCreateMode ? null : (id || ''));
   const invoiceItems = useInvoiceItems(invoice);
+
+  if (isCreateMode) {
+    return (
+      <MainLayout title="Create New Invoice">
+        <div className="space-y-6 max-w-3xl mx-auto">
+          <Button asChild variant="outline" className="mb-4">
+            <Link to="/invoices">Back to Invoices</Link>
+          </Button>
+          
+          <CreateInvoiceForm />
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (loading) {
     return (
