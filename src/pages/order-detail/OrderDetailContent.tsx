@@ -3,7 +3,6 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { OrderMetaForm } from "./OrderMetaForm";
 import { OrderProductsProgress } from "./OrderProductsProgress";
-import { OrderRoutingStages } from "./components/OrderRoutingStages";
 import { OrderDetailState } from "./components/OrderDetailState";
 import { useOrderForm } from "./hooks/useOrderForm";
 import { Button } from "@/components/ui/button";
@@ -46,11 +45,6 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
 
   const hasNoProducts = !productsLoading && orderProducts.length === 0;
   const hasProductsWithNoRecipes = orderProducts.some(product => !product.recipe_id);
-  
-  // Track if we have any products with recipes that have routing stages
-  const hasProductsWithRoutingStages = orderProducts.some(product => 
-    product.recipe_id && product.recipes?.id
-  );
 
   const handleSyncProducts = async () => {
     if (!syncOrderProducts) return;
@@ -171,15 +165,8 @@ export const OrderDetailContent: React.FC<OrderDetailContentProps> = ({
             materials_status: normalizedPartsStatus // Ensure consistent status display
           }))}
           orderId={orderId}
+          refetch={refetch}
         />
-        
-        {!hasNoProducts && (
-          <OrderRoutingStages 
-            orderId={orderId} 
-            orderProducts={orderProducts} 
-            refetch={refetch}
-          />
-        )}
       </CardContent>
     </Card>
   );

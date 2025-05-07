@@ -8,6 +8,7 @@ import { CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { checkMaterialAvailability, updateOrderMaterialStatus } from "@/services/materialReservationService";
 import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatches";
+import { ProductRoutingStages } from "./components/routing-stages/ProductRoutingStages";
 
 // Types for normalized order product
 type OrderProductRow = {
@@ -36,12 +37,14 @@ interface OrderProductsProgressProps {
   productsLoading: boolean;
   orderProducts: OrderProductRow[];
   orderId: string;
+  refetch: () => Promise<void>;
 }
 
 export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
   productsLoading,
   orderProducts,
-  orderId
+  orderId,
+  refetch
 }) => {
   const { toast } = useToast();
   const { data: batches = [] } = useMaterialBatches();
@@ -89,6 +92,7 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
       case 'requested': return 'bg-yellow-100 text-yellow-800';
       case 'delayed': return 'bg-orange-100 text-orange-800';
       case 'not enough': return 'bg-red-100 text-red-800';
+      case 'completed': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -124,7 +128,7 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
         <div className="text-gray-500 italic text-center py-2">No products found for this order</div>
       ) : (
         orderProducts.map((product) => (
-          <div key={product.id} className="border-b last:border-0 pb-4 last:pb-0 pt-2">
+          <div key={product.id} className="border rounded-lg last:border-0 p-4 mb-4">
             <div className="flex justify-between items-start mb-2">
               <div>
                 <h4 className="font-medium">{product.product_name || "Unknown Product"}</h4>
@@ -137,26 +141,22 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
                 {product.notes && (
                   <p className="text-xs text-muted-foreground mt-1 italic">Notes: {product.notes}</p>
                 )}
-                <div className="mt-2">
-                  <Badge variant="outline" className={
-                    product.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                    product.status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 
-                    'bg-gray-100 text-gray-800'
-                  }>
-                    {product.status.replace('_', ' ')}
-                  </Badge>
-                </div>
               </div>
-              {product.recipe_id ? (
-                <Link 
-                  to={`/recipes/${product.recipe_id}`}
-                  className="text-sm text-blue-600 hover:underline hover:text-blue-800"
-                >
-                  View Recipe
-                </Link>
-              ) : (
-                <span className="text-sm text-gray-400">No Recipe</span>
-              )}
+              <div className="flex flex-col items-end gap-2">
+                <Badge variant="outline" className={getStatusBadgeColor(product.status)}>
+                  {product.status.replace('_', ' ')}
+                </Badge>
+                {product.recipe_id ? (
+                  <Link 
+                    to={`/recipes/${product.recipe_id}`}
+                    className="text-sm text-blue-600 hover:underline hover:text-blue-800"
+                  >
+                    View Recipe
+                  </Link>
+                ) : (
+                  <span className="text-sm text-gray-400">No Recipe</span>
+                )}
+              </div>
             </div>
             <div className="space-y-3 mt-4">
               <div>
@@ -181,6 +181,15 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
                 <Progress value={product.machines_progress ?? 0} className="h-2" />
               </div>
             </div>
+            
+            {/* Production stages for this product */}
+            {product.recipe_id && (
+              <ProductRoutingStages 
+                recipeId={product.recipe_id}
+                orderProduct={product}
+                refetch={refetch}
+              />
+            )}
           </div>
         ))
       )}
