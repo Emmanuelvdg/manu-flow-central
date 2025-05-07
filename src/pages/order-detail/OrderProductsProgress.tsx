@@ -158,29 +158,8 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
                 )}
               </div>
             </div>
-            <div className="space-y-3 mt-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Materials</span>
-                  <span>{product.materials_progress ?? 0}%</span>
-                </div>
-                <Progress value={product.materials_progress ?? 0} className="h-2" />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Personnel</span>
-                  <span>{product.personnel_progress ?? 0}%</span>
-                </div>
-                <Progress value={product.personnel_progress ?? 0} className="h-2" />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Machines</span>
-                  <span>{product.machines_progress ?? 0}%</span>
-                </div>
-                <Progress value={product.machines_progress ?? 0} className="h-2" />
-              </div>
-            </div>
+            
+            {/* Removed the progress bars for Materials, Personnel, and Machines */}
             
             {/* Production stages for this product */}
             {product.recipe_id && (
