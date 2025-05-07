@@ -38,6 +38,20 @@ export const InvoiceDetailCard = ({
   invoiceItems,
   totalAmount,
 }: InvoiceDetailCardProps) => {
+  // Map invoice status to a valid StatusBadge type
+  const getStatusBadgeType = (status: string) => {
+    // Map invoice status strings to valid StatusType values
+    const statusMap: Record<string, string> = {
+      'paid': 'completed',
+      'pending': 'submitted',
+      'overdue': 'rejected',
+      'draft': 'draft'
+    };
+    
+    // Return the mapped status or default to 'submitted' if not found
+    return statusMap[status.toLowerCase()] || 'submitted';
+  };
+  
   return (
     <Card className="print:shadow-none">
       <CardHeader className="space-y-0 pb-4">
@@ -48,7 +62,7 @@ export const InvoiceDetailCard = ({
               Order: {orderNumber}
             </CardDescription>
           </div>
-          <StatusBadge status={statusDisplay} />
+          <StatusBadge status={getStatusBadgeType(statusDisplay) as any} />
         </div>
       </CardHeader>
       

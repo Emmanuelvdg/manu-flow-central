@@ -4,7 +4,6 @@ import { useParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 
 import { InvoiceHeader } from './invoice-detail/InvoiceHeader';
 import { InvoiceDetailCard } from './invoice-detail/InvoiceDetailCard';
@@ -15,13 +14,6 @@ const InvoiceDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { invoice, loading, handleMarkAsPaid } = useInvoiceData(id || '');
   const invoiceItems = useInvoiceItems(invoice);
-
-  const statusMap: Record<string, any> = {
-    'paid': 'completed',
-    'pending': 'submitted',
-    'overdue': 'rejected',
-    'draft': 'draft'
-  };
 
   if (loading) {
     return (
@@ -59,7 +51,7 @@ const InvoiceDetail = () => {
         <InvoiceDetailCard
           invoiceNumber={invoice.invoice_number}
           orderNumber={invoice.order?.order_number || invoice.order_id}
-          statusDisplay={statusMap[invoice.status] || invoice.status}
+          statusDisplay={invoice.status}
           customerName={invoice.order?.customer_name || "Customer"}
           customerAddress={invoice.order?.shipping_address}
           customerEmail={invoice.quote?.customer_email}

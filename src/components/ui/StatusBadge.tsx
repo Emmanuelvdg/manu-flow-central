@@ -2,7 +2,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-type StatusType = 
+export type StatusType = 
   | 'draft'
   | 'submitted'
   | 'processing'
