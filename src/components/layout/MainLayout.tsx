@@ -14,7 +14,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      {/* Remove the open and setOpen props from Sidebar component */}
+      <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10 border-b">
@@ -83,4 +84,3 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
     </div>
   );
 };
-
