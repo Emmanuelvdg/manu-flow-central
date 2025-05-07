@@ -18,6 +18,7 @@ import RecipesDashboard from "./pages/RecipesDashboard";
 import RecipeCreate from "./pages/RecipeCreate";
 import RFQCreate from "./pages/RFQCreate";
 import ShipmentsDashboard from "./pages/ShipmentsDashboard";
+import UserManagement from "./pages/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/recipes/:id" element={<Recipe />} />
             <Route path="/resources" element={<Resource />} />
             <Route path="/shipments" element={<ShipmentsDashboard />} />
+            <Route path="/user-management" element={<UserManagement />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
