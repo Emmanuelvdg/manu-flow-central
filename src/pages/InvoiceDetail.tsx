@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -26,7 +25,7 @@ interface InvoiceData {
     order_number: string;
     customer_name: string;
     shipping_address: string;
-    products: any[];
+    products: any;  // Changed from any[] to any to handle JSON type
     quote_id: string;
   };
   quote?: {
@@ -59,11 +58,6 @@ const InvoiceDetail = () => {
             shipping_address,
             products,
             quote_id
-          ),
-          quote:order (
-            quotes:quote_id (
-              customer_email
-            )
           )
         `)
         .eq('id', invoiceId)
@@ -72,11 +66,19 @@ const InvoiceDetail = () => {
       if (error) throw error;
       
       // Format the data for the component
-      let formattedInvoice: InvoiceData = data;
+      let formattedInvoice: InvoiceData = {...data};
       
-      // Extract customer email from nested query if available
-      if (data.quote?.quotes?.customer_email) {
-        formattedInvoice.quote = { customer_email: data.quote.quotes.customer_email };
+      // Get customer email from a separate query if needed
+      if (data.order?.quote_id) {
+        const { data: quoteData, error: quoteError } = await supabase
+          .from('quotes')
+          .select('customer_email')
+          .eq('id', data.order.quote_id)
+          .single();
+          
+        if (!quoteError && quoteData) {
+          formattedInvoice.quote = { customer_email: quoteData.customer_email };
+        }
       }
       
       setInvoice(formattedInvoice);
@@ -183,7 +185,7 @@ const InvoiceDetail = () => {
   }
 
   // Calculate invoice items from order products
-  const invoiceItems = invoice.order?.products 
+  const invoiceItems = invoice?.order?.products 
     ? Array.isArray(invoice.order.products) 
       ? invoice.order.products.map((product: any, index: number) => ({
           id: index + 1,
@@ -192,13 +194,21 @@ const InvoiceDetail = () => {
           unitPrice: product.price || 0,
           total: (product.price || 0) * (product.quantity || 1)
         }))
-      : [{
-          id: 1,
-          description: "Order items",
-          quantity: 1,
-          unitPrice: invoice.amount,
-          total: invoice.amount
-        }]
+      : typeof invoice.order.products === 'object' 
+        ? Object.values(invoice.order.products).map((product: any, index: number) => ({
+            id: index + 1,
+            description: product.name || product.product_id || `Product #${index + 1}`,
+            quantity: product.quantity || 1,
+            unitPrice: product.price || 0,
+            total: (product.price || 0) * (product.quantity || 1)
+          }))
+        : [{
+            id: 1,
+            description: "Order items",
+            quantity: 1,
+            unitPrice: invoice.amount,
+            total: invoice.amount
+          }]
     : [{
         id: 1,
         description: "Order total",
@@ -208,7 +218,7 @@ const InvoiceDetail = () => {
       }];
 
   return (
-    <MainLayout title={`Invoice Details - ${invoice.invoice_number}`}>
+    <MainLayout title={`Invoice Details - ${invoice?.invoice_number || 'Loading...'}`}>
       <div className="space-y-6 max-w-3xl mx-auto">
         <div className="flex justify-between items-center">
           <Button variant="outline" size="sm" asChild>

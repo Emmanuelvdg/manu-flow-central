@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, FileInvoice } from "lucide-react";
+import { CheckCircle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { checkMaterialAvailability, updateOrderMaterialStatus } from "@/services/materialReservationService";
 import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatches";
@@ -176,7 +175,7 @@ export const OrderProductsProgress: React.FC<OrderProductsProgressProps> = ({
               variant={invoiceExists ? "outline" : "default"}
               className="gap-2 bg-blue-600 hover:bg-blue-700"
             >
-              <FileInvoice className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
               {invoiceExists 
                 ? 'Already Invoiced' 
                 : creatingInvoice 

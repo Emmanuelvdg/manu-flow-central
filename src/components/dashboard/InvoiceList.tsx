@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { DataTable, Column, ColumnCellProps } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Plus, Download, FileInvoice } from 'lucide-react';
+import { Eye, Plus, Download, FileText } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 // Define the Invoice type
