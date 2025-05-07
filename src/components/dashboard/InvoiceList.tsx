@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { DataTable, Column, ColumnCellProps } from '@/components/ui/DataTable';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, Plus, Download, FileText } from 'lucide-react';
+import { Eye, Plus, Download, FileText, AlertCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 // Define the Invoice type
@@ -30,6 +31,7 @@ export const InvoiceList = () => {
   const { toast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInvoices();
@@ -38,6 +40,9 @@ export const InvoiceList = () => {
   const fetchInvoices = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log("Fetching invoices...");
       const { data, error } = await supabase
         .from('invoices')
         .select(`
@@ -49,11 +54,14 @@ export const InvoiceList = () => {
         `)
         .order('created_at', { ascending: false });
 
+      console.log("Invoices response:", { data, error });
+      
       if (error) throw error;
       
       setInvoices(data || []);
     } catch (error) {
       console.error("Error fetching invoices:", error);
+      setError("Failed to load invoices. Please try again later.");
       toast({
         title: "Error",
         description: "Failed to load invoices",
@@ -159,10 +167,29 @@ export const InvoiceList = () => {
     }
   ];
 
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />
+      <h3 className="text-lg font-medium">No invoices found</h3>
+      <p className="text-sm text-gray-500 mb-6">
+        You haven't created any invoices yet. Get started by creating your first invoice.
+      </p>
+      <Button onClick={() => navigate('/invoices/create')}>
+        <Plus className="mr-2 h-4 w-4" />
+        Create Your First Invoice
+      </Button>
+    </div>
+  );
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Invoices</CardTitle>
+        <div>
+          <CardTitle>Invoices</CardTitle>
+          <CardDescription>
+            Manage and track all your customer invoices
+          </CardDescription>
+        </div>
         <Button size="sm" onClick={() => navigate('/invoices/create')}>
           <Plus className="mr-2 h-4 w-4" />
           New Invoice
@@ -171,6 +198,10 @@ export const InvoiceList = () => {
       <CardContent>
         {loading ? (
           <div className="text-center py-4">Loading invoices...</div>
+        ) : error ? (
+          <div className="text-center py-4 text-red-500">{error}</div>
+        ) : invoices.length === 0 ? (
+          <EmptyState />
         ) : (
           <DataTable 
             columns={columns} 
