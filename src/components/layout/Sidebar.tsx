@@ -14,6 +14,7 @@ import {
   Ruler,
   TruckIcon,
   User,
+  Users,
 } from "lucide-react";
 
 const items = [
@@ -46,7 +47,7 @@ const items = [
   {
     title: "Administration",
     links: [
-      { href: "/user-management", label: "User Management", icon: User },
+      { href: "/user-management", label: "User Management", icon: Users },
     ],
   },
 ];
