@@ -6,13 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
 import { Product } from '@/components/dashboard/types/product';
 import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
-
-// Define CartItem interface locally since it's not exported from useCart
-export interface CartItem {
-  product: Product;
-  variantId: string | null;
-  quantity: number;
-}
+import { CartItem } from '@/components/dashboard/hooks/useCart';
 
 interface PublicProductCardProps {
   product: Product;
@@ -35,7 +29,8 @@ export const PublicProductCard: React.FC<PublicProductCardProps> = ({ product, o
     onAddToCart({
       product,
       variantId: selectedVariantId,
-      quantity: itemQuantity
+      quantity: itemQuantity,
+      variant: selectedVariant
     });
     setItemQuantity(1); // Reset quantity after adding
   };

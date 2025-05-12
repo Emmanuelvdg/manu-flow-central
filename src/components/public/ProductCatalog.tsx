@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { useProducts } from '@/components/dashboard/hooks/useProducts';
 import { useCart } from '@/components/dashboard/hooks/useCart';
-import { PublicProductCard, CartItem } from './ProductCard';
+import { PublicProductCard } from './ProductCard';
 import { CartSection } from './CartSection';
 import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
 
@@ -80,7 +79,10 @@ export const PublicProductCatalog = () => {
                 <PublicProductCard
                   key={product.id}
                   product={product}
-                  onAddToCart={addToCart}
+                  onAddToCart={(item) => {
+                    // Handle the CartItem that comes from PublicProductCard
+                    addToCart(item);
+                  }}
                   quantity={cartItems
                     .filter(item => item.product.id === product.id)
                     .reduce((sum, item) => sum + item.quantity, 0)}

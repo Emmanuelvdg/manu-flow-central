@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ShoppingCart, X, Plus, Minus } from 'lucide-react';
-import { CartItem } from '@/components/dashboard/ProductCatalog';
+import { CartItem } from '@/components/dashboard/hooks/useCart';
 import { formatVariantAttributes } from '@/components/dashboard/utils/productUtils';
 
 interface CartSectionProps {
