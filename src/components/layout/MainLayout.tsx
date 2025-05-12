@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { useToast } from "@/components/ui/use-toast";
+import { Menu, X } from "lucide-react";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -13,21 +14,46 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   const { toast } = useToast();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Remove the open and setOpen props from Sidebar component */}
-      <Sidebar />
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Mobile sidebar */}
+      <div className={`lg:hidden fixed inset-0 z-40 ${sidebarOpen ? "block" : "hidden"}`}>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
+        <div className="fixed inset-y-0 left-0 flex flex-col z-40 w-64 bg-white">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/bca2590c-b286-4921-9c95-52a4a7306fcd.png" 
+                alt="Labamu Manufacturing" 
+                className="h-8 w-auto"
+              />
+            </div>
+            <button onClick={() => setSidebarOpen(false)} className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <Sidebar />
+          </div>
+        </div>
+      </div>
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Static sidebar for desktop */}
+      <div className={`hidden lg:flex lg:flex-shrink-0`}>
+        <div className="w-64 flex flex-col">
+          <Sidebar />
+        </div>
+      </div>
+      
+      {/* Main content area */}
+      <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <header className="bg-white shadow-sm z-10 border-b">
-          <div className="flex items-center justify-between px-4 py-2 sm:px-6">
+          <div className="flex items-center justify-between h-16 px-4 sm:px-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="text-gray-500 focus:outline-none"
+                className="text-gray-500 focus:outline-none lg:hidden"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                <Menu className="h-6 w-6" />
               </button>
               <img 
                 src="/lovable-uploads/bca2590c-b286-4921-9c95-52a4a7306fcd.png" 
@@ -77,7 +103,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
         </main>
       </div>
