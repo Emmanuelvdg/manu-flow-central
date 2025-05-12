@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { useProducts } from '@/components/dashboard/hooks/useProducts';
 import { useCart } from '@/components/dashboard/hooks/useCart';
-import { PublicProductCard } from './ProductCard';
+import { PublicProductCard, CartItem } from './ProductCard';
 import { CartSection } from './CartSection';
 import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
 

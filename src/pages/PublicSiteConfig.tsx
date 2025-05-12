@@ -10,7 +10,7 @@ const PublicSiteConfig: React.FC = () => {
   const [activeTab, setActiveTab] = useState('edit');
 
   return (
-    <MainLayout>
+    <MainLayout title="Public Site Configuration">
       <div className="container px-4 py-6 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Public Site Configuration</h1>
         

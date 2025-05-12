@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,8 +5,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
 import { Product } from '@/components/dashboard/types/product';
-import { CartItem } from '@/components/dashboard/hooks/useCart';
 import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
+
+// Define CartItem interface locally since it's not exported from useCart
+export interface CartItem {
+  product: Product;
+  variantId: string | null;
+  quantity: number;
+}
 
 interface PublicProductCardProps {
   product: Product;
@@ -23,7 +28,8 @@ export const PublicProductCard: React.FC<PublicProductCardProps> = ({ product, o
 
   const selectedVariant = product.variants?.find(v => v.id === selectedVariantId);
   const displayPrice = selectedVariant ? selectedVariant.price : product.price;
-  const displaySku = selectedVariant ? selectedVariant.sku : product.sku;
+  // Fix SKU display - check if product has a SKU property
+  const displaySku = selectedVariant ? selectedVariant.sku : (product as any).sku || 'N/A';
   
   const handleAddToCart = () => {
     onAddToCart({
@@ -74,7 +80,7 @@ export const PublicProductCard: React.FC<PublicProductCardProps> = ({ product, o
                         <SelectValue placeholder="Select Variant" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Base Product</SelectItem>
+                        <SelectItem value="base">Base Product</SelectItem>
                         {product.variants.map(variant => (
                           <SelectItem key={variant.id} value={variant.id}>
                             {Object.values(variant.attributes || {}).join(', ')} - ${variant.price?.toFixed(2)}
