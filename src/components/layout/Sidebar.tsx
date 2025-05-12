@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Package2Icon,
@@ -7,6 +8,13 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  FileText,
+  ClipboardList,
+  Receipt,
+  Truck,
+  Layers,
+  Users,
+  Cog,
 } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -14,9 +22,8 @@ import { cn } from "@/lib/utils";
 interface SidebarItemProps {
   icon: React.ReactNode;
   label: string;
-  to?: string;
+  to: string;
   expanded: boolean;
-  dropdown?: { label: string; to: string }[];
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -24,68 +31,46 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   label,
   to,
   expanded,
-  dropdown,
 }) => {
   const location = useLocation();
-  const isActive = to ? location.pathname === to : false;
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
+  const isActive = location.pathname === to;
 
   return (
     <li>
-      {to ? (
-        <NavLink
-          to={to}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 py-2 px-3 rounded-md transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              isActive
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground"
-            )
-          }
-        >
-          {icon}
-          {expanded && <span>{label}</span>}
-        </NavLink>
-      ) : (
-        <button
-          onClick={toggleDropdown}
-          className="flex items-center justify-between w-full gap-3 py-2 px-3 rounded-md transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground"
-        >
-          <div className="flex items-center gap-3">
-            {icon}
-            {expanded && <span>{label}</span>}
-          </div>
-          {expanded && (
-            <span>{isDropdownOpen ? <ChevronLeft /> : <ChevronRight />}</span>
-          )}
-        </button>
-      )}
-
-      {dropdown && expanded && isDropdownOpen && (
-        <ul className="ml-4 space-y-1">
-          {dropdown.map((item) => (
-            <li key={item.label}>
-              <NavLink
-                to={item.to}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 py-2 px-3 rounded-md transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground ml-2",
-                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
-                  )
-                }
-              >
-                {item.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      )}
+      <NavLink
+        to={to}
+        className={({ isActive }) =>
+          cn(
+            "flex items-center gap-3 py-2 px-3 rounded-md transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            isActive
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-sidebar-foreground"
+          )
+        }
+      >
+        {icon}
+        {expanded && <span>{label}</span>}
+      </NavLink>
     </li>
+  );
+};
+
+interface SidebarCategoryProps {
+  title: string;
+  expanded: boolean;
+  children: React.ReactNode;
+}
+
+const SidebarCategory: React.FC<SidebarCategoryProps> = ({ title, expanded, children }) => {
+  return (
+    <div className="mb-4">
+      {expanded && (
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-1">
+          {title}
+        </div>
+      )}
+      <ul className="space-y-1">{children}</ul>
+    </div>
   );
 };
 
@@ -122,63 +107,86 @@ export const Sidebar = () => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-2 space-y-1">
-          {/* Products */}
-          <SidebarItem
-            icon={<Package2Icon />}
-            label="Products"
-            to="/products"
-            expanded={expanded}
-            dropdown={[
-              { label: "Catalog", to: "/products" },
-              { label: "Categories", to: "/product-categories" },
-            ]}
-          />
+        <div className="flex-1 overflow-y-auto py-4 px-2">
+          {/* Products Category */}
+          <SidebarCategory title="Products" expanded={expanded}>
+            <SidebarItem 
+              icon={<Package2Icon className="h-5 w-5" />} 
+              label="Products" 
+              to="/products" 
+              expanded={expanded} 
+            />
+          </SidebarCategory>
 
-          {/* Sales */}
-          <SidebarItem
-            icon={<DollarSignIcon />}
-            label="Sales"
-            expanded={expanded}
-            dropdown={[
-              { label: "RFQs", to: "/rfqs" },
-              { label: "Quotes", to: "/quotes" },
-              { label: "Orders", to: "/orders" },
-              { label: "Invoices", to: "/invoices" },
-            ]}
-          />
+          {/* Sales Category */}
+          <SidebarCategory title="Sales" expanded={expanded}>
+            <SidebarItem 
+              icon={<FileText className="h-5 w-5" />} 
+              label="Quotes" 
+              to="/quotes" 
+              expanded={expanded} 
+            />
+            <SidebarItem 
+              icon={<ClipboardList className="h-5 w-5" />} 
+              label="RFQs" 
+              to="/rfqs" 
+              expanded={expanded} 
+            />
+            <SidebarItem 
+              icon={<Receipt className="h-5 w-5" />} 
+              label="Invoices" 
+              to="/invoices" 
+              expanded={expanded} 
+            />
+          </SidebarCategory>
 
-          {/* Manufacturing */}
-          <SidebarItem
-            icon={<Factory />}
-            label="Manufacturing"
-            expanded={expanded}
-            dropdown={[
-              { label: "Recipes", to: "/recipes" },
-              { label: "Resources", to: "/resources" },
-            ]}
-          />
+          {/* Manufacturing Category */}
+          <SidebarCategory title="Manufacturing" expanded={expanded}>
+            <SidebarItem 
+              icon={<PackageIcon className="h-5 w-5" />} 
+              label="Orders" 
+              to="/orders" 
+              expanded={expanded} 
+            />
+            <SidebarItem 
+              icon={<Layers className="h-5 w-5" />} 
+              label="Bill of Materials" 
+              to="/recipes" 
+              expanded={expanded} 
+            />
+            <SidebarItem 
+              icon={<Truck className="h-5 w-5" />} 
+              label="Shipments" 
+              to="/shipments" 
+              expanded={expanded} 
+            />
+          </SidebarCategory>
 
-          {/* Inventory */}
-          <SidebarItem
-            icon={<PackageIcon />}
-            label="Inventory"
-            expanded={expanded}
-            dropdown={[
-              { label: "Shipments", to: "/shipments" },
-            ]}
-          />
+          {/* Inventory Category */}
+          <SidebarCategory title="Inventory" expanded={expanded}>
+            <SidebarItem 
+              icon={<PackageIcon className="h-5 w-5" />} 
+              label="Resources" 
+              to="/resources" 
+              expanded={expanded} 
+            />
+          </SidebarCategory>
 
-          {/* Administration */}
-          <SidebarItem
-            icon={<Settings />}
-            label="Administration"
-            expanded={expanded}
-            dropdown={[
-              { label: "User Management", to: "/user-management" },
-              { label: "Public Site Config", to: "/public-site-config" },
-            ]}
-          />
+          {/* Administration Category */}
+          <SidebarCategory title="Administration" expanded={expanded}>
+            <SidebarItem 
+              icon={<Users className="h-5 w-5" />} 
+              label="User Management" 
+              to="/user-management" 
+              expanded={expanded} 
+            />
+            <SidebarItem 
+              icon={<Cog className="h-5 w-5" />} 
+              label="Public Site Config" 
+              to="/public-site-config" 
+              expanded={expanded} 
+            />
+          </SidebarCategory>
         </div>
 
         <div className="py-3 px-4 mt-auto border-t border-border">
