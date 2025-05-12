@@ -33,7 +33,7 @@ export const RecipeVariantSection: React.FC<RecipeVariantSectionProps> = ({
           <SelectValue placeholder="Select a variant" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Base product (no variant)</SelectItem>
+          <SelectItem value="base">Base product (no variant)</SelectItem>
           {productVariants.map((variant) => (
             <SelectItem key={variant.id} value={variant.id}>
               {formatVariantOption(variant)}
