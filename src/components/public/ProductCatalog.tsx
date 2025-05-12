@@ -9,12 +9,14 @@ import { useProducts } from '@/components/dashboard/hooks/useProducts';
 import { useCart } from '@/components/dashboard/hooks/useCart';
 import { PublicProductCard } from './ProductCard';
 import { CartSection } from './CartSection';
+import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
 
 export const PublicProductCatalog = () => {
   const { products, loading } = useProducts();
   const { cartItems, addToCart, removeFromCart, updateQuantity, clearCart } = useCart();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const { config } = usePublicSiteConfig();
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -72,7 +74,7 @@ export const PublicProductCatalog = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`${config.layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}`}>
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <PublicProductCard
@@ -82,6 +84,7 @@ export const PublicProductCatalog = () => {
                   quantity={cartItems
                     .filter(item => item.product.id === product.id)
                     .reduce((sum, item) => sum + item.quantity, 0)}
+                  layout={config.layout}
                 />
               ))
             ) : (
