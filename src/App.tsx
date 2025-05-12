@@ -19,6 +19,9 @@ import RecipeCreate from "./pages/RecipeCreate";
 import RFQCreate from "./pages/RFQCreate";
 import ShipmentsDashboard from "./pages/ShipmentsDashboard";
 import UserManagement from "./pages/UserManagement";
+import PublicProducts from "./pages/PublicProducts";
+import PublicQuote from "./pages/PublicQuote";
+import PublicThankYou from "./pages/PublicThankYou";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +33,12 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public Routes */}
+            <Route path="/public" element={<PublicProducts />} />
+            <Route path="/public/quote" element={<PublicQuote />} />
+            <Route path="/public/thank-you" element={<PublicThankYou />} />
+            
+            {/* Admin Routes */}
             <Route path="/" element={<Dashboard />} />
             <Route path="/products" element={<Dashboard />} />
             <Route path="/rfqs" element={<Dashboard />} />
