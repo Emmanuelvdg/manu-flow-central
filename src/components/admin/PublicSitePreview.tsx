@@ -35,7 +35,7 @@ export const PublicSitePreview: React.FC = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <img 
-              src={logo} 
+              src={logo.path} 
               alt={companyName} 
               className="h-8 w-auto"
             />

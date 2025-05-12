@@ -40,7 +40,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <img 
-                src={logo} 
+                src={logo.path} 
                 alt={companyName} 
                 className="h-8 w-auto"
               />

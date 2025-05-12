@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,17 +7,41 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Upload, Image } from 'lucide-react';
 
 export const PublicSiteConfigForm: React.FC = () => {
-  const { config, updateConfig, resetConfig } = usePublicSiteConfig();
+  const { config, updateConfig, resetConfig, uploadLogo } = usePublicSiteConfig();
   const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
 
   const handleSave = () => {
     toast({
       title: 'Configuration saved',
       description: 'Your public site configuration has been saved.',
     });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      await uploadLogo(file);
+      toast({
+        title: 'Logo uploaded',
+        description: 'Your logo has been uploaded successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Upload failed',
+        description: 'There was an error uploading your logo.',
+        variant: 'destructive',
+      });
+      console.error('Upload error:', error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleAddSocialMedia = () => {
@@ -64,12 +87,65 @@ export const PublicSiteConfigForm: React.FC = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="logo">Logo URL</Label>
-            <Input
-              id="logo"
-              value={config.logo}
-              onChange={(e) => updateConfig({ logo: e.target.value })}
-            />
+            <Label htmlFor="logo">Logo</Label>
+            <div className="flex flex-col space-y-3">
+              <div className="flex items-center space-x-4">
+                <div className="h-16 w-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden border">
+                  {config.logo.path ? (
+                    <img 
+                      src={config.logo.path} 
+                      alt="Company Logo" 
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <Image className="text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium truncate">{config.logo.filename || 'No file selected'}</p>
+                  {config.logo.path && (
+                    <p className="text-xs text-gray-500 truncate">
+                      {config.logo.path.substring(config.logo.path.lastIndexOf('/') + 1)}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={uploading}
+                  className="relative"
+                  asChild
+                >
+                  <label className="cursor-pointer flex items-center">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {uploading ? 'Uploading...' : 'Upload Logo'}
+                    <input
+                      type="file"
+                      className="sr-only"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={uploading}
+                    />
+                  </label>
+                </Button>
+                
+                {config.logo.path && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => updateConfig({ logo: { path: '', filename: '' }})}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" /> Remove
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="layout">Layout Style</Label>

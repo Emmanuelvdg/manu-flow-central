@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SocialMediaLink {
   platform: string;
@@ -15,7 +16,10 @@ export interface ContactInfo {
 
 export interface PublicSiteConfig {
   companyName: string;
-  logo: string;
+  logo: {
+    path: string;
+    filename: string;
+  };
   banner: {
     text: string;
     backgroundColor: string;
@@ -36,7 +40,10 @@ export interface PublicSiteConfig {
 
 const defaultConfig: PublicSiteConfig = {
   companyName: 'Labamu Manufacturing',
-  logo: '/lovable-uploads/bca2590c-b286-4921-9c95-52a4a7306fcd.png',
+  logo: {
+    path: '/lovable-uploads/bca2590c-b286-4921-9c95-52a4a7306fcd.png',
+    filename: 'labamu-logo.png'
+  },
   banner: {
     text: 'Welcome to our online catalog',
     backgroundColor: '#1A1F2C',
@@ -79,6 +86,7 @@ interface PublicSiteConfigContextType {
   config: PublicSiteConfig;
   updateConfig: (newConfig: Partial<PublicSiteConfig>) => void;
   resetConfig: () => void;
+  uploadLogo: (file: File) => Promise<void>;
 }
 
 const PublicSiteConfigContext = createContext<PublicSiteConfigContextType | undefined>(undefined);
@@ -109,7 +117,42 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
         ...prev.contactInfo,
         ...(newConfig.contactInfo || {}),
       },
+      logo: {
+        ...prev.logo,
+        ...(newConfig.logo || {}),
+      },
     }));
+  };
+
+  const uploadLogo = async (file: File) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('website_assets')
+        .upload(filePath, file);
+      
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get public URL
+      const { data } = supabase.storage
+        .from('website_assets')
+        .getPublicUrl(filePath);
+        
+      updateConfig({
+        logo: {
+          path: data.publicUrl,
+          filename: file.name
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      throw error;
+    }
   };
 
   const resetConfig = () => {
@@ -117,7 +160,7 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
   };
 
   return (
-    <PublicSiteConfigContext.Provider value={{ config, updateConfig, resetConfig }}>
+    <PublicSiteConfigContext.Provider value={{ config, updateConfig, resetConfig, uploadLogo }}>
       {children}
     </PublicSiteConfigContext.Provider>
   );
