@@ -3,31 +3,26 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  CalendarCheck,
-  Clipboard,
-  CreditCard,
-  FileBox,
-  FileQuestion,
+  Box,
   FileText,
-  Layers,
+  FileQuestion,
+  CreditCard,
   Package2,
   Ruler,
   TruckIcon,
-  User,
+  Layers,
   Users,
 } from "lucide-react";
 
 const items = [
   {
-    title: "Manufacturing",
+    title: "PRODUCTS",
     links: [
-      { href: "/orders", label: "Orders", icon: Package2 },
-      { href: "/recipes", label: "Bill of Materials", icon: Ruler },
-      { href: "/shipments", label: "Shipments", icon: TruckIcon },
+      { href: "/products", label: "Products", icon: Box },
     ],
   },
   {
-    title: "Sales",
+    title: "SALES",
     links: [
       { href: "/quotes", label: "Quotes", icon: FileText },
       { href: "/rfqs", label: "RFQs", icon: FileQuestion },
@@ -35,17 +30,21 @@ const items = [
     ],
   },
   {
-    title: "Inventory",
-    links: [{ href: "/resources", label: "Resources", icon: Layers }],
-  },
-  {
-    title: "Products",
+    title: "MANUFACTURING",
     links: [
-      { href: "/products", label: "Products", icon: Package2 },
+      { href: "/orders", label: "Orders", icon: Package2 },
+      { href: "/recipes", label: "Bill of Materials", icon: Ruler },
+      { href: "/shipments", label: "Shipments", icon: TruckIcon },
     ],
   },
   {
-    title: "Administration",
+    title: "INVENTORY",
+    links: [
+      { href: "/resources", label: "Resources", icon: Layers },
+    ],
+  },
+  {
+    title: "ADMINISTRATION",
     links: [
       { href: "/user-management", label: "User Management", icon: Users },
     ],
