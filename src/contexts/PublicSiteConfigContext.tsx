@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -7,6 +8,11 @@ export interface SocialMediaLink {
   platform: string;
   url: string;
   icon: string;
+}
+
+export interface NavigationLink {
+  label: string;
+  url: string;
 }
 
 export interface ContactInfo {
@@ -36,6 +42,7 @@ export interface PublicSiteConfig {
   };
   contactInfo: ContactInfo;
   socialMedia: SocialMediaLink[];
+  navigationLinks: NavigationLink[];
   layout: 'grid' | 'list';
 }
 
@@ -80,6 +87,20 @@ const defaultConfig: PublicSiteConfig = {
       icon: 'Facebook',
     },
   ],
+  navigationLinks: [
+    {
+      label: 'Home',
+      url: '/public',
+    },
+    {
+      label: 'Products',
+      url: '/public',
+    },
+    {
+      label: 'Request Quote',
+      url: '/public/quote',
+    },
+  ],
   layout: 'grid',
 };
 
@@ -122,6 +143,7 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
         ...prev.logo,
         ...(newConfig.logo || {}),
       },
+      navigationLinks: newConfig.navigationLinks || prev.navigationLinks,
     }));
   };
 

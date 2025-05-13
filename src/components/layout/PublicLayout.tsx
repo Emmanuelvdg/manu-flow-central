@@ -9,7 +9,7 @@ interface PublicLayoutProps {
 
 export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
   const { config } = usePublicSiteConfig();
-  const { colorScheme, companyName, logo, banner, contactInfo, socialMedia } = config;
+  const { colorScheme, companyName, logo, banner, contactInfo, socialMedia, navigationLinks } = config;
 
   // Apply dynamic styles based on configuration
   const headerStyle = {
@@ -47,12 +47,16 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
               <span className="ml-3 text-xl font-medium" style={{ color: colorScheme.text }}>{companyName}</span>
             </div>
             <nav className="ml-10 flex items-center space-x-4">
-              <Link to="/public" className="hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" style={{ color: colorScheme.text }}>
-                Products
-              </Link>
-              <Link to="/public/quote" className="hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" style={{ color: colorScheme.text }}>
-                Request Quote
-              </Link>
+              {navigationLinks.map((navLink, index) => (
+                <Link 
+                  key={index} 
+                  to={navLink.url} 
+                  className="hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium" 
+                  style={{ color: colorScheme.text }}
+                >
+                  {navLink.label}
+                </Link>
+              ))}
               <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium text-white" style={primaryButtonStyle}>
                 Login
               </Link>

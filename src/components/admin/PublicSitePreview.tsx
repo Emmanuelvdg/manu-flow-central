@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 export const PublicSitePreview: React.FC = () => {
   const { config } = usePublicSiteConfig();
-  const { colorScheme, companyName, logo, banner, contactInfo } = config;
+  const { colorScheme, companyName, logo, banner, contactInfo, navigationLinks } = config;
 
   // Apply dynamic styles based on configuration
   const headerStyle = {
@@ -42,8 +42,11 @@ export const PublicSitePreview: React.FC = () => {
             <span className="ml-3 text-xl font-medium" style={{ color: colorScheme.text }}>{companyName}</span>
           </div>
           <nav className="flex items-center space-x-4">
-            <Button variant="ghost" style={{ color: colorScheme.text }}>Products</Button>
-            <Button variant="ghost" style={{ color: colorScheme.text }}>Request Quote</Button>
+            {navigationLinks.map((navLink, index) => (
+              <Button key={index} variant="ghost" style={{ color: colorScheme.text }}>
+                {navLink.label}
+              </Button>
+            ))}
             <Button style={primaryButtonStyle}>Login</Button>
           </nav>
         </div>
