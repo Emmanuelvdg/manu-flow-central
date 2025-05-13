@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 export interface SocialMediaLink {
   platform: string;
@@ -126,16 +127,41 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
 
   const uploadLogo = async (file: File) => {
     try {
+      // Check if website_assets bucket exists, if not this will throw an error
+      const { data: buckets, error: checkError } = await supabase.storage.listBuckets();
+      
+      if (checkError) {
+        console.error('Error checking buckets:', checkError);
+        throw new Error('Unable to access storage. Please check your Supabase configuration.');
+      }
+      
+      const bucketExists = buckets.some(bucket => bucket.name === 'website_assets');
+      
+      if (!bucketExists) {
+        // Create the bucket if it doesn't exist
+        const { error: createError } = await supabase.storage.createBucket('website_assets', {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+        });
+        
+        if (createError) {
+          console.error('Error creating bucket:', createError);
+          throw new Error('Failed to create storage bucket');
+        }
+      }
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
       
+      // Upload the file
       const { error: uploadError } = await supabase.storage
         .from('website_assets')
         .upload(filePath, file);
       
       if (uploadError) {
-        throw uploadError;
+        console.error('Error uploading logo:', uploadError);
+        throw new Error('Failed to upload logo');
       }
       
       // Get public URL
@@ -143,14 +169,29 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
         .from('website_assets')
         .getPublicUrl(filePath);
         
+      if (!data || !data.publicUrl) {
+        throw new Error('Failed to get public URL for uploaded logo');
+      }
+      
       updateConfig({
         logo: {
           path: data.publicUrl,
           filename: file.name
         }
       });
-    } catch (error) {
-      console.error('Error uploading logo:', error);
+      
+      toast({
+        title: 'Success',
+        description: 'Logo uploaded successfully',
+      });
+      
+    } catch (error: any) {
+      console.error('Error in uploadLogo:', error);
+      toast({
+        title: 'Upload failed',
+        description: error.message || 'An error occurred while uploading the logo',
+        variant: 'destructive',
+      });
       throw error;
     }
   };

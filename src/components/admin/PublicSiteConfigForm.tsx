@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,12 +8,24 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { Trash2, Plus, Upload, Image } from 'lucide-react';
+import { Trash2, Plus, Upload, Image, Loader2 } from 'lucide-react';
+import { ensureStorageBucket } from '@/integrations/supabase/storage';
 
 export const PublicSiteConfigForm: React.FC = () => {
   const { config, updateConfig, resetConfig, uploadLogo } = usePublicSiteConfig();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
+
+  useEffect(() => {
+    // Check if storage bucket is ready on component mount
+    async function checkStorage() {
+      const ready = await ensureStorageBucket('website_assets');
+      setStorageReady(ready);
+    }
+    
+    checkStorage();
+  }, []);
 
   const handleSave = () => {
     toast({
@@ -24,23 +37,38 @@ export const PublicSiteConfigForm: React.FC = () => {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please upload a valid image file (JPEG, PNG, GIF, WEBP, SVG)',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Logo image must be smaller than 5MB',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       setUploading(true);
       await uploadLogo(file);
-      toast({
-        title: 'Logo uploaded',
-        description: 'Your logo has been uploaded successfully.',
-      });
     } catch (error) {
-      toast({
-        title: 'Upload failed',
-        description: 'There was an error uploading your logo.',
-        variant: 'destructive',
-      });
       console.error('Upload error:', error);
+      // Error is already handled in uploadLogo function
     } finally {
       setUploading(false);
+      // Reset the input value so the same file can be uploaded again if needed
+      e.target.value = '';
     }
   };
 
@@ -96,6 +124,11 @@ export const PublicSiteConfigForm: React.FC = () => {
                       src={config.logo.path} 
                       alt="Company Logo" 
                       className="h-full w-full object-contain"
+                      onError={(e) => {
+                        // Handle image loading error
+                        e.currentTarget.src = '/placeholder.svg';
+                        console.error('Logo image failed to load');
+                      }}
                     />
                   ) : (
                     <Image className="text-gray-400" />
@@ -116,19 +149,28 @@ export const PublicSiteConfigForm: React.FC = () => {
                   type="button" 
                   variant="outline" 
                   size="sm" 
-                  disabled={uploading}
+                  disabled={uploading || !storageReady}
                   className="relative"
                   asChild
                 >
                   <label className="cursor-pointer flex items-center">
-                    <Upload className="h-4 w-4 mr-2" />
-                    {uploading ? 'Uploading...' : 'Upload Logo'}
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Logo
+                      </>
+                    )}
                     <input
                       type="file"
                       className="sr-only"
                       accept="image/*"
                       onChange={handleLogoUpload}
-                      disabled={uploading}
+                      disabled={uploading || !storageReady}
                     />
                   </label>
                 </Button>
@@ -145,6 +187,11 @@ export const PublicSiteConfigForm: React.FC = () => {
                   </Button>
                 )}
               </div>
+              {!storageReady && (
+                <p className="text-sm text-amber-500">
+                  Storage not ready. Please check your Supabase configuration.
+                </p>
+              )}
             </div>
           </div>
           <div className="space-y-2 md:col-span-2">
