@@ -19,6 +19,10 @@ export const PublicSiteConfigForm: React.FC = () => {
   const [storageError, setStorageError] = useState<string | null>(null);
   const [checkingStorage, setCheckingStorage] = useState(true);
 
+  // Ensure we have default values for arrays to prevent map errors
+  const navigationLinks = config.navigationLinks || [];
+  const socialMedia = config.socialMedia || [];
+
   useEffect(() => {
     // Check if storage bucket is ready on component mount
     async function checkStorage() {
@@ -93,7 +97,7 @@ export const PublicSiteConfigForm: React.FC = () => {
   const handleAddSocialMedia = () => {
     updateConfig({
       socialMedia: [
-        ...config.socialMedia,
+        ...(config.socialMedia || []),
         {
           platform: '',
           url: '',
@@ -104,12 +108,16 @@ export const PublicSiteConfigForm: React.FC = () => {
   };
 
   const handleRemoveSocialMedia = (index: number) => {
+    if (!config.socialMedia) return;
+    
     updateConfig({
       socialMedia: config.socialMedia.filter((_, i) => i !== index),
     });
   };
 
   const handleSocialMediaChange = (index: number, key: keyof typeof config.socialMedia[0], value: string) => {
+    if (!config.socialMedia) return;
+    
     const updatedSocialMedia = [...config.socialMedia];
     updatedSocialMedia[index] = {
       ...updatedSocialMedia[index],
@@ -121,7 +129,7 @@ export const PublicSiteConfigForm: React.FC = () => {
   const handleAddNavigationLink = () => {
     updateConfig({
       navigationLinks: [
-        ...config.navigationLinks,
+        ...(config.navigationLinks || []),
         {
           label: '',
           url: '',
@@ -131,12 +139,16 @@ export const PublicSiteConfigForm: React.FC = () => {
   };
 
   const handleRemoveNavigationLink = (index: number) => {
+    if (!config.navigationLinks) return;
+    
     updateConfig({
       navigationLinks: config.navigationLinks.filter((_, i) => i !== index),
     });
   };
 
   const handleNavigationLinkChange = (index: number, key: keyof typeof config.navigationLinks[0], value: string) => {
+    if (!config.navigationLinks) return;
+    
     const updatedNavigationLinks = [...config.navigationLinks];
     updatedNavigationLinks[index] = {
       ...updatedNavigationLinks[index],
@@ -164,7 +176,7 @@ export const PublicSiteConfigForm: React.FC = () => {
             <div className="flex flex-col space-y-3">
               <div className="flex items-center space-x-4">
                 <div className="h-16 w-16 bg-gray-100 rounded flex items-center justify-center overflow-hidden border">
-                  {config.logo.path ? (
+                  {config.logo && config.logo.path ? (
                     <img 
                       src={config.logo.path} 
                       alt="Company Logo" 
@@ -180,8 +192,8 @@ export const PublicSiteConfigForm: React.FC = () => {
                   )}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium truncate">{config.logo.filename || 'No file selected'}</p>
-                  {config.logo.path && (
+                  <p className="text-sm font-medium truncate">{config.logo?.filename || 'No file selected'}</p>
+                  {config.logo?.path && (
                     <p className="text-xs text-gray-500 truncate">
                       {config.logo.path.substring(config.logo.path.lastIndexOf('/') + 1)}
                     </p>
@@ -236,7 +248,7 @@ export const PublicSiteConfigForm: React.FC = () => {
                   </label>
                 </Button>
                 
-                {config.logo.path && (
+                {config.logo && config.logo.path && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -275,7 +287,7 @@ export const PublicSiteConfigForm: React.FC = () => {
             <Label htmlFor="bannerEnabled" className="text-sm">Enable Banner</Label>
             <Switch
               id="bannerEnabled"
-              checked={config.banner.enabled}
+              checked={config.banner?.enabled || false}
               onCheckedChange={(checked) => updateConfig({ banner: { ...config.banner, enabled: checked } })}
             />
           </div>
@@ -286,9 +298,9 @@ export const PublicSiteConfigForm: React.FC = () => {
             <Label htmlFor="bannerText">Banner Text</Label>
             <Input
               id="bannerText"
-              value={config.banner.text}
+              value={config.banner?.text || ''}
               onChange={(e) => updateConfig({ banner: { ...config.banner, text: e.target.value } })}
-              disabled={!config.banner.enabled}
+              disabled={!config.banner?.enabled}
             />
           </div>
           <div className="space-y-2">
@@ -297,15 +309,15 @@ export const PublicSiteConfigForm: React.FC = () => {
               <Input
                 id="bannerBgColor"
                 type="color"
-                value={config.banner.backgroundColor}
+                value={config.banner?.backgroundColor || '#1A1F2C'}
                 onChange={(e) => updateConfig({ banner: { ...config.banner, backgroundColor: e.target.value } })}
-                disabled={!config.banner.enabled}
+                disabled={!config.banner?.enabled}
                 className="w-16 h-10 p-1"
               />
               <Input
-                value={config.banner.backgroundColor}
+                value={config.banner?.backgroundColor || '#1A1F2C'}
                 onChange={(e) => updateConfig({ banner: { ...config.banner, backgroundColor: e.target.value } })}
-                disabled={!config.banner.enabled}
+                disabled={!config.banner?.enabled}
                 className="flex-1"
               />
             </div>
@@ -316,15 +328,15 @@ export const PublicSiteConfigForm: React.FC = () => {
               <Input
                 id="bannerTextColor"
                 type="color"
-                value={config.banner.textColor}
+                value={config.banner?.textColor || '#FFFFFF'}
                 onChange={(e) => updateConfig({ banner: { ...config.banner, textColor: e.target.value } })}
-                disabled={!config.banner.enabled}
+                disabled={!config.banner?.enabled}
                 className="w-16 h-10 p-1"
               />
               <Input
-                value={config.banner.textColor}
+                value={config.banner?.textColor || '#FFFFFF'}
                 onChange={(e) => updateConfig({ banner: { ...config.banner, textColor: e.target.value } })}
-                disabled={!config.banner.enabled}
+                disabled={!config.banner?.enabled}
                 className="flex-1"
               />
             </div>
@@ -344,7 +356,7 @@ export const PublicSiteConfigForm: React.FC = () => {
         </div>
         
         <div className="space-y-4">
-          {config.navigationLinks.map((navLink, index) => (
+          {navigationLinks.map((navLink, index) => (
             <div key={index} className="flex items-center gap-2">
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2">
                 <Input
@@ -375,7 +387,7 @@ export const PublicSiteConfigForm: React.FC = () => {
             </div>
           ))}
           
-          {config.navigationLinks.length === 0 && (
+          {navigationLinks.length === 0 && (
             <div className="text-center py-4 border border-dashed rounded-md text-muted-foreground">
               No navigation links added. Click "Add Link" to create menu items.
             </div>
@@ -395,12 +407,12 @@ export const PublicSiteConfigForm: React.FC = () => {
               <Input
                 id="primaryColor"
                 type="color"
-                value={config.colorScheme.primary.startsWith('hsl') ? '#1e40af' : config.colorScheme.primary}
+                value={config.colorScheme?.primary.startsWith('hsl') ? '#1e40af' : config.colorScheme?.primary || '#1e40af'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, primary: e.target.value } })}
                 className="w-16 h-10 p-1"
               />
               <Input
-                value={config.colorScheme.primary}
+                value={config.colorScheme?.primary || 'hsl(var(--primary))'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, primary: e.target.value } })}
                 placeholder="e.g., #1e40af or hsl(var(--primary))"
                 className="flex-1"
@@ -413,12 +425,12 @@ export const PublicSiteConfigForm: React.FC = () => {
               <Input
                 id="secondaryColor"
                 type="color"
-                value={config.colorScheme.secondary.startsWith('hsl') ? '#94a3b8' : config.colorScheme.secondary}
+                value={config.colorScheme?.secondary.startsWith('hsl') ? '#94a3b8' : config.colorScheme?.secondary || '#94a3b8'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, secondary: e.target.value } })}
                 className="w-16 h-10 p-1"
               />
               <Input
-                value={config.colorScheme.secondary}
+                value={config.colorScheme?.secondary || 'hsl(var(--secondary))'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, secondary: e.target.value } })}
                 placeholder="e.g., #94a3b8 or hsl(var(--secondary))"
                 className="flex-1"
@@ -431,12 +443,12 @@ export const PublicSiteConfigForm: React.FC = () => {
               <Input
                 id="accentColor"
                 type="color"
-                value={config.colorScheme.accent.startsWith('hsl') ? '#10b981' : config.colorScheme.accent}
+                value={config.colorScheme?.accent.startsWith('hsl') ? '#10b981' : config.colorScheme?.accent || '#10b981'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, accent: e.target.value } })}
                 className="w-16 h-10 p-1"
               />
               <Input
-                value={config.colorScheme.accent}
+                value={config.colorScheme?.accent || 'hsl(var(--accent))'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, accent: e.target.value } })}
                 placeholder="e.g., #10b981 or hsl(var(--accent))"
                 className="flex-1"
@@ -449,12 +461,12 @@ export const PublicSiteConfigForm: React.FC = () => {
               <Input
                 id="backgroundColor"
                 type="color"
-                value={config.colorScheme.background.startsWith('hsl') ? '#ffffff' : config.colorScheme.background}
+                value={config.colorScheme?.background.startsWith('hsl') ? '#ffffff' : config.colorScheme?.background || '#ffffff'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, background: e.target.value } })}
                 className="w-16 h-10 p-1"
               />
               <Input
-                value={config.colorScheme.background}
+                value={config.colorScheme?.background || 'hsl(var(--background))'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, background: e.target.value } })}
                 placeholder="e.g., #ffffff or hsl(var(--background))"
                 className="flex-1"
@@ -467,12 +479,12 @@ export const PublicSiteConfigForm: React.FC = () => {
               <Input
                 id="textColor"
                 type="color"
-                value={config.colorScheme.text.startsWith('hsl') ? '#333333' : config.colorScheme.text}
+                value={config.colorScheme?.text.startsWith('hsl') ? '#333333' : config.colorScheme?.text || '#333333'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, text: e.target.value } })}
                 className="w-16 h-10 p-1"
               />
               <Input
-                value={config.colorScheme.text}
+                value={config.colorScheme?.text || 'hsl(var(--foreground))'}
                 onChange={(e) => updateConfig({ colorScheme: { ...config.colorScheme, text: e.target.value } })}
                 placeholder="e.g., #333333 or hsl(var(--foreground))"
                 className="flex-1"
@@ -493,7 +505,7 @@ export const PublicSiteConfigForm: React.FC = () => {
             <Input
               id="contactEmail"
               type="email"
-              value={config.contactInfo.email}
+              value={config.contactInfo?.email || ''}
               onChange={(e) => updateConfig({ contactInfo: { ...config.contactInfo, email: e.target.value } })}
             />
           </div>
@@ -501,7 +513,7 @@ export const PublicSiteConfigForm: React.FC = () => {
             <Label htmlFor="contactPhone">Phone</Label>
             <Input
               id="contactPhone"
-              value={config.contactInfo.phone}
+              value={config.contactInfo?.phone || ''}
               onChange={(e) => updateConfig({ contactInfo: { ...config.contactInfo, phone: e.target.value } })}
             />
           </div>
@@ -509,7 +521,7 @@ export const PublicSiteConfigForm: React.FC = () => {
             <Label htmlFor="contactAddress">Address</Label>
             <Textarea
               id="contactAddress"
-              value={config.contactInfo.address}
+              value={config.contactInfo?.address || ''}
               onChange={(e) => updateConfig({ contactInfo: { ...config.contactInfo, address: e.target.value } })}
               rows={3}
             />
@@ -529,7 +541,7 @@ export const PublicSiteConfigForm: React.FC = () => {
         </div>
         
         <div className="space-y-4">
-          {config.socialMedia.map((social, index) => (
+          {socialMedia.map((social, index) => (
             <div key={index} className="flex items-center gap-2">
               <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
                 <Input
@@ -554,6 +566,12 @@ export const PublicSiteConfigForm: React.FC = () => {
               </Button>
             </div>
           ))}
+
+          {socialMedia.length === 0 && (
+            <div className="text-center py-4 border border-dashed rounded-md text-muted-foreground">
+              No social media links added. Click "Add" to create social media links.
+            </div>
+          )}
         </div>
       </section>
 

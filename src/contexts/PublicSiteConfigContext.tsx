@@ -143,7 +143,8 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
         ...prev.logo,
         ...(newConfig.logo || {}),
       },
-      navigationLinks: newConfig.navigationLinks || prev.navigationLinks,
+      navigationLinks: newConfig.navigationLinks !== undefined ? newConfig.navigationLinks : prev.navigationLinks,
+      socialMedia: newConfig.socialMedia !== undefined ? newConfig.socialMedia : prev.socialMedia,
     }));
   };
 
