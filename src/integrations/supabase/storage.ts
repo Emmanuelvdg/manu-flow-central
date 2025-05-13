@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 
 export async function ensureStorageBucket(bucketName: string) {
@@ -16,7 +17,8 @@ export async function ensureStorageBucket(bucketName: string) {
       }
       
       // If we get a permissions error (likely RLS related)
-      if (error.message?.includes('row-level security') || error.status === 400) {
+      // Remove the reference to error.status and use error.message only
+      if (error.message?.includes('row-level security') || error.message?.includes('permission denied')) {
         console.error(`Permission denied accessing bucket ${bucketName}. RLS policy may be restricting access.`);
         return false;
       }
