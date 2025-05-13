@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { ensureStorageBucket } from '@/integrations/supabase/storage';
 
 export interface SocialMediaLink {
   platform: string;
@@ -127,27 +127,11 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
 
   const uploadLogo = async (file: File) => {
     try {
-      // Check if website_assets bucket exists, if not this will throw an error
-      const { data: buckets, error: checkError } = await supabase.storage.listBuckets();
+      // Check if website_assets bucket exists
+      const storageReady = await ensureStorageBucket('website_assets');
       
-      if (checkError) {
-        console.error('Error checking buckets:', checkError);
-        throw new Error('Unable to access storage. Please check your Supabase configuration.');
-      }
-      
-      const bucketExists = buckets.some(bucket => bucket.name === 'website_assets');
-      
-      if (!bucketExists) {
-        // Create the bucket if it doesn't exist
-        const { error: createError } = await supabase.storage.createBucket('website_assets', {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-        });
-        
-        if (createError) {
-          console.error('Error creating bucket:', createError);
-          throw new Error('Failed to create storage bucket');
-        }
+      if (!storageReady) {
+        throw new Error('Storage bucket not available. Please contact your administrator.');
       }
       
       const fileExt = file.name.split('.').pop();

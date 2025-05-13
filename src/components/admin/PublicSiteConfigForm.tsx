@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
 import { Button } from '@/components/ui/button';
@@ -8,20 +7,32 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { Trash2, Plus, Upload, Image, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Upload, Image, Loader2, AlertCircle } from 'lucide-react';
 import { ensureStorageBucket } from '@/integrations/supabase/storage';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const PublicSiteConfigForm: React.FC = () => {
   const { config, updateConfig, resetConfig, uploadLogo } = usePublicSiteConfig();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
+  const [storageError, setStorageError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if storage bucket is ready on component mount
     async function checkStorage() {
-      const ready = await ensureStorageBucket('website_assets');
-      setStorageReady(ready);
+      try {
+        const ready = await ensureStorageBucket('website_assets');
+        setStorageReady(ready);
+        if (!ready) {
+          setStorageError('Storage bucket not available. Please ensure the website_assets bucket exists in Supabase.');
+        } else {
+          setStorageError(null);
+        }
+      } catch (error) {
+        console.error('Error checking storage:', error);
+        setStorageError('Failed to check storage status. Please check your Supabase configuration.');
+      }
     }
     
     checkStorage();
@@ -61,9 +72,11 @@ export const PublicSiteConfigForm: React.FC = () => {
 
     try {
       setUploading(true);
+      setStorageError(null);
       await uploadLogo(file);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
+      setStorageError(error.message || 'An unknown error occurred');
       // Error is already handled in uploadLogo function
     } finally {
       setUploading(false);
@@ -144,6 +157,15 @@ export const PublicSiteConfigForm: React.FC = () => {
                 </div>
               </div>
               
+              {storageError && (
+                <Alert variant="destructive" className="py-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    {storageError}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <div className="flex gap-2">
                 <Button 
                   type="button" 
@@ -187,11 +209,6 @@ export const PublicSiteConfigForm: React.FC = () => {
                   </Button>
                 )}
               </div>
-              {!storageReady && (
-                <p className="text-sm text-amber-500">
-                  Storage not ready. Please check your Supabase configuration.
-                </p>
-              )}
             </div>
           </div>
           <div className="space-y-2 md:col-span-2">
