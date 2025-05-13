@@ -17,21 +17,26 @@ export const PublicSiteConfigForm: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [checkingStorage, setCheckingStorage] = useState(true);
 
   useEffect(() => {
     // Check if storage bucket is ready on component mount
     async function checkStorage() {
+      setCheckingStorage(true);
       try {
         const ready = await ensureStorageBucket('website_assets');
         setStorageReady(ready);
         if (!ready) {
-          setStorageError('Storage bucket not available. Please ensure the website_assets bucket exists in Supabase.');
+          setStorageError('Storage bucket not available. Please ensure the website_assets bucket exists in Supabase and has proper public access permissions.');
         } else {
           setStorageError(null);
         }
       } catch (error) {
         console.error('Error checking storage:', error);
         setStorageError('Failed to check storage status. Please check your Supabase configuration.');
+        setStorageReady(false);
+      } finally {
+        setCheckingStorage(false);
       }
     }
     
@@ -157,6 +162,13 @@ export const PublicSiteConfigForm: React.FC = () => {
                 </div>
               </div>
               
+              {checkingStorage && (
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Checking storage access...</span>
+                </div>
+              )}
+              
               {storageError && (
                 <Alert variant="destructive" className="py-2">
                   <AlertCircle className="h-4 w-4" />
@@ -171,7 +183,7 @@ export const PublicSiteConfigForm: React.FC = () => {
                   type="button" 
                   variant="outline" 
                   size="sm" 
-                  disabled={uploading || !storageReady}
+                  disabled={uploading || !storageReady || checkingStorage}
                   className="relative"
                   asChild
                 >
@@ -192,7 +204,7 @@ export const PublicSiteConfigForm: React.FC = () => {
                       className="sr-only"
                       accept="image/*"
                       onChange={handleLogoUpload}
-                      disabled={uploading || !storageReady}
+                      disabled={uploading || !storageReady || checkingStorage}
                     />
                   </label>
                 </Button>

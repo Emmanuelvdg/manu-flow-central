@@ -1,8 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
-import { ensureStorageBucket } from '@/integrations/supabase/storage';
+import { ensureStorageBucket, uploadToStorage } from '@/integrations/supabase/storage';
 
 export interface SocialMediaLink {
   platform: string;
@@ -128,43 +127,25 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
 
   const uploadLogo = async (file: File) => {
     try {
-      // Check if website_assets bucket exists
-      const storageReady = await ensureStorageBucket('website_assets');
+      const BUCKET_NAME = 'website_assets';
+      
+      // Check if storage bucket is available
+      const storageReady = await ensureStorageBucket(BUCKET_NAME);
       
       if (!storageReady) {
-        throw new Error('Storage bucket not available. Please ensure the website_assets bucket exists in Supabase.');
+        throw new Error(`Storage bucket ${BUCKET_NAME} not available. Please ensure the ${BUCKET_NAME} bucket exists in Supabase and has proper public access.`);
       }
       
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
       
-      // Upload the file
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('website_assets')
-        .upload(filePath, file);
-      
-      if (uploadError) {
-        console.error('Error uploading logo:', uploadError);
-        throw new Error(uploadError.message || 'Failed to upload logo');
-      }
-      
-      if (!uploadData) {
-        throw new Error('No upload data returned');
-      }
-      
-      // Get public URL
-      const { data } = supabase.storage
-        .from('website_assets')
-        .getPublicUrl(filePath);
-        
-      if (!data || !data.publicUrl) {
-        throw new Error('Failed to get public URL for uploaded logo');
-      }
+      // Use our improved upload function
+      const publicUrl = await uploadToStorage(BUCKET_NAME, filePath, file);
       
       updateConfig({
         logo: {
-          path: data.publicUrl,
+          path: publicUrl,
           filename: file.name
         }
       });
