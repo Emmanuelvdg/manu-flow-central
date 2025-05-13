@@ -1,8 +1,10 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash, Pencil } from "lucide-react";
+import { Plus, Minus, Trash, Pencil, Upload } from "lucide-react";
+import { BulkUploadDialog } from "@/components/resources/BulkUploadDialog";
 import type { RecipeMaterialsSectionProps } from "./form/RecipeFormTypes";
 
 interface MaterialOption {
@@ -31,6 +33,21 @@ export function RecipeMaterialsSection({
   handleDeleteMaterial,
   disabled = false
 }: RecipeMaterialsSectionProps) {
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+
+  const handleBulkMaterialUpload = (uploadedMaterials: any[]) => {
+    // Map uploaded materials to the format needed by the recipe
+    const newMaterials = uploadedMaterials.map(mat => ({
+      id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: mat.name,
+      quantity: mat.quantity || 1,
+      unit: mat.unit
+    }));
+    
+    // Add the new materials to the existing ones
+    setMaterials([...materials, ...newMaterials]);
+  };
+
   return (
     <div>
       <button
@@ -133,18 +150,41 @@ export function RecipeMaterialsSection({
             </div>
           )}
           {!editingMaterial && (
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              className="text-xs mt-1"
-              onClick={handleAddMaterial}
-              disabled={disabled}
-            >
-              <Plus className="w-3 h-3 mr-1" /> Add Material
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                className="text-xs mt-1"
+                onClick={handleAddMaterial}
+                disabled={disabled}
+              >
+                <Plus className="w-3 h-3 mr-1" /> Add Material
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                className="text-xs mt-1"
+                onClick={() => setIsBulkUploadOpen(true)}
+                disabled={disabled}
+              >
+                <Upload className="w-3 h-3 mr-1" /> Bulk Import
+              </Button>
+            </div>
           )}
         </div>
+      )}
+      
+      {isBulkUploadOpen && (
+        <BulkUploadDialog
+          open={isBulkUploadOpen}
+          onClose={() => setIsBulkUploadOpen(false)}
+          onUploadComplete={handleBulkMaterialUpload}
+          templateType="recipe-materials"
+          existingMaterials={[]}
+        />
       )}
     </div>
   );
