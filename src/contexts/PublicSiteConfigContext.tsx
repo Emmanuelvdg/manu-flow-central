@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -131,7 +132,7 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
       const storageReady = await ensureStorageBucket('website_assets');
       
       if (!storageReady) {
-        throw new Error('Storage bucket not available. Please contact your administrator.');
+        throw new Error('Storage bucket not available. Please ensure the website_assets bucket exists in Supabase.');
       }
       
       const fileExt = file.name.split('.').pop();
@@ -139,13 +140,17 @@ export const PublicSiteConfigProvider: React.FC<{ children: React.ReactNode }> =
       const filePath = `logos/${fileName}`;
       
       // Upload the file
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('website_assets')
         .upload(filePath, file);
       
       if (uploadError) {
         console.error('Error uploading logo:', uploadError);
-        throw new Error('Failed to upload logo');
+        throw new Error(uploadError.message || 'Failed to upload logo');
+      }
+      
+      if (!uploadData) {
+        throw new Error('No upload data returned');
       }
       
       // Get public URL

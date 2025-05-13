@@ -11,6 +11,12 @@ export async function ensureStorageBucket(bucketName: string) {
       return false;
     }
     
+    // Check if buckets is null or undefined
+    if (!buckets) {
+      console.error('No buckets data returned');
+      return false;
+    }
+    
     const bucketExists = buckets.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
