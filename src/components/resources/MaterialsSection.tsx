@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -167,7 +168,8 @@ export const MaterialsSection = () => {
         
         // Create a batch if stock is provided
         if (material.stock && material.stock > 0) {
-          const newBatch: Partial<MaterialBatch> = {
+          // Fix: Convert from camelCase to snake_case for database
+          const newBatch = {
             material_id: material.id,
             batch_number: `BULK-${Date.now().toString().slice(-6)}`,
             initial_stock: material.stock,
