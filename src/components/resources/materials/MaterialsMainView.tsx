@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { MaterialsHeader } from "../MaterialsHeader";
 import { MaterialsTable } from "../MaterialsTable";
@@ -55,14 +55,14 @@ export const MaterialsMainView = () => {
               onBulkUpload={handleBulkUpload}
               existingMaterials={materials}
             />
-            <Card.Content>
+            <CardContent>
               <MaterialsTable
                 materials={materials}
                 onEditMaterial={handleEditMaterial}
                 onCreateOrder={handleCreateOrder}
                 formatCurrency={formatCurrency}
               />
-            </Card.Content>
+            </CardContent>
           </Card>
 
           <PurchaseOrdersSection 
