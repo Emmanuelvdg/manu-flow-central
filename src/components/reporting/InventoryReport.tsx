@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,8 +105,18 @@ export const InventoryReport: React.FC<InventoryReportProps> = ({ dateRange }) =
         const materialAllocations = allocations?.filter(alloc => alloc.material_id === material.id) || [];
         const totalAllocated = materialAllocations.reduce((sum, alloc) => sum + (alloc.quantity || 0), 0);
         
+        // Transform to match our MaterialWithValues interface
         return {
-          ...material,
+          id: material.id,
+          name: material.name,
+          category: material.category || "",
+          unit: material.unit,
+          status: material.status || "Active",
+          vendor: material.vendor || "",
+          stock: totalStock, // Map totalStock to stock to match the interface
+          costPerUnit: avgCost, // Map avgCost to costPerUnit to match the interface
+          batches: material.batches || [],
+          // Additional calculated values
           totalStock,
           avgCost,
           inventoryValue,
