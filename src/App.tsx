@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/NotFound";
 import Resource from "@/pages/Resource";
 import OrderDetail from "@/pages/OrderDetail";
+import Orders from "@/pages/Orders"; // Added import for Orders page
 import QuoteDetail from "@/pages/QuoteDetail";
 import PublicSiteConfig from "@/pages/PublicSiteConfig";
 import RFQDetail from "@/pages/RFQDetail";
@@ -43,6 +44,7 @@ function App() {
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resources" element={<Resource />} />
+          <Route path="/orders" element={<Orders />} /> {/* Added Orders route */}
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/orders/quote-order-mapping" element={<OrderDetail />} />
           <Route path="/quotes" element={<Quotes />} />
@@ -54,6 +56,7 @@ function App() {
           <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/site-config" element={<PublicSiteConfig />} />
           <Route path="/users" element={<UserManagement />} />
+          <Route path="/user-management" element={<UserManagement />} /> {/* Added user-management route */}
           <Route path="/recipe/:id" element={<Recipe />} />
           <Route path="/recipe/create" element={<RecipeCreate />} />
           <Route path="/recipes" element={<RecipesDashboard />} />

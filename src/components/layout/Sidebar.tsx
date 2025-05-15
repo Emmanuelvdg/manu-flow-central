@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Package2Icon,
@@ -194,7 +193,7 @@ export const Sidebar = () => {
             <SidebarItem 
               icon={<Cog className="h-5 w-5" />} 
               label="Public Site Config" 
-              to="/public-site-config" 
+              to="/site-config" 
               expanded={expanded} 
             />
           </SidebarCategory>
