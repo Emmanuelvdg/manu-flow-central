@@ -1,35 +1,47 @@
 
-// Format currency helper
-export const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
-  }).format(amount);
-};
-
 // Calculate total material items
-export const calculateTotalMaterialItems = (materials: any[]) => {
+export const calculateTotalMaterialItems = (materials: any[] = []): number => {
   return materials.length;
 };
 
 // Calculate total stages
-export const calculateTotalStages = (routingStages: any[]) => {
-  return routingStages.length;
+export const calculateTotalStages = (stages: any[] = []): number => {
+  return stages.length;
 };
 
-// Calculate total personnel hours
-export const calculateTotalPersonnelHours = (routingStages: any[]) => {
-  return routingStages.reduce(
-    (sum, stage) => sum + (stage.personnel || []).reduce((s, p) => s + (p.hours || 0), 0),
-    0
-  );
+// Calculate total personnel hours across all stages
+export const calculateTotalPersonnelHours = (stages: any[] = []): number => {
+  return stages.reduce((total, stage) => {
+    const personnelHours = (stage.personnel || []).reduce(
+      (hours: number, person: any) => hours + (Number(person.hours) || 0), 
+      0
+    );
+    return total + personnelHours;
+  }, 0);
 };
 
-// Calculate total machine hours
-export const calculateTotalMachineHours = (routingStages: any[]) => {
-  return routingStages.reduce(
-    (sum, stage) => sum + (stage.machines || []).reduce((s, m) => s + (m.hours || 0), 0),
-    0
-  );
+// Calculate total machine hours across all stages
+export const calculateTotalMachineHours = (stages: any[] = []): number => {
+  return stages.reduce((total, stage) => {
+    const machineHours = (stage.machines || []).reduce(
+      (hours: number, machine: any) => hours + (Number(machine.hours) || 0), 
+      0
+    );
+    return total + machineHours;
+  }, 0);
+};
+
+// Format currency to USD
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+};
+
+// Calculate material cost
+export const calculateMaterialCost = (quantity: number, costPerUnit: number): number => {
+  return quantity * costPerUnit;
 };

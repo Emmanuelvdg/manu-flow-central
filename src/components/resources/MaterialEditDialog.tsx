@@ -10,7 +10,7 @@ interface MaterialEditDialogProps {
   material: Material;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedMaterial: Material) => void;
+  onSave: (updatedMaterial: Material) => Promise<void>;
 }
 
 export function MaterialEditDialog({ 

@@ -9,7 +9,7 @@ import MachineRow from "./MachineRow";
 import TotalCostRow from "./TotalCostRow";
 import RecipeStats from "./RecipeStats";
 import StageGroupRows from "./StageGroupRows";
-import { RecipeFilters } from "./RecipeTableFilters";
+import RecipeTableFilters, { RecipeFilters } from "./RecipeTableFilters";
 
 // Define interface for the component props
 interface RecipeFullTableProps {
@@ -22,17 +22,6 @@ interface RecipeFullTableProps {
   };
 }
 
-interface RecipeStatsProps {
-  recipe?: any;
-  quantity: number;
-  showStats: boolean;
-  setShowStats: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-interface TotalCostRowProps {
-  cost: number;
-}
-
 export default function RecipeFullTable({ 
   recipe, 
   materials, 
@@ -41,7 +30,10 @@ export default function RecipeFullTable({
 }: RecipeFullTableProps) {
   const [quantity, setQuantity] = useState(1);
   const [showStats, setShowStats] = useState(false);
-  const [filterStage, setFilterStage] = useState(null);
+  const [filterState, setFilterState] = useState<RecipeFilters>({
+    materialNameFilter: "",
+    minCostThreshold: 0
+  });
   const [totalCost, setTotalCost] = useState(0);
   
   // Process the input props or use recipe object
@@ -79,15 +71,20 @@ export default function RecipeFullTable({
     );
   }
 
-  const handleQuantityChange = (e) => {
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10) || 1;
     setQuantity(value > 0 ? value : 1);
   };
   
   // Get unique stages for filtering
   const stages = recipeStages 
-    ? [...new Set(recipeStages.map(stage => stage.stage_name || stage.name))]
+    ? [...new Set(recipeStages.map((stage: any) => stage.stage_name || stage.name))]
     : [];
+
+  // Handle filter changes
+  const handleFilterChange = (filters: RecipeFilters) => {
+    setFilterState(filters);
+  };
 
   return (
     <Card>
@@ -112,18 +109,19 @@ export default function RecipeFullTable({
               />
             </div>
             <RecipeStats 
-              recipe={recipe} 
-              quantity={quantity} 
+              materials={recipeMaterials}
+              routingStages={recipeStages}
+              totalCost={totalCost}
               showStats={showStats}
               setShowStats={setShowStats}
             />
           </div>
         </div>
         
-        <RecipeFilters 
-          stages={stages} 
-          filterStage={filterStage} 
-          setFilterStage={setFilterStage} 
+        {/* Filter controls */}
+        <RecipeTableFilters 
+          onFilterChange={handleFilterChange}
+          maxPossibleCost={100} // You might want to calculate this based on actual data
         />
       </CardHeader>
       
@@ -147,12 +145,13 @@ export default function RecipeFullTable({
                 <MaterialsTableRows 
                   materials={recipeMaterials} 
                   materialCosts={recipeCosts.individualCosts || []}
+                  filters={filterState}
                 />
               )}
               
               {/* Routing Stages Section */}
               {recipeStages && recipeStages.length > 0 && (
-                recipeStages.map((stage) => (
+                recipeStages.map((stage: any) => (
                   <StageGroupRows 
                     key={stage.id || stage.stage_id}
                     stage={stage}
@@ -161,7 +160,7 @@ export default function RecipeFullTable({
               )}
               
               {/* Total Cost */}
-              <TotalCostRow cost={totalCost} />
+              <TotalCostRow totalCost={totalCost} />
             </TableBody>
           </Table>
         </div>

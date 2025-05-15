@@ -14,12 +14,16 @@ interface RecipeStatsProps {
   materials: Material[];
   routingStages: RoutingStage[];
   totalCost: number;
+  showStats: boolean;
+  setShowStats: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const RecipeStats: React.FC<RecipeStatsProps> = ({
   materials,
   routingStages,
-  totalCost
+  totalCost,
+  showStats,
+  setShowStats
 }) => {
   // Calculate totals
   const totalMaterialItems = calculateTotalMaterialItems(materials);

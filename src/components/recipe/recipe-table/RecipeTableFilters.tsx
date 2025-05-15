@@ -6,14 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Search, FilterX } from "lucide-react";
 
-interface RecipeTableFiltersProps {
-  onFilterChange: (filters: RecipeFilters) => void;
-  maxPossibleCost: number;
-}
-
 export interface RecipeFilters {
   materialNameFilter: string;
   minCostThreshold: number;
+}
+
+interface RecipeTableFiltersProps {
+  onFilterChange: (filters: RecipeFilters) => void;
+  maxPossibleCost: number;
 }
 
 const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({ 

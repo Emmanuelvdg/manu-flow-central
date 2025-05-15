@@ -1,9 +1,15 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Edit } from "lucide-react";
 import RequirementsSection from "./RequirementsSection";
 import RecipeFullTable from "./RecipeFullTable";
+
+// Helper function to calculate material cost
+const calculateMaterialCost = (quantity: number, costPerUnit: number): number => {
+  return quantity * costPerUnit;
+};
 
 interface RecipeDetailsProps {
   recipe: any;
@@ -40,8 +46,8 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
     ? {
         individualCosts: materials.map((m: any) => ({
           ...m,
-          cost: 0, // We don't have individual costs in the saved recipe
-          costPerUnit: 0
+          cost: calculateMaterialCost(m.quantity, m.costPerUnit || 0),
+          costPerUnit: m.costPerUnit || 0
         })),
         totalCost: recipe.totalCost
       }
@@ -80,15 +86,15 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
         />
         <RecipeFullTable 
           recipe={recipe}
-          materials={recipe?.materials}
-          routingStages={recipe?.routing_stages}
+          materials={materials}
+          routingStages={routingStages}
           materialCosts={{
-            individualCosts: recipe?.materials?.map((m) => ({
+            individualCosts: materials.map((m: any) => ({
               ...m,
-              cost: calculateMaterialCost(m.quantity, m.costPerUnit),
-              costPerUnit: m.costPerUnit
+              cost: calculateMaterialCost(m.quantity, m.costPerUnit || 0),
+              costPerUnit: m.costPerUnit || 0
             })),
-            totalCost: recipe?.totalCost
+            totalCost: recipe.totalCost || 0
           }}
         />
       </CardContent>

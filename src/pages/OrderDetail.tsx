@@ -11,6 +11,7 @@ import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatc
 import { checkMaterialAvailability, allocateOrderMaterials, updateOrderMaterialStatus } from "@/services/materialReservationService";
 import { MaterialStatusSection } from "./order-detail/components/MaterialStatusSection";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +26,7 @@ export const OrderDetail = () => {
   } = useOrderDetail(id);
   
   const { 
-    data: products = [], 
+    data: orderProducts = [], 
     isLoading: productsLoading, 
     refetch: refetchProducts
   } = useOrderProducts(id);
@@ -35,7 +36,7 @@ export const OrderDetail = () => {
   
   // Map material batches by material ID for faster lookup
   const materialBatchesMap = React.useMemo(() => {
-    return batches.reduce((acc, batch) => {
+    return batches.reduce((acc: any, batch) => {
       if (!acc[batch.materialId]) {
         acc[batch.materialId] = [];
       }
@@ -72,12 +73,12 @@ export const OrderDetail = () => {
   };
 
   const handleCheckMaterials = useCallback(async () => {
-    if (!id || products.length === 0) return;
+    if (!id || orderProducts.length === 0) return;
     setChecking(true);
 
     try {
       const productsWithMaterials = await Promise.all(
-        products.map(async (product) => {
+        orderProducts.map(async (product) => {
           const materials = await getProductMaterials(product.id);
           return { ...product, materials };
         })
@@ -105,7 +106,7 @@ export const OrderDetail = () => {
     } finally {
       setChecking(false);
     }
-  }, [id, products, materialBatchesMap, refetchOrder]);
+  }, [id, orderProducts, materialBatchesMap, refetchOrder]);
 
   const handleAllocateMaterials = useCallback(async () => {
     if (!id || order?.parts_status !== 'booked') return;
@@ -140,12 +141,12 @@ export const OrderDetail = () => {
   }, [id, order, refetchOrder]);
 
   useEffect(() => {
-    if (!orderLoading && products.length > 0 && !order?.parts_status) {
+    if (!orderLoading && orderProducts.length > 0 && !order?.parts_status) {
       handleCheckMaterials();
     }
-  }, [orderLoading, products.length, order?.parts_status, handleCheckMaterials]);
+  }, [orderLoading, orderProducts.length, order?.parts_status, handleCheckMaterials]);
 
-  const getStatusBadgeColor = (status) => {
+  const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'booked':
         return 'bg-green-100 text-green-800 border-green-200';
@@ -173,10 +174,9 @@ export const OrderDetail = () => {
         <>
           <OrderDetailHeader 
             orderId={order.id}
-            orderNumber={order.order_number}
-            orderStatus={order.status}
             orderDate={order.order_date}
             customerName={order.customer_name}
+            status={order.status}
             MaterialStatusSection={
               <MaterialStatusSection
                 orderPartsStatus={order.parts_status || 'not booked'}
@@ -195,7 +195,7 @@ export const OrderDetail = () => {
             isLoading={orderLoading}
             error={orderError}
             productsLoading={productsLoading}
-            orderProducts={products}
+            orderProducts={orderProducts}
             refetch={handleRefetch}
             syncOrderProducts={async () => {
               if (order?.products) {

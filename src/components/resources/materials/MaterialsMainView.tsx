@@ -74,18 +74,18 @@ export const MaterialsMainView: React.FC = () => {
 
       {isEditDialogOpen && selectedMaterial && (
         <MaterialEditDialog
-          open={isEditDialogOpen}
-          onClose={onCloseEditDialog}
           material={selectedMaterial}
+          isOpen={isEditDialogOpen}
+          onClose={onCloseEditDialog}
           onSave={handleSaveMaterial}
         />
       )}
 
       {isPurchaseDialogOpen && selectedMaterial && (
         <PurchaseOrderDialog
-          open={isPurchaseDialogOpen}
-          onClose={onClosePurchaseDialog}
           material={selectedMaterial}
+          isOpen={isPurchaseDialogOpen}
+          onClose={onClosePurchaseDialog}
           onProcessOrder={handleProcessPurchaseOrder}
           formatDate={formatDate}
         />

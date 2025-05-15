@@ -1,156 +1,203 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Material, PurchaseOrder, MaterialBatch } from "@/types/material";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 
-interface PurchaseOrderDialogProps {
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Material } from "@/types/material";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+interface PurchaseOrderProps {
   material: Material;
   isOpen: boolean;
   onClose: () => void;
-  onCreateOrder: (order: PurchaseOrder, newBatch: MaterialBatch) => void;
+  onProcessOrder: (order: any, newBatch: any) => Promise<void>;
+  formatDate: (dateString: string) => string;
 }
 
-export function PurchaseOrderDialog({ 
-  material, 
-  isOpen, 
-  onClose, 
-  onCreateOrder 
-}: PurchaseOrderDialogProps) {
-  const { toast } = useToast();
-  const [quantity, setQuantity] = useState<number>(1);
-  const [expectedDelivery, setExpectedDelivery] = useState<string>("");
-  const [costPerUnit, setCostPerUnit] = useState<number>(material.costPerUnit || 0);
-  const [batchStatus, setBatchStatus] = useState<MaterialBatch['status']>('requested');
-  
-  const calculateTotalCost = (): number => {
-    return quantity * costPerUnit;
+export function PurchaseOrderDialog({
+  material,
+  isOpen,
+  onClose,
+  onProcessOrder,
+  formatDate,
+}: PurchaseOrderProps) {
+  // State for quantity, date, and price
+  const [quantity, setQuantity] = useState<number>(100);
+  const [price, setPrice] = useState<number>(material.costPerUnit || 0);
+  const [orderDate, setOrderDate] = useState<Date>(new Date());
+  const [deliveryDate, setDeliveryDate] = useState<Date>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 7 days from now
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle quantity change
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuantity(Number(e.target.value));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const newOrder: PurchaseOrder = {
-      id: `PO-${Date.now().toString().slice(-6)}`,
-      materialId: material.id,
-      quantity: quantity,
-      status: 'Pending',
-      orderDate: new Date().toISOString().split('T')[0],
-      expectedDelivery: expectedDelivery,
-      vendor: material.vendor,
-      totalCost: calculateTotalCost()
-    };
-    
-    const newBatch: MaterialBatch = {
-      id: `batch-${Date.now()}`,
-      materialId: material.id,
-      batchNumber: `B${Date.now().toString().slice(-6)}`,
-      initialStock: quantity,
-      remainingStock: quantity,
-      costPerUnit: costPerUnit,
-      purchaseDate: newOrder.orderDate,
-      deliveredDate: expectedDelivery,
-      status: batchStatus
-    };
+  // Handle price change
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPrice(Number(e.target.value));
+  };
 
-    onCreateOrder(newOrder, newBatch);
-    
-    toast({
-      title: "Purchase Order Created",
-      description: `Order ${newOrder.id} for ${material.name} has been created with a new batch.`,
-    });
-    
-    onClose();
+  // Format date for display
+  const formatDateDisplay = (date: Date) => {
+    return format(date, "PPP");
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Create the purchase order
+      const order = {
+        materialId: material.id,
+        quantity,
+        unitPrice: price,
+        totalCost: quantity * price,
+        orderDate: orderDate.toISOString(),
+        deliveryDate: deliveryDate.toISOString()
+      };
+
+      // Create the new batch
+      const newBatch = {
+        materialId: material.id,
+        batchNumber: `B${Date.now().toString().slice(-6)}`,
+        initialStock: quantity,
+        remainingStock: quantity,
+        costPerUnit: price,
+        purchaseDate: orderDate.toISOString(),
+        status: "ordered"
+      };
+
+      // Process the order
+      await onProcessOrder(order, newBatch);
+      onClose();
+    } catch (error) {
+      console.error("Error processing purchase order:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create Purchase Order</DialogTitle>
+          <DialogTitle>Create Purchase Order for {material.name}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Material</Label>
-              <div className="col-span-3 font-medium">{material.name}</div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Vendor</Label>
-              <div className="col-span-3">{material.vendor}</div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="quantity" className="text-right">Quantity</Label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="quantity">Quantity</Label>
               <Input
                 id="quantity"
                 type="number"
                 min="1"
                 value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                className="col-span-3"
+                onChange={handleQuantityChange}
+                required
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                In {material.unit}
+              </p>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="cost" className="text-right">Cost Per Unit</Label>
-              <Input
-                id="cost"
-                type="number"
-                step="0.01"
-                value={costPerUnit}
-                onChange={(e) => setCostPerUnit(parseFloat(e.target.value) || 0)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="totalCost" className="text-right">Total Cost</Label>
-              <Input
-                id="totalCost"
-                value={calculateTotalCost().toFixed(2)}
-                readOnly
-                className="col-span-3 bg-gray-50"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="expectedDelivery" className="text-right">Expected Delivery</Label>
-              <Input
-                id="expectedDelivery"
-                type="date"
-                value={expectedDelivery}
-                onChange={(e) => setExpectedDelivery(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="batchStatus" className="text-right">Batch Status</Label>
-              <Select 
-                value={batchStatus} 
-                onValueChange={(value: MaterialBatch['status']) => setBatchStatus(value)}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select batch status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="requested">Requested</SelectItem>
-                  <SelectItem value="expected">Expected</SelectItem>
-                  <SelectItem value="delayed">Delayed</SelectItem>
-                  <SelectItem value="received">Received</SelectItem>
-                </SelectContent>
-              </Select>
+            <div>
+              <Label htmlFor="price">Unit Price</Label>
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  $
+                </span>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  className="pl-6"
+                  value={price}
+                  onChange={handlePriceChange}
+                  required
+                />
+              </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Create Order</Button>
-          </DialogFooter>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Order Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !orderDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {orderDate ? formatDateDisplay(orderDate) : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={orderDate}
+                    onSelect={(date) => date && setOrderDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label>Expected Delivery</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !deliveryDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {deliveryDate ? formatDateDisplay(deliveryDate) : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={deliveryDate}
+                    onSelect={(date) => date && setDeliveryDate(date)}
+                    initialFocus
+                    disabled={(date) => date < new Date()}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-gray-200">
+            <div className="flex justify-between text-sm mb-2">
+              <span>Total Cost:</span>
+              <span className="font-semibold">
+                ${(price * quantity).toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Processing..." : "Create Purchase Order"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
