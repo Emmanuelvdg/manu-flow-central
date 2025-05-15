@@ -6,10 +6,11 @@ import type { Personnel } from "./types";
 
 interface PersonnelRowProps {
   personnel: Personnel;
-  stageName: string;
+  quantity: number;
+  stageName?: string;
 }
 
-const PersonnelRow: React.FC<PersonnelRowProps> = ({ personnel, stageName }) => {
+const PersonnelRow: React.FC<PersonnelRowProps> = ({ personnel, quantity, stageName = "" }) => {
   return (
     <TableRow className="bg-green-50 hover:bg-green-100 transition-colors">
       <TableCell className="text-green-800 pl-6">

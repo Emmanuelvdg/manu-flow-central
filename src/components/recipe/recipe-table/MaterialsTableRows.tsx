@@ -4,17 +4,21 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { formatCurrency } from "./utils";
 import { Package2 } from "lucide-react";
 import type { Material, MaterialCost } from "./types";
-import { RecipeFilters } from "./RecipeTableFilters";
 
 interface MaterialsTableRowsProps {
   materials: Material[];
   materialCosts: MaterialCost[];
-  filters?: RecipeFilters;
+  quantity: number;
+  filters?: {
+    materialNameFilter: string;
+    minCostThreshold: number;
+  };
 }
 
 const MaterialsTableRows: React.FC<MaterialsTableRowsProps> = ({
   materials,
   materialCosts = [],
+  quantity = 1,
   filters = { materialNameFilter: "", minCostThreshold: 0 }
 }) => {
   const filteredMaterials = materials.filter(material => {

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import RoutingStageRow from "./RoutingStageRow";
@@ -13,10 +12,25 @@ import {
 import type { RoutingStage } from "./types";
 
 interface StageGroupRowsProps {
+  routingStages: RoutingStage[];
+  quantity: number;
+}
+
+export const StageGroupRows: React.FC<StageGroupRowsProps> = ({ routingStages, quantity }) => {
+  return (
+    <>
+      {routingStages.map(stage => (
+        <StageGroup key={stage.id} stage={stage} />
+      ))}
+    </>
+  );
+};
+
+interface StageGroupProps {
   stage: RoutingStage;
 }
 
-const StageGroupRows: React.FC<StageGroupRowsProps> = ({ stage }) => {
+const StageGroup: React.FC<StageGroupProps> = ({ stage }) => {
   const [expanded, setExpanded] = useState(true);
   
   // Check if stage has any machines or personnel

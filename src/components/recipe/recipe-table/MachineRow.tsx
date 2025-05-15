@@ -6,10 +6,11 @@ import type { Machine } from "./types";
 
 interface MachineRowProps {
   machine: Machine;
-  stageName: string;
+  quantity: number;
+  stageName?: string;
 }
 
-const MachineRow: React.FC<MachineRowProps> = ({ machine, stageName }) => {
+const MachineRow: React.FC<MachineRowProps> = ({ machine, quantity, stageName = "" }) => {
   return (
     <TableRow className="bg-blue-50 hover:bg-blue-100 transition-colors">
       <TableCell className="text-blue-800 pl-6">

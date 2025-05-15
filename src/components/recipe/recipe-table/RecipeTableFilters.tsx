@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { CircleStack, Users2, Cog } from 'lucide-react';
+import { Package2, Users2, Cog } from 'lucide-react';
 import { RecipeTableFiltersProps } from './types';
 
 const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({
@@ -29,17 +29,17 @@ const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({
           <ToggleGroupItem
             value="materials"
             aria-label="Toggle materials"
-            pressed={showMaterials}
+            data-state={showMaterials ? "on" : "off"}
             onClick={() => handleFilterToggle('showMaterials', !showMaterials)}
           >
-            <CircleStack className="h-4 w-4 mr-1" />
+            <Package2 className="h-4 w-4 mr-1" />
             Materials
           </ToggleGroupItem>
           
           <ToggleGroupItem
             value="personnel"
             aria-label="Toggle personnel"
-            pressed={showPersonnel}
+            data-state={showPersonnel ? "on" : "off"}
             onClick={() => handleFilterToggle('showPersonnel', !showPersonnel)}
           >
             <Users2 className="h-4 w-4 mr-1" />
@@ -49,7 +49,7 @@ const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({
           <ToggleGroupItem
             value="machines"
             aria-label="Toggle machines"
-            pressed={showMachines}
+            data-state={showMachines ? "on" : "off"}
             onClick={() => handleFilterToggle('showMachines', !showMachines)}
           >
             <Cog className="h-4 w-4 mr-1" />

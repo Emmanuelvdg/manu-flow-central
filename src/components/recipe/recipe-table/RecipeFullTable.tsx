@@ -8,9 +8,9 @@ import {
   TableBody
 } from "@/components/ui/table";
 import MaterialsTableRows from "./MaterialsTableRows";
-import { PersonnelRow } from "./PersonnelRow";
-import { MachineRow } from "./MachineRow";
-import { StageGroupRows } from "./StageGroupRows";
+import PersonnelRow from "./PersonnelRow";
+import MachineRow from "./MachineRow";
+import StageGroupRows from "./StageGroupRows";
 import { RecipeStats } from "./RecipeStats";
 import { TotalCostRow } from "./TotalCostRow";
 import RecipeTableFilters from "./RecipeTableFilters";
@@ -103,9 +103,11 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[250px]">Description</TableHead>
-            <TableHead>Details</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Stage</TableHead>
+            <TableHead>Name</TableHead>
             <TableHead className="text-right">Quantity</TableHead>
+            <TableHead>Unit</TableHead>
             <TableHead className="text-right">Unit Cost</TableHead>
             <TableHead className="text-right">Total</TableHead>
           </TableRow>
@@ -120,23 +122,29 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
           )}
           
           {filters.showPersonnel && routingStages && routingStages.length > 0 && 
-            routingStages.flatMap(stage => stage.personnel || []).map(personnel => (
-              <PersonnelRow 
-                key={personnel.id || personnel.personnel_id} 
-                personnel={personnel} 
-                quantity={quantity} 
-              />
-            ))
+            routingStages.flatMap(stage => 
+              (stage.personnel || []).map(personnel => (
+                <PersonnelRow 
+                  key={personnel.id || personnel.personnel_id} 
+                  personnel={personnel} 
+                  quantity={quantity}
+                  stageName={stage.stage_name}
+                />
+              ))
+            )
           }
           
           {filters.showMachines && routingStages && routingStages.length > 0 && 
-            routingStages.flatMap(stage => stage.machines || []).map(machine => (
-              <MachineRow 
-                key={machine.id || machine.machine_id} 
-                machine={machine} 
-                quantity={quantity} 
-              />
-            ))
+            routingStages.flatMap(stage => 
+              (stage.machines || []).map(machine => (
+                <MachineRow 
+                  key={machine.id || machine.machine_id} 
+                  machine={machine} 
+                  quantity={quantity}
+                  stageName={stage.stage_name}
+                />
+              ))
+            )
           }
           
           {routingStages && routingStages.length > 0 && filters.showMachines && filters.showPersonnel && (
