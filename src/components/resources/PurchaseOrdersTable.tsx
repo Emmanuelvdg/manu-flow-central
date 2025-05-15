@@ -2,6 +2,7 @@
 import React from "react";
 import { DataTable, Column, ColumnCellProps } from "@/components/ui/DataTable";
 import { PurchaseOrder, Material } from "@/types/material";
+import { Badge } from "@/components/ui/badge";
 
 interface PurchaseOrdersTableProps {
   purchaseOrders: PurchaseOrder[];
@@ -47,26 +48,43 @@ export const PurchaseOrdersTable: React.FC<PurchaseOrdersTableProps> = ({
       cell: (props: ColumnCellProps<PurchaseOrder>) => formatDate(props.getValue()),
     },
     {
+      header: "Total Cost",
+      accessorKey: "totalCost",
+      cell: (props: ColumnCellProps<PurchaseOrder>) => {
+        const cost = props.getValue();
+        return cost ? `$${Number(cost).toFixed(2)}` : '-';
+      }
+    },
+    {
       header: "Status",
       accessorKey: "status",
       cell: (props: ColumnCellProps<PurchaseOrder>) => {
         const status = props.getValue() as string;
         return (
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
-              status === "delivered"
-                ? "bg-green-100 text-green-800"
-                : status === "ordered"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-yellow-100 text-yellow-800"
-            }`}
+          <Badge
+            className={`
+              ${status === "delivered" ? "bg-green-100 text-green-800 hover:bg-green-200" : 
+                status === "ordered" ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : 
+                status === "requested" ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200" :
+                "bg-gray-100 text-gray-800 hover:bg-gray-200"}
+            `}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
+          </Badge>
         );
       },
     },
   ];
 
-  return <DataTable columns={purchaseOrderColumns} data={purchaseOrders} />;
+  return (
+    <div>
+      {purchaseOrders.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          No purchase orders found. Create orders by clicking "Order" on a material in the Materials tab.
+        </div>
+      ) : (
+        <DataTable columns={purchaseOrderColumns} data={purchaseOrders} />
+      )}
+    </div>
+  );
 };
