@@ -22,6 +22,8 @@ import ReportingDashboard from "@/pages/ReportingDashboard";
 import Quotes from "@/pages/Quotes";
 import RFQs from "@/pages/RFQs";
 import Invoices from "@/pages/Invoices";
+import Products from "@/pages/Products";
+import PublicProducts from "@/pages/PublicProducts";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -57,6 +59,7 @@ function App() {
           <Route path="/recipes" element={<RecipesDashboard />} />
           <Route path="/shipments" element={<ShipmentsDashboard />} />
           <Route path="/reporting" element={<ReportingDashboard />} />
+          <Route path="/products" element={<Products />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
