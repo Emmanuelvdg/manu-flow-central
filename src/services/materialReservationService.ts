@@ -128,7 +128,7 @@ export const allocateOrderMaterials = async (orderId: string): Promise<boolean> 
         purchaseDate: batch.purchase_date,
         expiryDate: batch.expiry_date,
         deliveredDate: null,
-        status: batch.status
+        status: batch.status as "requested" | "expected" | "delayed" | "received" // Fixed type error here
       });
       return acc;
     }, {} as { [key: string]: MaterialBatch[] });

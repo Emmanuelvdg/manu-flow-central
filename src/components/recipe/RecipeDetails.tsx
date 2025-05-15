@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
@@ -79,11 +78,18 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
           onAddMaterial={handleAddMaterial}
           onAddRoutingStage={handleAddRoutingStage}
         />
-        <RecipeFullTable
+        <RecipeFullTable 
           recipe={recipe}
-          materials={materials}
-          routingStages={routingStages}
-          materialCosts={materialCosts}
+          materials={recipe?.materials}
+          routingStages={recipe?.routing_stages}
+          materialCosts={{
+            individualCosts: recipe?.materials?.map((m) => ({
+              ...m,
+              cost: calculateMaterialCost(m.quantity, m.costPerUnit),
+              costPerUnit: m.costPerUnit
+            })),
+            totalCost: recipe?.totalCost
+          }}
         />
       </CardContent>
     </Card>

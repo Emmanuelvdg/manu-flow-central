@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -194,9 +193,13 @@ export default function RecipeMappingForm(props: RecipeFormProps) {
             <div className="border rounded-lg p-4 bg-white">
               <h3 className="text-lg font-medium mb-4">Recipe Cost Preview</h3>
               <RecipeFullTable 
-                materials={form.materials}
-                routingStages={form.routingStages}
-                materialCosts={form.materialCosts}
+                recipe={recipe}
+                materials={recipe?.materials || materialsList}
+                routingStages={recipe?.routing_stages || stages}
+                materialCosts={{
+                  individualCosts: materialCosts.individualCosts,
+                  totalCost: materialCosts.totalCost
+                }}
               />
             </div>
           ) : (

@@ -1,17 +1,17 @@
 
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { MaterialsHeader } from "../MaterialsHeader";
-import { MaterialsTable } from "../MaterialsTable";
-import { MaterialDialogs } from "../MaterialDialogs";
-import { useMaterialsManager } from "./hooks/useMaterialsManager";
-import { MaterialsLoadingState } from "../MaterialsLoadingState";
-import { ErrorBoundary } from "../ErrorBoundary";
-import { PurchaseOrdersSection } from "../PurchaseOrdersSection";
-import { MaterialStockReport } from "../MaterialStockReport";
+import React from 'react';
+import { useMaterialsManager } from './hooks/useMaterialsManager';
+import { MaterialsHeader } from '../MaterialsHeader';
+import { MaterialsTable } from '../MaterialsTable';
+import { MaterialStockReport } from '../MaterialStockReport';
+import { MaterialsLoadingState } from '../MaterialsLoadingState';
+import { MaterialEditDialog } from '../MaterialEditDialog';
+import { PurchaseOrderDialog } from '../PurchaseOrderDialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BatchAllocationManager } from './BatchAllocationManager';
 
-export const MaterialsMainView = () => {
+export const MaterialsMainView: React.FC = () => {
   const {
     materials,
     selectedMaterial,
@@ -29,33 +29,33 @@ export const MaterialsMainView = () => {
     handleBulkUpload,
     onCloseEditDialog,
     onClosePurchaseDialog,
-    purchaseOrders
+    purchaseOrders,
   } = useMaterialsManager();
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Error loading materials</AlertTitle>
-        <AlertDescription>{String(error)}</AlertDescription>
-      </Alert>
-    );
-  }
 
   if (isLoading) {
     return <MaterialsLoadingState />;
   }
 
+  if (error) {
+    return <div>Error loading materials: {error.message}</div>;
+  }
+
   return (
-    <div className="space-y-8">
-      <ErrorBoundary>
-        <>
+    <div className="space-y-4">
+      <MaterialsHeader 
+        onNewMaterial={handleNewMaterial}
+        onBulkUpload={handleBulkUpload}
+      />
+      
+      <Tabs defaultValue="inventory">
+        <TabsList className="mb-4">
+          <TabsTrigger value="inventory">Inventory</TabsTrigger>
+          <TabsTrigger value="allocations">Allocations</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="inventory" className="space-y-4">
           <Card>
-            <MaterialsHeader 
-              onNewMaterial={handleNewMaterial} 
-              onBulkUpload={handleBulkUpload}
-              existingMaterials={materials}
-            />
-            <CardContent>
+            <CardContent className="pt-6">
               <MaterialsTable
                 materials={materials}
                 onEditMaterial={handleEditMaterial}
@@ -64,28 +64,32 @@ export const MaterialsMainView = () => {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="allocations" className="space-y-4">
+          <BatchAllocationManager />
+          <MaterialStockReport />
+        </TabsContent>
+      </Tabs>
 
-          <PurchaseOrdersSection 
-            purchaseOrders={purchaseOrders}
-            materials={materials}
-            formatDate={formatDate}
-          />
+      {isEditDialogOpen && selectedMaterial && (
+        <MaterialEditDialog
+          open={isEditDialogOpen}
+          onClose={onCloseEditDialog}
+          material={selectedMaterial}
+          onSave={handleSaveMaterial}
+        />
+      )}
 
-          <MaterialDialogs
-            selectedMaterial={selectedMaterial}
-            isEditDialogOpen={isEditDialogOpen}
-            isPurchaseDialogOpen={isPurchaseDialogOpen}
-            onCloseEditDialog={onCloseEditDialog}
-            onClosePurchaseDialog={onClosePurchaseDialog}
-            onSaveMaterial={handleSaveMaterial}
-            onCreateOrder={handleProcessPurchaseOrder}
-          />
-        </>
-      </ErrorBoundary>
-
-      <MaterialStockReport />
+      {isPurchaseDialogOpen && selectedMaterial && (
+        <PurchaseOrderDialog
+          open={isPurchaseDialogOpen}
+          onClose={onClosePurchaseDialog}
+          material={selectedMaterial}
+          onProcessOrder={handleProcessPurchaseOrder}
+          formatDate={formatDate}
+        />
+      )}
     </div>
   );
 };
-
-export default MaterialsMainView;

@@ -9,7 +9,7 @@ import MachineRow from "./MachineRow";
 import TotalCostRow from "./TotalCostRow";
 import RecipeStats from "./RecipeStats";
 import StageGroupRows from "./StageGroupRows";
-import { RecipeFilters, RecipeTableFilters } from "./RecipeTableFilters";
+import { RecipeFilters } from "./RecipeTableFilters";
 
 // Define interface for the component props
 interface RecipeFullTableProps {
@@ -20,6 +20,17 @@ interface RecipeFullTableProps {
     individualCosts?: any[];
     totalCost: number;
   };
+}
+
+interface RecipeStatsProps {
+  recipe?: any;
+  quantity: number;
+  showStats: boolean;
+  setShowStats: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+interface TotalCostRowProps {
+  cost: number;
 }
 
 export default function RecipeFullTable({ 
@@ -109,7 +120,7 @@ export default function RecipeFullTable({
           </div>
         </div>
         
-        <RecipeTableFilters 
+        <RecipeFilters 
           stages={stages} 
           filterStage={filterStage} 
           setFilterStage={setFilterStage} 
