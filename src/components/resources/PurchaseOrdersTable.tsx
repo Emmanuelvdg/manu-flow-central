@@ -40,12 +40,18 @@ export const PurchaseOrdersTable: React.FC<PurchaseOrdersTableProps> = ({
     {
       header: "Order Date",
       accessorKey: "orderDate",
-      cell: (props: ColumnCellProps<PurchaseOrder>) => formatDate(props.getValue()),
+      cell: (props: ColumnCellProps<PurchaseOrder>) => {
+        const dateValue = props.getValue();
+        return formatDate(dateValue);
+      },
     },
     {
       header: "Expected Delivery",
       accessorKey: "expectedDelivery",
-      cell: (props: ColumnCellProps<PurchaseOrder>) => formatDate(props.getValue()),
+      cell: (props: ColumnCellProps<PurchaseOrder>) => {
+        const dateValue = props.getValue();
+        return formatDate(dateValue);
+      },
     },
     {
       header: "Total Cost",

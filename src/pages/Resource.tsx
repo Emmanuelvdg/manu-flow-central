@@ -9,10 +9,11 @@ import { RoutingSection } from "@/components/resources/RoutingSection";
 import { PurchaseOrdersSection } from "@/components/resources/PurchaseOrdersSection";
 import { usePurchaseOrders } from "@/components/resources/hooks/usePurchaseOrders";
 import { useMaterials } from "@/components/resources/hooks/useMaterials";
+import { formatDate } from "@/components/dashboard/quotes/utils/formatUtils";
 
 const Resource = () => {
   const { purchaseOrders } = usePurchaseOrders();
-  const { materials, formatDate } = useMaterials();
+  const { materials } = useMaterials();
   
   return (
     <MainLayout title="Resources & Inventory">
