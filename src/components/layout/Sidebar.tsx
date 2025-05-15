@@ -15,6 +15,7 @@ import {
   Layers,
   Users,
   Cog,
+  BarChart3,
 } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -168,6 +169,16 @@ export const Sidebar = () => {
               icon={<PackageIcon className="h-5 w-5" />} 
               label="Resources" 
               to="/resources" 
+              expanded={expanded} 
+            />
+          </SidebarCategory>
+
+          {/* Analytics Category - New! */}
+          <SidebarCategory title="Analytics" expanded={expanded}>
+            <SidebarItem 
+              icon={<BarChart3 className="h-5 w-5" />} 
+              label="Reports & Analytics" 
+              to="/reporting" 
               expanded={expanded} 
             />
           </SidebarCategory>
