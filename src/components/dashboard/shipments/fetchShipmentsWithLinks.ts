@@ -31,7 +31,7 @@ export async function fetchShipmentsWithLinks() {
 
   console.log("Linked IDs:", { orderIds, quoteIds, rfqIds, invoiceIds });
 
-  // Fetch related orders
+  // Fetch related orders - IMPORTANT: Using the correct ID format
   let orders: any[] = [];
   let quotes: any[] = [];
   let rfqs: any[] = [];
@@ -49,6 +49,7 @@ export async function fetchShipmentsWithLinks() {
       throw new Error(orderErr.message);
     }
     orders = dbOrders ?? [];
+    console.log("Fetched orders for shipments:", orders);
   }
 
   // Fetch quotes directly from shipments quote_ids
@@ -179,7 +180,7 @@ export async function fetchShipmentsWithLinks() {
 
     return {
       ...shipment,
-      order_id: order?.id ?? null,
+      order_id: order?.id ?? shipment.order_id ?? null,
       order_number: order?.order_number ?? null,
       quote_id: quote?.id ?? shipment.quote_id ?? null,
       quote_number: quote?.quote_number ?? null,
