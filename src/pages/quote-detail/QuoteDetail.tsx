@@ -1,49 +1,51 @@
 
 import React from "react";
+import { useParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
-import { QuoteDetailForm } from "./QuoteDetailForm";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { fetchQuote } from "@/components/dashboard/quotes/quoteUtils";
+import { QuoteDetailForm } from "./QuoteDetailForm";
+import { QuoteAnalytics } from "./components/analytics/QuoteAnalytics";
+import { LoadingState } from "./components/LoadingState";
+import { ErrorState } from "./components/ErrorState";
 
-const QuoteDetail: React.FC = () => {
+const QuoteDetail = () => {
   const { id } = useParams<{ id: string }>();
-
-  // Skip fetching for new quotes
-  const { data: quote, isLoading } = useQuery({
+  
+  const { data: quote, isLoading, error } = useQuery({
     queryKey: ['quote', id],
-    queryFn: () => fetchQuote(id || ''),
-    enabled: !!id && id !== 'create',
+    queryFn: () => fetchQuote(id!),
+    enabled: !!id,
   });
 
   return (
-    <MainLayout title={`Quote Detail${id ? ` - ${id}` : ""}`}>
-      <div className="max-w-2xl mx-auto mt-8">
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/quotes">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Quotes
-          </Link>
-        </Button>
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle>
-              {id && id !== "create" ? `Quote #${quote?.quote_number || id}` : "Create Quote"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center py-8">Loading quote details...</div>
-            ) : (
-              <QuoteDetailForm initialData={quote} />
-            )}
-          </CardContent>
-          {/* Footer handled in form for precise enable/disable behaviour */}
-        </Card>
-      </div>
+    <MainLayout title={isLoading ? "Loading Quote..." : `Quote ${quote?.quote_number || id}`}>
+      <Card>
+        <CardContent className="p-6">
+          {isLoading ? (
+            <LoadingState message="Loading quote details..." />
+          ) : error ? (
+            <ErrorState message="Failed to load quote details" />
+          ) : id === "create" || !quote ? (
+            <QuoteDetailForm isNew={true} />
+          ) : (
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList>
+                <TabsTrigger value="details">Quote Details</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              </TabsList>
+              <TabsContent value="details" className="mt-6">
+                <QuoteDetailForm initialData={quote} />
+              </TabsContent>
+              <TabsContent value="analytics" className="mt-6">
+                <QuoteAnalytics quote={quote} />
+              </TabsContent>
+            </Tabs>
+          )}
+        </CardContent>
+      </Card>
     </MainLayout>
   );
 };
