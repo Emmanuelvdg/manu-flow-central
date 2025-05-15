@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import RoutingStageRow from "./RoutingStageRow";
@@ -20,7 +21,7 @@ export const StageGroupRows: React.FC<StageGroupRowsProps> = ({ routingStages, q
   return (
     <>
       {routingStages.map(stage => (
-        <StageGroup key={stage.id} stage={stage} />
+        <StageGroup key={stage.id} stage={stage} quantity={quantity} />
       ))}
     </>
   );
@@ -28,9 +29,10 @@ export const StageGroupRows: React.FC<StageGroupRowsProps> = ({ routingStages, q
 
 interface StageGroupProps {
   stage: RoutingStage;
+  quantity: number;
 }
 
-const StageGroup: React.FC<StageGroupProps> = ({ stage }) => {
+const StageGroup: React.FC<StageGroupProps> = ({ stage, quantity }) => {
   const [expanded, setExpanded] = useState(true);
   
   // Check if stage has any machines or personnel
@@ -62,6 +64,7 @@ const StageGroup: React.FC<StageGroupProps> = ({ stage }) => {
                   key={p.id + "_pers"} 
                   personnel={p} 
                   stageName={stage.stage_name} 
+                  quantity={quantity}
                 />
               ))}
               
@@ -71,6 +74,7 @@ const StageGroup: React.FC<StageGroupProps> = ({ stage }) => {
                   key={m.id + "_mach"} 
                   machine={m} 
                   stageName={stage.stage_name} 
+                  quantity={quantity}
                 />
               ))}
             </CollapsibleContent>
