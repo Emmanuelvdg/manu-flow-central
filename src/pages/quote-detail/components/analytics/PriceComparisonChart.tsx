@@ -14,6 +14,12 @@ interface PriceComparisonChartProps {
   quoteId: string;
 }
 
+interface ProductPrice {
+  name: string;
+  quotePrice: number;
+  orderPrice: number;
+}
+
 export const PriceComparisonChart: React.FC<PriceComparisonChartProps> = ({ quoteId }) => {
   const { data, isLoading } = useQuery({
     queryKey: ['price-comparison', quoteId],
@@ -34,11 +40,12 @@ export const PriceComparisonChart: React.FC<PriceComparisonChartProps> = ({ quot
       const orderTotal = quote.orders && quote.orders[0]?.total;
       
       // Create comparison data for each product
-      const productsComparison = [];
+      const productsComparison: ProductPrice[] = [];
       if (quote.products && Array.isArray(quote.products)) {
         // Group quote products for comparison
-        const quoteProducts = {};
-        quote.products.forEach(product => {
+        const quoteProducts: Record<string, ProductPrice> = {};
+        
+        quote.products.forEach((product: any) => {
           if (product && typeof product === 'object') {
             const name = product.name || 'Unknown Product';
             if (!quoteProducts[name]) {
@@ -55,7 +62,7 @@ export const PriceComparisonChart: React.FC<PriceComparisonChartProps> = ({ quot
         
         // If we have order data, add it to the comparison
         if (quote.orders && quote.orders[0]?.products && Array.isArray(quote.orders[0].products)) {
-          quote.orders[0].products.forEach(product => {
+          quote.orders[0].products.forEach((product: any) => {
             if (product && typeof product === 'object') {
               const name = product.name || 'Unknown Product';
               if (!quoteProducts[name]) {

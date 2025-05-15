@@ -17,6 +17,32 @@ interface FinancialReportProps {
   dateRange: 'week' | 'month' | 'quarter' | 'year';
 }
 
+interface ProductMarginData {
+  productId: string;
+  productName: string;
+  orderCount: number;
+  totalRevenue: number;
+  totalCost: number;
+  totalGrossMargin: number;
+  averageGrossMarginPercentage: number;
+}
+
+interface AgingBucket {
+  name: string;
+  count: number;
+  value: number;
+}
+
+interface FinancialData {
+  grossMarginByProduct: ProductMarginData[];
+  agingData: AgingBucket[];
+  wipTotal: number;
+  totalOrders: number;
+  totalRevenue: number;
+  invoicesPaid: number;
+  invoicesUnpaid: number;
+}
+
 export const FinancialReport: React.FC<FinancialReportProps> = ({ dateRange }) => {
   // Calculate date range for filtering
   const calculateDateRange = () => {
@@ -77,7 +103,7 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ dateRange }) =
       if (!orders) return null;
       
       // Product lines with gross margin
-      const productGroups = {};
+      const productGroups: Record<string, ProductMarginData> = {};
       
       orders.forEach(order => {
         if (order.order_products && order.order_products.length > 0) {
@@ -124,10 +150,10 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ dateRange }) =
       
       // Convert to array and sort by margin
       const grossMarginByProduct = Object.values(productGroups)
-        .sort((a: any, b: any) => b.totalGrossMargin - a.totalGrossMargin);
+        .sort((a, b) => b.totalGrossMargin - a.totalGrossMargin);
       
       // Invoice aging analysis
-      const agingBuckets = {
+      const agingBuckets: Record<string, AgingBucket> = {
         'current': { name: 'Current', count: 0, value: 0 },
         '1-30': { name: '1-30 Days', count: 0, value: 0 },
         '31-60': { name: '31-60 Days', count: 0, value: 0 },
@@ -178,7 +204,7 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ dateRange }) =
         totalRevenue: orders.reduce((sum, order) => sum + (order.total || 0), 0),
         invoicesPaid: invoices?.filter(inv => inv.paid).length || 0,
         invoicesUnpaid: invoices?.filter(inv => !inv.paid).length || 0
-      };
+      } as FinancialData;
     }
   });
 

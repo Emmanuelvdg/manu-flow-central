@@ -12,9 +12,10 @@ import { useQuoteForm } from "./hooks/useQuoteForm";
 
 export interface QuoteDetailFormProps {
   initialData?: any;
+  isNew?: boolean;
 }
 
-export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData }) => {
+export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData, isNew = false }) => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
