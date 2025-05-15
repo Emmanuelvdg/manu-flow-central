@@ -13,21 +13,31 @@ import { useQuoteForm } from "./hooks/useQuoteForm";
 export interface QuoteDetailFormProps {
   initialData?: any;
   isNew?: boolean;
+  quoteId?: string; // Added quoteId prop to the interface
 }
 
-export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData, isNew = false }) => {
+export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData, isNew = false, quoteId }) => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const rfqData = location.state?.fromRFQ;
   const rfqIdForShipment = location.state?.rfqIdForShipment;
 
+  // Use the passed quoteId if available, otherwise fallback to id from params
+  const quoteIdentifier = quoteId || id;
+
   const {
     formState,
     setters,
     handleSave,
     handleSubmitQuote
-  } = useQuoteForm({ initialData, id, rfqData, rfqIdForShipment });
+  } = useQuoteForm({ 
+    initialData, 
+    id: quoteIdentifier, 
+    rfqData, 
+    rfqIdForShipment,
+    isNew 
+  });
 
   return (
     <div className="space-y-8">

@@ -8,14 +8,17 @@ export interface UseQuoteFormProps {
   id?: string;
   rfqData?: any;
   rfqIdForShipment?: string;
+  isNew?: boolean;
 }
 
-export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment }: UseQuoteFormProps) => {
-  const isNew = !id || id === "create";
+export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment, isNew }: UseQuoteFormProps) => {
+  // If isNew was not explicitly passed, determine it from the id
+  const isNewQuote = isNew !== undefined ? isNew : (!id || id === "create");
+  
   const [formState, setters] = useQuoteState({ 
     initialData, 
     rfqData, 
-    isNew 
+    isNew: isNewQuote
   });
 
   const { handleSave, handleSubmitQuote } = useQuoteActions({ 
