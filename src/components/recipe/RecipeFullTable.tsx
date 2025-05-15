@@ -1,4 +1,4 @@
 
-import RecipeFullTable from "./recipe-table/RecipeFullTable";
+import RecipeFullTableComponent from "./recipe-table/RecipeFullTable";
 
-export default RecipeFullTable;
+export default RecipeFullTableComponent;

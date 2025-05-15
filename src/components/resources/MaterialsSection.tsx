@@ -14,7 +14,8 @@ export const MaterialsSection: React.FC = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleCreateOrder = (material: Material) => {
+  // Renamed from handleCreateOrder to handleOpenOrderDialog to avoid conflict
+  const handleOpenOrderDialog = (material: Material) => {
     setSelectedMaterial(material);
     setIsPurchaseDialogOpen(true);
   };
@@ -45,7 +46,7 @@ export const MaterialsSection: React.FC = () => {
       <MaterialsTable 
         materials={[]} // Make sure to pass the materials array here
         onEditMaterial={handleEditMaterial}
-        onCreateOrder={handleCreateOrder}
+        onCreateOrder={handleOpenOrderDialog} // Updated to use the renamed function
         formatCurrency={(value) => `$${(value || 0).toFixed(2)}`}
       />
       

@@ -57,7 +57,7 @@ export const PurchaseOrderDialog: React.FC<PurchaseOrderProps> = ({
         id: `po-${Date.now()}`,
         materialId: material.id,
         quantity,
-        status: "ordered",
+        status: "requested", // Changed from "ordered" to "requested" to match expected type
         orderDate: orderDate.toISOString(),
         expectedDelivery: deliveryDate.toISOString(),
         vendor: material.vendor || "Unknown",
@@ -74,7 +74,7 @@ export const PurchaseOrderDialog: React.FC<PurchaseOrderProps> = ({
         costPerUnit: price,
         purchaseDate: orderDate.toISOString(),
         deliveredDate: null,
-        status: "ordered"
+        status: "requested" // Changed from "ordered" to "requested" to match expected type
       };
 
       // Process the order
