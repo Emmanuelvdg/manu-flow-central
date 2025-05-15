@@ -1,63 +1,58 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { MaterialsTable } from "./MaterialsTable";
 import { MaterialDialogs } from "./MaterialDialogs";
 import { PurchaseOrder, MaterialBatch, Material } from "@/types/material";
+import { useMaterialsManager } from "./materials/hooks/useMaterialsManager";
 
 export const MaterialsSection: React.FC = () => {
-  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const {
+    materials,
+    selectedMaterial,
+    isLoading,
+    error,
+    isEditDialogOpen,
+    isPurchaseDialogOpen,
+    formatCurrency,
+    handleEditMaterial,
+    handleCreateOrder,
+    handleSaveMaterial,
+    handleProcessPurchaseOrder,
+    onCloseEditDialog,
+    onClosePurchaseDialog
+  } = useMaterialsManager();
   
-  const handleEditMaterial = (material: Material) => {
-    setSelectedMaterial(material);
-    setIsEditDialogOpen(true);
-  };
-
-  // Renamed from handleCreateOrder to handleOpenOrderDialog to avoid conflict
-  const handleOpenOrderDialog = (material: Material) => {
-    setSelectedMaterial(material);
-    setIsPurchaseDialogOpen(true);
-  };
+  // If data is loading, show loading state
+  if (isLoading) {
+    return <div className="p-8 text-center">Loading materials data...</div>;
+  }
   
-  // Make sure these functions return Promises
-  const handleSaveMaterial = async (material: Material): Promise<void> => {
-    // Placeholder: Implement your existing save material logic here
-    console.log("Saving material:", material);
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        resolve();
-      }, 500);
-    });
-  };
-  
-  const handleCreateOrder = async (order: PurchaseOrder, newBatch: MaterialBatch): Promise<void> => {
-    // Placeholder: Implement your existing create order logic here
-    console.log("Creating order:", order, newBatch);
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        resolve();
-      }, 500);
-    });
-  };
+  // If there's an error, show error message
+  if (error) {
+    return (
+      <div className="p-8 text-center text-red-500">
+        Error loading materials: {error instanceof Error ? error.message : "Unknown error"}
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4">
       <MaterialsTable 
-        materials={[]} // Make sure to pass the materials array here
+        materials={materials}
         onEditMaterial={handleEditMaterial}
-        onCreateOrder={handleOpenOrderDialog} // Updated to use the renamed function
-        formatCurrency={(value) => `$${(value || 0).toFixed(2)}`}
+        onCreateOrder={handleCreateOrder}
+        formatCurrency={formatCurrency}
       />
       
       <MaterialDialogs
         selectedMaterial={selectedMaterial}
         isEditDialogOpen={isEditDialogOpen}
         isPurchaseDialogOpen={isPurchaseDialogOpen}
-        onCloseEditDialog={() => setIsEditDialogOpen(false)}
-        onClosePurchaseDialog={() => setIsPurchaseDialogOpen(false)}
+        onCloseEditDialog={onCloseEditDialog}
+        onClosePurchaseDialog={onClosePurchaseDialog}
         onSaveMaterial={handleSaveMaterial}
-        onCreateOrder={handleCreateOrder}
+        onCreateOrder={handleProcessPurchaseOrder}
       />
     </div>
   );
