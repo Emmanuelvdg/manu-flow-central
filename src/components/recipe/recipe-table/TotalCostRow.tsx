@@ -1,23 +1,17 @@
 
 import React from "react";
-import { TableRow, TableCell } from "@/components/ui/table";
-import { formatCurrency } from "./utils";
 
-interface TotalCostRowProps {
+export interface TotalCostRowProps {
   totalCost: number;
 }
 
-const TotalCostRow: React.FC<TotalCostRowProps> = ({ totalCost }) => {
-  if (totalCost <= 0) return null;
-  
+export const TotalCostRow: React.FC<TotalCostRowProps> = ({ totalCost }) => {
   return (
-    <TableRow className="font-bold bg-red-50">
-      <TableCell colSpan={5} className="text-right text-gray-800">Total Cost of Goods:</TableCell>
-      <TableCell colSpan={2} className="text-red-700 text-lg">
-        {formatCurrency(totalCost)}
-      </TableCell>
-    </TableRow>
+    <tr className="border-t border-t-2 border-t-gray-300">
+      <td colSpan={4} className="py-3 font-bold text-right">
+        Total Recipe Cost:
+      </td>
+      <td className="py-3 text-right font-bold">${totalCost.toFixed(2)}</td>
+    </tr>
   );
 };
-
-export default TotalCostRow;

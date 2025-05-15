@@ -21,6 +21,9 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
 }) => {
   const { data: allocations = [] } = useMaterialAllocations();
 
+  // Ensure materials is always an array
+  const materialsList = Array.isArray(materials) ? materials : [];
+
   const materialColumns: Column<Material>[] = [
     {
       header: "Name",
@@ -42,8 +45,9 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
         const materialAllocations = allocations.filter(a => a.material_id === material.id);
         
         // Calculate stock details
+        const batches = material.batches || [];
         const { totalStock, allocatedStock, availableStock } = calculateAvailableStock(
-          material.batches || [],
+          batches,
           materialAllocations
         );
         
@@ -116,5 +120,5 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
     },
   ];
 
-  return <DataTable columns={materialColumns} data={materials} />;
+  return <DataTable columns={materialColumns} data={materialsList} />;
 };

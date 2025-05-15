@@ -1,170 +1,219 @@
 
-import React, { useState, useEffect } from "react";
-import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from "@/components/ui/table";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import MaterialsTableRows from "./MaterialsTableRows";
-import PersonnelRow from "./PersonnelRow";
-import MachineRow from "./MachineRow";
-import TotalCostRow from "./TotalCostRow";
-import RecipeStats from "./RecipeStats";
-import StageGroupRows from "./StageGroupRows";
-import RecipeTableFilters, { RecipeFilters } from "./RecipeTableFilters";
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { MaterialsTableRows } from "./MaterialsTableRows";
+import { TotalCostRow } from "./TotalCostRow";
+import { RecipeStats } from "./RecipeStats";
+import { StageGroupRows } from "./StageGroupRows";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
+import {
+  RecipeTableProps,
+  MaterialCosts,
+  Material,
+  RoutingStage,
+} from "./types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Define interface for the component props
 interface RecipeFullTableProps {
-  recipe?: any;
-  materials?: any[];
-  routingStages?: any[];
-  materialCosts?: {
-    individualCosts?: any[];
-    totalCost: number;
-  };
+  recipe: any;
+  materials: Material[];
+  routingStages: RoutingStage[];
+  materialCosts?: MaterialCosts;
 }
 
-export default function RecipeFullTable({ 
-  recipe, 
-  materials, 
-  routingStages, 
-  materialCosts 
-}: RecipeFullTableProps) {
-  const [quantity, setQuantity] = useState(1);
-  const [showStats, setShowStats] = useState(false);
-  const [filterState, setFilterState] = useState<RecipeFilters>({
-    materialNameFilter: "",
-    minCostThreshold: 0
-  });
-  const [totalCost, setTotalCost] = useState(0);
+const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
+  recipe,
+  materials,
+  routingStages,
+  materialCosts,
+}) => {
+  const [showStats, setShowStats] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Ensure we have valid materials and routingStages arrays
+  const safetyMaterials = materials || [];
+  const safetyStages = routingStages || [];
   
-  // Process the input props or use recipe object
-  const recipeMaterials = materials || (recipe?.materials || []);
-  const recipeStages = routingStages || (recipe?.routing_stages || []);
-  const recipeCosts = materialCosts || (recipe?.totalCost 
-    ? {
-        individualCosts: recipeMaterials.map((m: any) => ({
-          ...m,
-          cost: 0,
-          costPerUnit: 0
-        })),
-        totalCost: recipe.totalCost
-      }
-    : { individualCosts: [], totalCost: 0 });
-  
-  useEffect(() => {
-    if (materialCosts?.totalCost) {
-      setTotalCost(materialCosts.totalCost * quantity);
-    } else if (recipe?.totalCost) {
-      setTotalCost(recipe.totalCost * quantity);
-    }
-  }, [quantity, recipe, materialCosts]);
-  
-  if (!recipe && !materials && !routingStages) {
+  // Calculate total cost (materials + labor + machine)
+  const materialCost = materialCosts?.totalCost || 0;
+  const laborCost = safetyStages.reduce((total, stage) => {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Recipe</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>No recipe data available.</p>
-        </CardContent>
-      </Card>
+      total +
+      (stage.personnel || []).reduce(
+        (stageTotal, person) =>
+          stageTotal + (person.hourlyRate || 0) * (person.hours || 0),
+        0
+      )
     );
-  }
+  }, 0);
+  const machineCost = safetyStages.reduce((total, stage) => {
+    return (
+      total +
+      (stage.machines || []).reduce(
+        (stageTotal, machine) =>
+          stageTotal + (machine.hourlyRate || 0) * (machine.hours || 0),
+        0
+      )
+    );
+  }, 0);
+  const totalCost = materialCost + laborCost + machineCost;
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10) || 1;
-    setQuantity(value > 0 ? value : 1);
-  };
-  
-  // Get unique stages for filtering
-  const stages = recipeStages 
-    ? [...new Set(recipeStages.map((stage: any) => stage.stage_name || stage.name))]
-    : [];
-
-  // Handle filter changes
-  const handleFilterChange = (filters: RecipeFilters) => {
-    setFilterState(filters);
+  const toggleStats = () => {
+    setShowStats(!showStats);
   };
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>{recipe?.name}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{recipe?.description}</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div>
-              <label htmlFor="quantity" className="text-sm font-medium block mb-1">
-                Quantity:
-              </label>
-              <Input
-                id="quantity"
-                type="number"
-                min="1"
-                className="w-20"
-                value={quantity}
-                onChange={handleQuantityChange}
-              />
-            </div>
-            <RecipeStats 
-              materials={recipeMaterials}
-              routingStages={recipeStages}
-              totalCost={totalCost}
-              showStats={showStats}
-              setShowStats={setShowStats}
-            />
-          </div>
+      <CardHeader className="pb-3 flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Recipe Cost Breakdown</CardTitle>
+          <CardDescription>
+            Cost analysis for product recipe
+          </CardDescription>
         </div>
-        
-        {/* Filter controls */}
-        <RecipeTableFilters 
-          onFilterChange={handleFilterChange}
-          maxPossibleCost={100} // You might want to calculate this based on actual data
-        />
+        <Button variant="outline" onClick={toggleStats} size="sm">
+          {showStats ? (
+            <>
+              <EyeOff className="h-4 w-4 mr-1" /> Hide Stats
+            </>
+          ) : (
+            <>
+              <Eye className="h-4 w-4 mr-1" /> Show Stats
+            </>
+          )}
+        </Button>
       </CardHeader>
-      
+
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">Item</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
-                <TableHead>Unit</TableHead>
-                <TableHead className="text-right">Unit Cost</TableHead>
-                <TableHead className="text-right">Total Cost</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        {showStats && (
+          <RecipeStats 
+            quantity={1} 
+            showStats={showStats} 
+            setShowStats={setShowStats}
+            materialCost={materialCost}
+            laborCost={laborCost}
+            machineCost={machineCost}
+            totalCost={totalCost}
+          />
+        )}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="grid grid-cols-2 mb-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="detailed">Detailed</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 font-medium">Category</th>
+                  <th className="text-right py-2 font-medium">Cost</th>
+                  <th className="text-right py-2 font-medium">% of Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b">
+                  <td className="py-2">Raw Materials</td>
+                  <td className="text-right">${materialCost.toFixed(2)}</td>
+                  <td className="text-right">
+                    {totalCost ? ((materialCost / totalCost) * 100).toFixed(1) : "0"}%
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2">Labor</td>
+                  <td className="text-right">${laborCost.toFixed(2)}</td>
+                  <td className="text-right">
+                    {totalCost ? ((laborCost / totalCost) * 100).toFixed(1) : "0"}%
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2">Machine Usage</td>
+                  <td className="text-right">${machineCost.toFixed(2)}</td>
+                  <td className="text-right">
+                    {totalCost ? ((machineCost / totalCost) * 100).toFixed(1) : "0"}%
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <TotalCostRow totalCost={totalCost} />
+              </tfoot>
+            </table>
+          </TabsContent>
+
+          <TabsContent value="detailed">
+            <div className="space-y-6">
               {/* Materials Section */}
-              {recipeMaterials && recipeMaterials.length > 0 && (
-                <MaterialsTableRows 
-                  materials={recipeMaterials} 
-                  materialCosts={recipeCosts.individualCosts || []}
-                  filters={filterState}
-                />
-              )}
-              
-              {/* Routing Stages Section */}
-              {recipeStages && recipeStages.length > 0 && (
-                recipeStages.map((stage: any) => (
-                  <StageGroupRows 
-                    key={stage.id || stage.stage_id}
-                    stage={stage}
-                  />
-                ))
-              )}
-              
-              {/* Total Cost */}
-              <TotalCostRow totalCost={totalCost} />
-            </TableBody>
-          </Table>
-        </div>
+              <div>
+                <h3 className="text-lg font-medium mb-2">Materials</h3>
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2 font-medium">Material</th>
+                      <th className="text-right py-2 font-medium">Quantity</th>
+                      <th className="text-right py-2 font-medium">Unit</th>
+                      <th className="text-right py-2 font-medium">Unit Cost</th>
+                      <th className="text-right py-2 font-medium">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {safetyMaterials.length > 0 ? (
+                      <MaterialsTableRows
+                        materials={safetyMaterials}
+                        individualCosts={materialCosts?.individualCosts || []}
+                      />
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="text-center py-4 text-gray-500">
+                          No materials added to this recipe
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t">
+                      <td colSpan={4} className="py-2 font-medium text-right">
+                        Total Materials Cost:
+                      </td>
+                      <td className="py-2 text-right font-bold">
+                        ${materialCost.toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Production Stages Section */}
+              <div>
+                <h3 className="text-lg font-medium mb-2">Production Stages</h3>
+                {safetyStages.length > 0 ? (
+                  <StageGroupRows routingStages={safetyStages} />
+                ) : (
+                  <div className="text-center py-4 text-gray-500 border rounded-md">
+                    No production stages added to this recipe
+                  </div>
+                )}
+              </div>
+
+              {/* Total Cost Row */}
+              <table className="w-full border-collapse">
+                <tfoot>
+                  <TotalCostRow totalCost={totalCost} />
+                </tfoot>
+              </table>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default RecipeFullTable;

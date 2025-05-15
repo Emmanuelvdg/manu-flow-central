@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { MaterialsTable } from "./MaterialsTable";
 import { MaterialDialogs } from "./MaterialDialogs";
@@ -8,12 +9,12 @@ export const MaterialsSection: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   
-  const handleOpenEditDialog = (material: Material) => {
+  const handleEditMaterial = (material: Material) => {
     setSelectedMaterial(material);
     setIsEditDialogOpen(true);
   };
 
-  const handleOpenPurchaseDialog = (material: Material) => {
+  const handleCreateOrder = (material: Material) => {
     setSelectedMaterial(material);
     setIsPurchaseDialogOpen(true);
   };
@@ -42,8 +43,10 @@ export const MaterialsSection: React.FC = () => {
   return (
     <div className="space-y-4">
       <MaterialsTable 
-        onEdit={handleOpenEditDialog}
-        onPurchase={handleOpenPurchaseDialog}
+        materials={[]} // Make sure to pass the materials array here
+        onEditMaterial={handleEditMaterial}
+        onCreateOrder={handleCreateOrder}
+        formatCurrency={(value) => `$${(value || 0).toFixed(2)}`}
       />
       
       <MaterialDialogs

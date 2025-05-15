@@ -86,8 +86,7 @@ export const MaterialsMainView: React.FC = () => {
           material={selectedMaterial}
           isOpen={isPurchaseDialogOpen}
           onClose={onClosePurchaseDialog}
-          onProcessOrder={handleProcessPurchaseOrder}
-          formatDate={formatDate}
+          onSubmitOrder={handleProcessPurchaseOrder}
         />
       )}
     </div>
