@@ -80,6 +80,7 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
           onAddRoutingStage={handleAddRoutingStage}
         />
         <RecipeFullTable
+          recipe={recipe}
           materials={materials}
           routingStages={routingStages}
           materialCosts={materialCosts}

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { calculateOrderMaterialStatus } from "@/utils/materialUtils";
 import { MaterialBatch } from "@/types/material";
