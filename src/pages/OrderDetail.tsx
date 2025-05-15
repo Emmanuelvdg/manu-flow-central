@@ -1,14 +1,12 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { OrderDetailHeader } from "./order-detail/OrderDetailHeader";
 import { OrderDetailContent } from "./order-detail/OrderDetailContent";
 import { useOrderDetail } from "@/hooks/useOrderDetail";
-import { useOrderProducts } from "@/hooks/orders/useOrderProducts";
-import { useOrderProductsSync } from "@/hooks/orders/useOrderProductsSync";
 import { useMaterialBatches } from "@/components/resources/hooks/useMaterialBatches";
-import { checkMaterialAvailability, allocateOrderMaterials, updateOrderMaterialStatus } from "@/services/materialReservationService";
+import { checkMaterialAvailability, allocateOrderMaterials } from "@/services/materialReservationService";
 import { MaterialStatusSection } from "./order-detail/components/MaterialStatusSection";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,17 +20,13 @@ export const OrderDetail = () => {
     order, 
     isLoading: orderLoading, 
     error: orderError,
-    refetch: refetchOrder
+    refetch: refetchOrder,
+    syncOrderProducts,
+    fixOrderProductMapping,
+    orderProducts
   } = useOrderDetail(id);
   
-  const { 
-    data: orderProducts = [], 
-    isLoading: productsLoading, 
-    refetch: refetchProducts
-  } = useOrderProducts(id);
-
   const { data: batches = [] } = useMaterialBatches();
-  const { syncOrderProducts } = useOrderProductsSync(id, refetchProducts);
   
   // Map material batches by material ID for faster lookup
   const materialBatchesMap = React.useMemo(() => {
@@ -73,7 +67,7 @@ export const OrderDetail = () => {
   };
 
   const handleCheckMaterials = useCallback(async () => {
-    if (!id || orderProducts.length === 0) return;
+    if (!order?.id || orderProducts.length === 0) return;
     setChecking(true);
 
     try {
@@ -89,7 +83,7 @@ export const OrderDetail = () => {
         materialBatchesMap
       );
 
-      await updateOrderStatus(id, { parts_status: status });
+      await updateOrderStatus(order.id, { parts_status: status });
       await refetchOrder();
       
       toast({
@@ -106,14 +100,14 @@ export const OrderDetail = () => {
     } finally {
       setChecking(false);
     }
-  }, [id, orderProducts, materialBatchesMap, refetchOrder]);
+  }, [order?.id, orderProducts, materialBatchesMap, refetchOrder]);
 
   const handleAllocateMaterials = useCallback(async () => {
-    if (!id || order?.parts_status !== 'booked') return;
+    if (!order?.id || order?.parts_status !== 'booked') return;
     setAllocating(true);
 
     try {
-      const allocated = await allocateOrderMaterials(id);
+      const allocated = await allocateOrderMaterials(order.id);
       
       if (allocated) {
         await refetchOrder();
@@ -138,9 +132,9 @@ export const OrderDetail = () => {
     } finally {
       setAllocating(false);
     }
-  }, [id, order, refetchOrder]);
+  }, [order, refetchOrder]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!orderLoading && orderProducts.length > 0 && !order?.parts_status) {
       handleCheckMaterials();
     }
@@ -185,7 +179,7 @@ export const OrderDetail = () => {
                 handleAllocateMaterials={handleAllocateMaterials}
                 checking={checking}
                 allocating={allocating}
-                productsLoading={productsLoading}
+                productsLoading={false}
               />
             }
           />
@@ -194,29 +188,18 @@ export const OrderDetail = () => {
             order={order}
             isLoading={orderLoading}
             error={orderError}
-            productsLoading={productsLoading}
+            productsLoading={false}
             orderProducts={orderProducts}
             refetch={handleRefetch}
             syncOrderProducts={async () => {
-              if (order?.products) {
-                // Make sure we're handling products as an array
-                const productsArray = Array.isArray(order.products) 
-                  ? order.products 
-                  : typeof order.products === 'object' && order.products !== null
-                    ? [order.products]
-                    : [];
-                
-                console.log("Syncing products:", productsArray);
-                // We'll use the syncOrderProducts function from useOrderProductsSync hook
-                await syncOrderProducts(productsArray);
+              if (syncOrderProducts) {
+                await syncOrderProducts();
               }
             }}
             fixOrderProductMapping={async () => {
-              // Implementation placeholder for fixing recipe mappings
-              toast({
-                title: "Recipe mappings checked",
-                description: "Recipe mappings have been verified and fixed if needed.",
-              });
+              if (fixOrderProductMapping) {
+                await fixOrderProductMapping();
+              }
             }}
           />
         </>
