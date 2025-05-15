@@ -40,6 +40,10 @@ export function MaterialEditDialog({
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -104,6 +108,7 @@ export function MaterialEditDialog({
             material={formData}
             onClose={onClose}
             onChange={handleChange}
+            onSelectChange={handleSelectChange}
             onSubmit={handleSubmit}
           />
 

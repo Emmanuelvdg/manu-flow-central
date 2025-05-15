@@ -9,6 +9,7 @@ interface MaterialEditFormProps {
   material: Material;
   onClose: () => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelectChange?: (name: string, value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -16,11 +17,16 @@ export const MaterialEditForm: React.FC<MaterialEditFormProps> = ({
   material,
   onClose,
   onChange,
+  onSelectChange,
   onSubmit,
 }) => {
   return (
     <form onSubmit={onSubmit}>
-      <MaterialForm formData={material} handleChange={onChange} />
+      <MaterialForm 
+        formData={material} 
+        handleChange={onChange}
+        handleSelectChange={onSelectChange} 
+      />
       <DialogFooter className="mt-6">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         <Button type="submit">Save Changes</Button>

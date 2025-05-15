@@ -38,6 +38,24 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       },
     },
     {
+      header: "ABC Class",
+      accessorKey: "abcClassification",
+      cell: (props: ColumnCellProps<Material>) => {
+        const material = props.row.original;
+        const classification = material.abcClassification || 'C';
+        
+        let badgeVariant = "outline";
+        if (classification === 'A') badgeVariant = "destructive";
+        else if (classification === 'B') badgeVariant = "secondary";
+        
+        return (
+          <Badge variant={badgeVariant as any} className="text-xs">
+            {classification}
+          </Badge>
+        );
+      },
+    },
+    {
       header: "Stock",
       accessorKey: "stock",
       cell: (props: ColumnCellProps<Material>) => {

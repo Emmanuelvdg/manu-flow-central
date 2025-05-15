@@ -1,83 +1,125 @@
 
-import { useQueryClient } from "@tanstack/react-query";
+import { MaterialBatch, Material } from "@/types/material";
 import { supabase } from "@/integrations/supabase/client";
-import { Material } from "@/types/material";
-import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useBatchOperations = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
-  const saveMaterialBatches = async (material: Material) => {
-    if (!material.batches) {
-      console.log("No batches array found on material:", material);
-      material.batches = [];
-    }
-    
+  const saveMaterialBatches = async (updatedMaterial: Material) => {
     try {
-      console.log(`Saving batches for material: ${material.id}`, material.batches);
+      console.log("Starting to save batches for material:", updatedMaterial.id);
       
-      const { data: deletedData, error: deleteError } = await supabase
+      // Update material data first, including ABC classification
+      const { error: materialUpdateError } = await supabase
+        .from("materials")
+        .update({
+          name: updatedMaterial.name,
+          category: updatedMaterial.category,
+          unit: updatedMaterial.unit,
+          vendor: updatedMaterial.vendor,
+          abc_classification: updatedMaterial.abcClassification || 'C',
+          status: updatedMaterial.status
+        })
+        .eq("id", updatedMaterial.id);
+
+      if (materialUpdateError) {
+        throw materialUpdateError;
+      }
+      
+      // Get existing batches for this material
+      const { data: existingBatches, error: fetchError } = await supabase
         .from("material_batches")
-        .delete()
-        .eq("material_id", material.id)
-        .select();
-      
-      if (deleteError) {
-        console.error("Error deleting existing batches:", deleteError);
-        throw deleteError;
+        .select("id")
+        .eq("material_id", updatedMaterial.id);
+
+      if (fetchError) {
+        throw fetchError;
       }
-      
-      console.log("Successfully deleted existing batches:", deletedData);
-      
-      if (material.batches && material.batches.length > 0) {
-        const validBatches = material.batches.filter(batch => 
-          batch.initialStock > 0 && batch.costPerUnit > 0
-        );
+
+      const existingBatchIds = existingBatches?.map(batch => batch.id) || [];
+      const updatedBatchIds = updatedMaterial.batches?.map(batch => batch.id) || [];
+
+      // Find batches to delete (exist in DB but not in updated material)
+      const batchesToDelete = existingBatchIds.filter(
+        id => !updatedBatchIds.includes(id)
+      );
+
+      if (batchesToDelete.length > 0) {
+        console.log(`Deleting ${batchesToDelete.length} batches:`, batchesToDelete);
         
-        console.log(`Found ${validBatches.length} valid batches out of ${material.batches.length} total`);
-        
-        if (validBatches.length === 0) {
-          console.log("No valid batches to insert");
-          return;
-        }
-        
-        const batchesToInsert = validBatches.map(batch => ({
-          material_id: material.id,
-          batch_number: batch.batchNumber,
-          initial_stock: Number(batch.initialStock),
-          remaining_stock: Number(batch.remainingStock),
-          cost_per_unit: Number(batch.costPerUnit),
-          purchase_date: batch.purchaseDate,
-          status: batch.status  // Include the new status field
-        }));
-        
-        console.log("Inserting batches:", JSON.stringify(batchesToInsert, null, 2));
-        
-        const { data, error: insertError } = await supabase
+        const { error: deleteError } = await supabase
           .from("material_batches")
-          .insert(batchesToInsert)
-          .select();
-        
-        if (insertError) {
-          console.error("Error inserting batches:", insertError);
-          throw insertError;
+          .delete()
+          .in("id", batchesToDelete);
+
+        if (deleteError) {
+          throw deleteError;
         }
-        
-        console.log("Successfully inserted batches:", data);
-      } else {
-        console.log("No batches to insert for this material");
+      }
+
+      // Process each batch in the updated material
+      if (updatedMaterial.batches && updatedMaterial.batches.length > 0) {
+        for (const batch of updatedMaterial.batches) {
+          // Check if batch has a UUID (already exists in DB)
+          const isExisting = existingBatchIds.includes(batch.id);
+          
+          if (isExisting) {
+            // Update existing batch
+            console.log("Updating batch:", batch.id);
+            
+            const { error: updateError } = await supabase
+              .from("material_batches")
+              .update({
+                batch_number: batch.batchNumber,
+                initial_stock: batch.initialStock,
+                remaining_stock: batch.remainingStock,
+                cost_per_unit: batch.costPerUnit,
+                purchase_date: batch.purchaseDate,
+                expiry_date: batch.expiryDate,
+                status: batch.status
+              })
+              .eq("id", batch.id);
+
+            if (updateError) {
+              throw updateError;
+            }
+          } else {
+            // Insert new batch
+            console.log("Inserting new batch for material:", updatedMaterial.id);
+            
+            // Generate UUID if the batch has a temporary ID
+            const batchId = batch.id.startsWith('pending-') 
+              ? undefined  // Let Supabase generate a UUID
+              : batch.id;
+              
+            const { error: insertError } = await supabase
+              .from("material_batches")
+              .insert({
+                id: batchId,
+                material_id: updatedMaterial.id,
+                batch_number: batch.batchNumber,
+                initial_stock: batch.initialStock,
+                remaining_stock: batch.remainingStock,
+                cost_per_unit: batch.costPerUnit,
+                purchase_date: batch.purchaseDate,
+                expiry_date: batch.expiryDate,
+                status: batch.status
+              });
+
+            if (insertError) {
+              throw insertError;
+            }
+          }
+        }
       }
       
+      // Invalidate related queries
       await queryClient.invalidateQueries({ queryKey: ["material-batches"] });
       
+      console.log("Successfully saved all batches for material:", updatedMaterial.id);
     } catch (error) {
       console.error("Error saving material batches:", error);
-      toast({
-        title: "Error",
-        description: `Failed to save material batches: ${error instanceof Error ? error.message : "Unknown error"}`,
-        variant: "destructive",
-      });
       throw error;
     }
   };

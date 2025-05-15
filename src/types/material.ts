@@ -21,6 +21,7 @@ export interface Material {
   vendor: string;
   stock: number;
   costPerUnit: number;
+  abcClassification?: string;
   batches?: MaterialBatch[];
 }
 

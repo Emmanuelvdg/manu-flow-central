@@ -371,6 +371,7 @@ export type Database = {
       }
       materials: {
         Row: {
+          abc_classification: string | null
           category: string | null
           created_at: string
           id: string
@@ -381,6 +382,7 @@ export type Database = {
           vendor: string | null
         }
         Insert: {
+          abc_classification?: string | null
           category?: string | null
           created_at?: string
           id: string
@@ -391,6 +393,7 @@ export type Database = {
           vendor?: string | null
         }
         Update: {
+          abc_classification?: string | null
           category?: string | null
           created_at?: string
           id?: string
