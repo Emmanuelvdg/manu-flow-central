@@ -11,7 +11,7 @@ interface CustomProductsListProps {
 
 export const CustomProductsList: React.FC<CustomProductsListProps> = ({ quoteId }) => {
   // Fetch custom products for this quote
-  const { data: customProducts, isLoading } = useQuery<CustomProduct[]>({
+  const { data: customProducts, isLoading } = useQuery({
     queryKey: ['custom-products', quoteId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -20,7 +20,14 @@ export const CustomProductsList: React.FC<CustomProductsListProps> = ({ quoteId 
         .eq('quote_id', quoteId);
         
       if (error) throw error;
-      return data || [];
+      
+      // Transform the raw data to match our CustomProduct interface
+      return (data || []).map(product => ({
+        id: product.id,
+        name: product.name,
+        description: product.description || undefined,
+        documents: Array.isArray(product.documents) ? product.documents : []
+      })) as CustomProduct[];
     },
   });
   
