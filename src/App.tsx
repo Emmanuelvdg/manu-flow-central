@@ -25,6 +25,7 @@ import RFQs from "@/pages/RFQs";
 import Invoices from "@/pages/Invoices";
 import Products from "@/pages/Products";
 import PublicProducts from "@/pages/PublicProducts";
+import QuoteOrderMappingPage from "@/pages/order-detail/QuoteOrderMappingPage"; // Add this import
 
 // Create a client
 const queryClient = new QueryClient({
@@ -44,9 +45,9 @@ function App() {
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resources" element={<Resource />} />
-          <Route path="/orders" element={<Orders />} /> {/* Added Orders route */}
+          <Route path="/orders" element={<Orders />} /> 
           <Route path="/orders/:id" element={<OrderDetail />} />
-          <Route path="/orders/quote-order-mapping" element={<OrderDetail />} />
+          <Route path="/orders/quote-order-mapping" element={<QuoteOrderMappingPage />} /> {/* Updated to use dedicated component */}
           <Route path="/quotes" element={<Quotes />} />
           <Route path="/quotes/:id" element={<QuoteDetail />} />
           <Route path="/rfqs" element={<RFQs />} />
@@ -56,7 +57,7 @@ function App() {
           <Route path="/invoices/:id" element={<InvoiceDetail />} />
           <Route path="/site-config" element={<PublicSiteConfig />} />
           <Route path="/users" element={<UserManagement />} />
-          <Route path="/user-management" element={<UserManagement />} /> {/* Added user-management route */}
+          <Route path="/user-management" element={<UserManagement />} />
           <Route path="/recipe/:id" element={<Recipe />} />
           <Route path="/recipe/create" element={<RecipeCreate />} />
           <Route path="/recipes" element={<RecipesDashboard />} />
