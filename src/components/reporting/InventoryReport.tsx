@@ -12,7 +12,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieC
 import { LoadingState } from "@/pages/quote-detail/components/LoadingState";
 import { DataTable } from "@/components/ui/DataTable";
 import type { Column } from "@/components/ui/DataTable";
-import type { Material } from "@/types/material";
+import type { Material, MaterialBatch } from "@/types/material";
 
 interface InventoryReportProps {
   dateRange: 'week' | 'month' | 'quarter' | 'year';
@@ -85,10 +85,24 @@ export const InventoryReport: React.FC<InventoryReportProps> = ({ dateRange }) =
       
       // Process materials for ABC analysis
       const materialsWithValues = materials.map(material => {
+        // Map database batches to MaterialBatch type
+        const mappedBatches: MaterialBatch[] = material.batches ? material.batches.map((batch: any) => ({
+          id: batch.id,
+          materialId: batch.material_id,
+          batchNumber: batch.batch_number,
+          initialStock: batch.initial_stock,
+          remainingStock: batch.remaining_stock,
+          costPerUnit: batch.cost_per_unit,
+          purchaseDate: batch.purchase_date,
+          expiryDate: batch.expiry_date || null,
+          deliveredDate: null, // This field isn't in the database
+          status: batch.status || 'received'
+        })) : [];
+        
         // Calculate total value of inventory
-        const totalStock = material.batches?.reduce((sum, batch) => sum + (batch.remaining_stock || 0), 0) || 0;
-        const avgCost = material.batches?.length > 0
-          ? material.batches.reduce((sum, batch) => sum + (batch.cost_per_unit || 0), 0) / material.batches.length
+        const totalStock = mappedBatches.reduce((sum, batch) => sum + (batch.remainingStock || 0), 0);
+        const avgCost = mappedBatches.length > 0
+          ? mappedBatches.reduce((sum, batch) => sum + (batch.costPerUnit || 0), 0) / mappedBatches.length
           : 0;
         const inventoryValue = totalStock * avgCost;
         
@@ -105,24 +119,26 @@ export const InventoryReport: React.FC<InventoryReportProps> = ({ dateRange }) =
         const materialAllocations = allocations?.filter(alloc => alloc.material_id === material.id) || [];
         const totalAllocated = materialAllocations.reduce((sum, alloc) => sum + (alloc.quantity || 0), 0);
         
-        // Transform to match our MaterialWithValues interface
-        return {
+        // Build MaterialWithValues object with properly typed batches
+        const result: MaterialWithValues = {
           id: material.id,
           name: material.name,
           category: material.category || "",
           unit: material.unit,
           status: material.status || "Active",
           vendor: material.vendor || "",
-          stock: totalStock, // Map totalStock to stock to match the interface
-          costPerUnit: avgCost, // Map avgCost to costPerUnit to match the interface
-          batches: material.batches || [],
+          stock: totalStock,
+          costPerUnit: avgCost,
+          batches: mappedBatches,
           // Additional calculated values
           totalStock,
           avgCost,
           inventoryValue,
           avgLeadTime,
           totalAllocated
-        } as MaterialWithValues;
+        };
+        
+        return result;
       });
       
       // Sort by inventory value for ABC analysis
