@@ -1,15 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Edit } from "lucide-react";
 import RequirementsSection from "./RequirementsSection";
 import RecipeFullTable from "./RecipeFullTable";
-
-// Helper function to calculate material cost
-const calculateMaterialCost = (quantity: number, costPerUnit: number): number => {
-  return quantity * costPerUnit;
-};
 
 interface RecipeDetailsProps {
   recipe: any;
@@ -24,8 +19,10 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   handleAddMaterial,
   handleAddRoutingStage,
 }) => {
+  const [quantity, setQuantity] = useState(1);
+  
   // Make sure we have the expected structure, with backward compatibility
-  const routingStages = recipe.routing_stages || [];
+  const routingStages = recipe.routing_stages || recipe.stages || [];
   const materials = recipe.materials || [];
   
   // Extract all personnel and machines from routing stages for backward compatibility
@@ -41,17 +38,18 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
   const personnel = recipe.personnel || extractPersonnelFromStages();
   const machines = recipe.machines || extractMachinesFromStages();
 
-  // Get material costs if available in the recipe
-  const materialCosts = recipe.totalCost 
-    ? {
-        individualCosts: materials.map((m: any) => ({
-          ...m,
-          cost: calculateMaterialCost(m.quantity, m.costPerUnit || 0),
-          costPerUnit: m.costPerUnit || 0
-        })),
-        totalCost: recipe.totalCost
-      }
-    : undefined;
+  // Format material costs for the table
+  const materialCosts = {
+    individualCosts: materials.map((m: any) => ({
+      id: m.id || m.material_id,
+      name: m.name || "",
+      quantity: m.quantity || 0,
+      unit: m.unit || "",
+      cost: (m.quantity || 0) * (m.costPerUnit || 0),
+      costPerUnit: m.costPerUnit || 0
+    })),
+    totalCost: recipe.totalCost || 0
+  };
 
   return (
     <Card>
@@ -85,17 +83,11 @@ const RecipeDetails: React.FC<RecipeDetailsProps> = ({
           onAddRoutingStage={handleAddRoutingStage}
         />
         <RecipeFullTable 
-          recipe={recipe}
           materials={materials}
           routingStages={routingStages}
-          materialCosts={{
-            individualCosts: materials.map((m: any) => ({
-              ...m,
-              cost: calculateMaterialCost(m.quantity, m.costPerUnit || 0),
-              costPerUnit: m.costPerUnit || 0
-            })),
-            totalCost: recipe.totalCost || 0
-          }}
+          materialCosts={materialCosts}
+          quantity={quantity}
+          setQuantity={setQuantity}
         />
       </CardContent>
     </Card>

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Table, 
   TableHeader, 
@@ -8,19 +8,20 @@ import {
   TableBody
 } from "@/components/ui/table";
 import MaterialsTableRows from "./MaterialsTableRows";
-import PersonnelRow from "./PersonnelRow";
-import MachineRow from "./MachineRow";
-import StageGroupRows from "./StageGroupRows";
-import RecipeStats from "./RecipeStats";
-import TotalCostRow from "./TotalCostRow";
+import { PersonnelRow } from "./PersonnelRow";
+import { MachineRow } from "./MachineRow";
+import { StageGroupRows } from "./StageGroupRows";
+import { RecipeStats } from "./RecipeStats";
+import { TotalCostRow } from "./TotalCostRow";
 import RecipeTableFilters from "./RecipeTableFilters";
-import { RecipeFullTableProps, MaterialCost } from "./types";
+import { RecipeFullTableProps } from "./types";
 
 const RecipeFullTable: React.FC<RecipeFullTableProps> = ({ 
-  recipe, 
+  materials, 
+  routingStages,
+  materialCosts,
   quantity = 1,
   setQuantity,
-  materialCosts,
   onCostUpdated
 }) => {
   const [showStats, setShowStats] = useState(false);
@@ -31,70 +32,73 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
   });
 
   // Calculate costs
-  const calculateTotalCost = () => {
-    if (!recipe) return 0;
+  const calculateMaterialCost = () => {
+    if (!materials) return 0;
     
-    let totalCost = 0;
-    
-    // Material costs
-    if (recipe.materials && recipe.materials.length > 0) {
-      totalCost += recipe.materials.reduce((sum, material) => {
-        const materialCost = materialCosts?.[material.material_id]?.costPerUnit || 0;
-        return sum + (materialCost * (material.quantity || 1));
-      }, 0);
-    }
-    
-    // Personnel costs
-    if (recipe.personnel && recipe.personnel.length > 0) {
-      totalCost += recipe.personnel.reduce((sum, person) => {
-        const hourlyRate = person.cost_per_hour || 0; // Updated to use cost_per_hour
-        const hours = person.hours || 0;
-        return sum + (hourlyRate * hours);
-      }, 0);
-    }
-    
-    // Machine costs
-    if (recipe.machines && recipe.machines.length > 0) {
-      totalCost += recipe.machines.reduce((sum, machine) => {
-        const hourlyRate = machine.cost_per_hour || 0; // Updated to use cost_per_hour
-        const hours = machine.hours || 0;
-        return sum + (hourlyRate * hours);
-      }, 0);
-    }
-    
-    return totalCost;
+    return materials.reduce((sum, material) => {
+      const materialCost = materialCosts?.individualCosts?.find(m => m.id === material.id)?.costPerUnit || 0;
+      return sum + (materialCost * (material.quantity || 1));
+    }, 0);
   };
   
-  const totalCost = calculateTotalCost() * quantity;
+  const calculateLaborCost = () => {
+    if (!routingStages) return 0;
+    
+    const personnel = routingStages.flatMap(stage => stage.personnel || []);
+    return personnel.reduce((sum, person) => {
+      const hourlyRate = person.cost_per_hour || 0;
+      const hours = person.hours || 0;
+      return sum + (hourlyRate * hours);
+    }, 0);
+  };
+  
+  const calculateMachineCost = () => {
+    if (!routingStages) return 0;
+    
+    const machines = routingStages.flatMap(stage => stage.machines || []);
+    return machines.reduce((sum, machine) => {
+      const hourlyRate = machine.cost_per_hour || 0;
+      const hours = machine.hours || 0;
+      return sum + (hourlyRate * hours);
+    }, 0);
+  };
+  
+  const materialCost = calculateMaterialCost() * quantity;
+  const laborCost = calculateLaborCost() * quantity;
+  const machineCost = calculateMachineCost() * quantity;
+  const totalCost = materialCost + laborCost + machineCost;
   
   // Update parent component with cost when it changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (onCostUpdated) {
       onCostUpdated(totalCost);
     }
   }, [totalCost, onCostUpdated]);
 
-  if (!recipe) {
+  if (!materials && !routingStages) {
     return <div>No recipe data available</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <RecipeStats 
-          recipeData={recipe} 
-          quantity={quantity} 
-          showStats={showStats} 
-          setShowStats={setShowStats}
-        />
-        
-        <RecipeTableFilters 
-          filters={filters}
-          setFilters={setFilters}
-          quantity={quantity}
-          setQuantity={setQuantity}
-        />
-      </div>
+      <RecipeStats
+        quantity={quantity}
+        showStats={showStats}
+        setShowStats={setShowStats}
+        materialCost={materialCost}
+        laborCost={laborCost}
+        machineCost={machineCost}
+        totalCost={totalCost}
+      />
+      
+      <RecipeTableFilters 
+        showPersonnel={filters.showPersonnel}
+        showMachines={filters.showMachines}
+        showMaterials={filters.showMaterials}
+        setFilters={setFilters}
+        quantity={quantity}
+        setQuantity={setQuantity}
+      />
 
       <Table>
         <TableHeader>
@@ -107,26 +111,26 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filters.showMaterials && recipe.materials && recipe.materials.length > 0 && (
+          {filters.showMaterials && materials && materials.length > 0 && (
             <MaterialsTableRows 
-              materials={recipe.materials} 
-              materialCosts={materialCosts} 
+              materials={materials} 
+              materialCosts={materialCosts?.individualCosts || []} 
               quantity={quantity} 
             />
           )}
           
-          {filters.showPersonnel && recipe.personnel && recipe.personnel.length > 0 && 
-            recipe.personnel.map(person => (
+          {filters.showPersonnel && routingStages && routingStages.length > 0 && 
+            routingStages.flatMap(stage => stage.personnel || []).map(personnel => (
               <PersonnelRow 
-                key={person.id || person.personnel_id} 
-                person={person} 
+                key={personnel.id || personnel.personnel_id} 
+                personnel={personnel} 
                 quantity={quantity} 
               />
             ))
           }
           
-          {filters.showMachines && recipe.machines && recipe.machines.length > 0 && 
-            recipe.machines.map(machine => (
+          {filters.showMachines && routingStages && routingStages.length > 0 && 
+            routingStages.flatMap(stage => stage.machines || []).map(machine => (
               <MachineRow 
                 key={machine.id || machine.machine_id} 
                 machine={machine} 
@@ -135,11 +139,9 @@ const RecipeFullTable: React.FC<RecipeFullTableProps> = ({
             ))
           }
           
-          {recipe.stages && recipe.stages.length > 0 && filters.showMachines && filters.showPersonnel && (
+          {routingStages && routingStages.length > 0 && filters.showMachines && filters.showPersonnel && (
             <StageGroupRows 
-              stages={recipe.stages}
-              personnel={recipe.personnel || []}
-              machines={recipe.machines || []}
+              routingStages={routingStages}
               quantity={quantity}
             />
           )}

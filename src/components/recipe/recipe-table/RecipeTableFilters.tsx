@@ -1,102 +1,75 @@
 
-import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Search, FilterX } from "lucide-react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { CircleStack, Users2, Cog } from 'lucide-react';
+import { RecipeTableFiltersProps } from './types';
 
-export interface RecipeFilters {
-  materialNameFilter: string;
-  minCostThreshold: number;
-}
-
-interface RecipeTableFiltersProps {
-  onFilterChange: (filters: RecipeFilters) => void;
-  maxPossibleCost: number;
-}
-
-const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({ 
-  onFilterChange,
-  maxPossibleCost = 100 
+const RecipeTableFilters: React.FC<RecipeTableFiltersProps> = ({
+  showPersonnel,
+  showMachines,
+  showMaterials,
+  setFilters,
+  quantity,
+  setQuantity
 }) => {
-  const [materialNameFilter, setMaterialNameFilter] = useState<string>("");
-  const [minCostThreshold, setMinCostThreshold] = useState<number>(0);
-  const [sliderValue, setSliderValue] = useState<number[]>([0]);
-
-  const handleNameFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setMaterialNameFilter(newValue);
-    onFilterChange({
-      materialNameFilter: newValue,
-      minCostThreshold
-    });
-  };
-
-  const handleCostThresholdChange = (value: number[]) => {
-    const newValue = value[0];
-    setSliderValue(value);
-    setMinCostThreshold(newValue);
-    onFilterChange({
-      materialNameFilter,
-      minCostThreshold: newValue
-    });
-  };
-
-  const handleClearFilters = () => {
-    setMaterialNameFilter("");
-    setMinCostThreshold(0);
-    setSliderValue([0]);
-    onFilterChange({
-      materialNameFilter: "",
-      minCostThreshold: 0
-    });
+  const handleFilterToggle = (filterName: string, value: boolean) => {
+    setFilters(current => ({
+      ...current,
+      [filterName]: value
+    }));
   };
 
   return (
-    <div className="p-4 bg-white border rounded-lg shadow-sm">
-      <div className="text-sm font-medium mb-3 text-gray-700">Filter Materials</div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="materialFilter" className="text-sm text-gray-600">Material Name</Label>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              id="materialFilter"
-              placeholder="Filter by name..."
-              value={materialNameFilter}
-              onChange={handleNameFilterChange}
-              className="pl-8 border-gray-300 focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2 md:col-span-1">
-          <div className="flex justify-between">
-            <Label htmlFor="costThreshold" className="text-sm text-gray-600">
-              Min Cost: <span className="font-medium text-blue-600">${minCostThreshold}</span>
-            </Label>
-          </div>
-          <Slider
-            id="costThreshold"
-            value={sliderValue}
-            onValueChange={handleCostThresholdChange}
-            max={maxPossibleCost}
-            step={1}
-            className="py-2"
-          />
-        </div>
-        
-        <div className="flex items-end">
-          <Button 
-            variant="outline" 
-            onClick={handleClearFilters}
-            className="flex items-center gap-1 border-gray-300 hover:bg-gray-50"
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-2 border-b">
+      <div className="flex items-center gap-2">
+        <div className="font-medium text-sm">Filters:</div>
+        <ToggleGroup type="multiple">
+          <ToggleGroupItem
+            value="materials"
+            aria-label="Toggle materials"
+            pressed={showMaterials}
+            onClick={() => handleFilterToggle('showMaterials', !showMaterials)}
           >
-            <FilterX className="h-4 w-4" />
-            Clear Filters
-          </Button>
-        </div>
+            <CircleStack className="h-4 w-4 mr-1" />
+            Materials
+          </ToggleGroupItem>
+          
+          <ToggleGroupItem
+            value="personnel"
+            aria-label="Toggle personnel"
+            pressed={showPersonnel}
+            onClick={() => handleFilterToggle('showPersonnel', !showPersonnel)}
+          >
+            <Users2 className="h-4 w-4 mr-1" />
+            Personnel
+          </ToggleGroupItem>
+          
+          <ToggleGroupItem
+            value="machines"
+            aria-label="Toggle machines"
+            pressed={showMachines}
+            onClick={() => handleFilterToggle('showMachines', !showMachines)}
+          >
+            <Cog className="h-4 w-4 mr-1" />
+            Machines
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <label htmlFor="quantity" className="text-sm font-medium">
+          Quantity:
+        </label>
+        <Input
+          id="quantity"
+          type="number"
+          min="1"
+          className="w-20"
+          value={quantity}
+          onChange={e => setQuantity && setQuantity(Number(e.target.value) || 1)}
+        />
       </div>
     </div>
   );

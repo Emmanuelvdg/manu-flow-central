@@ -10,14 +10,18 @@ export interface Personnel {
   id: string;
   role: string;
   hours: number;
+  cost_per_hour?: number;
   stageId?: string;
+  personnel_id?: string;
 }
 
 export interface Machine {
   id: string;
   machine: string;
   hours: number;
+  cost_per_hour?: number;
   stageId?: string;
+  machine_id?: string;
 }
 
 export interface RoutingStage {
@@ -45,4 +49,35 @@ export interface RecipeFullTableProps {
     individualCosts: MaterialCost[];
     totalCost: number;
   };
+  quantity?: number;
+  setQuantity?: React.Dispatch<React.SetStateAction<number>>;
+  onCostUpdated?: (cost: number) => void;
+}
+
+export interface RecipeTableFiltersProps {
+  showPersonnel: boolean;
+  showMachines: boolean;
+  showMaterials: boolean;
+  setFilters: React.Dispatch<React.SetStateAction<{
+    showPersonnel: boolean;
+    showMachines: boolean;
+    showMaterials: boolean;
+  }>>;
+  quantity: number;
+  setQuantity?: React.Dispatch<React.SetStateAction<number>>;
+}
+
+export interface PersonnelRowProps {
+  personnel: Personnel;
+  quantity: number;
+}
+
+export interface MachineRowProps {
+  machine: Machine;
+  quantity: number;
+}
+
+export interface StageGroupRowsProps {
+  routingStages: RoutingStage[];
+  quantity: number;
 }
