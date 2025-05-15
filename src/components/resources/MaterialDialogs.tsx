@@ -10,8 +10,8 @@ interface MaterialDialogsProps {
   isPurchaseDialogOpen: boolean;
   onCloseEditDialog: () => void;
   onClosePurchaseDialog: () => void;
-  onSaveMaterial: (material: Material) => void;
-  onCreateOrder: (order: PurchaseOrder, newBatch: MaterialBatch) => void;
+  onSaveMaterial: (material: Material) => Promise<void>;
+  onCreateOrder: (order: PurchaseOrder, newBatch: MaterialBatch) => Promise<void>;
 }
 
 export const MaterialDialogs: React.FC<MaterialDialogsProps> = ({
@@ -37,7 +37,7 @@ export const MaterialDialogs: React.FC<MaterialDialogsProps> = ({
         material={selectedMaterial}
         isOpen={isPurchaseDialogOpen}
         onClose={onClosePurchaseDialog}
-        onCreateOrder={onCreateOrder}
+        onSubmitOrder={onCreateOrder}
       />
     </>
   );

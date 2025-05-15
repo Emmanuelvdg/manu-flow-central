@@ -1,31 +1,19 @@
-
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Material } from "@/types/material";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import React from "react";
+import { Material, PurchaseOrder, MaterialBatch } from "@/types/material";
 
 interface PurchaseOrderProps {
   material: Material;
   isOpen: boolean;
   onClose: () => void;
-  onProcessOrder: (order: any, newBatch: any) => Promise<void>;
-  formatDate: (dateString: string) => string;
+  onSubmitOrder: (order: PurchaseOrder, newBatch: MaterialBatch) => Promise<void>;
 }
 
-export function PurchaseOrderDialog({
+export const PurchaseOrderDialog: React.FC<PurchaseOrderProps> = ({
   material,
   isOpen,
   onClose,
-  onProcessOrder,
-  formatDate,
-}: PurchaseOrderProps) {
+  onSubmitOrder,
+}) => {
   // State for quantity, date, and price
   const [quantity, setQuantity] = useState<number>(100);
   const [price, setPrice] = useState<number>(material.costPerUnit || 0);
@@ -76,7 +64,7 @@ export function PurchaseOrderDialog({
       };
 
       // Process the order
-      await onProcessOrder(order, newBatch);
+      await onSubmitOrder(order, newBatch);
       onClose();
     } catch (error) {
       console.error("Error processing purchase order:", error);
@@ -86,120 +74,122 @@ export function PurchaseOrderDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create Purchase Order for {material.name}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="quantity">Quantity</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={handleQuantityChange}
-                required
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                In {material.unit}
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="price">Unit Price</Label>
-              <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
+    <div>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Purchase Order for {material.name}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="quantity">Quantity</Label>
                 <Input
-                  id="price"
+                  id="quantity"
                   type="number"
-                  step="0.01"
-                  min="0.01"
-                  className="pl-6"
-                  value={price}
-                  onChange={handlePriceChange}
+                  min="1"
+                  value={quantity}
+                  onChange={handleQuantityChange}
                   required
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  In {material.unit}
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="price">Unit Price</Label>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    className="pl-6"
+                    value={price}
+                    onChange={handlePriceChange}
+                    required
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Order Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !orderDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {orderDate ? formatDateDisplay(orderDate) : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={orderDate}
-                    onSelect={(date) => date && setOrderDate(date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Order Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !orderDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {orderDate ? formatDateDisplay(orderDate) : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={orderDate}
+                      onSelect={(date) => date && setOrderDate(date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label>Expected Delivery</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !deliveryDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {deliveryDate ? formatDateDisplay(deliveryDate) : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={deliveryDate}
+                      onSelect={(date) => date && setDeliveryDate(date)}
+                      initialFocus
+                      disabled={(date) => date < new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-            <div>
-              <Label>Expected Delivery</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !deliveryDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {deliveryDate ? formatDateDisplay(deliveryDate) : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={deliveryDate}
-                    onSelect={(date) => date && setDeliveryDate(date)}
-                    initialFocus
-                    disabled={(date) => date < new Date()}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
 
-          <div className="pt-2 border-t border-gray-200">
-            <div className="flex justify-between text-sm mb-2">
-              <span>Total Cost:</span>
-              <span className="font-semibold">
-                ${(price * quantity).toFixed(2)}
-              </span>
+            <div className="pt-2 border-t border-gray-200">
+              <div className="flex justify-between text-sm mb-2">
+                <span>Total Cost:</span>
+                <span className="font-semibold">
+                  ${(price * quantity).toFixed(2)}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Processing..." : "Create Purchase Order"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Processing..." : "Create Purchase Order"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
-}
+};
