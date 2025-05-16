@@ -69,7 +69,7 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
 
   const startDate = calculateDateRange();
   
-  // Fetch financial data
+  // Fetch financial data with improved error handling and caching
   return useQuery({
     queryKey: ['financial-analysis', dateRange],
     queryFn: async () => {
@@ -88,7 +88,28 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
         
         if (ordersError) {
           console.error("Error fetching orders:", ordersError);
+          toast.error(`Failed to fetch orders: ${ordersError.message}`);
           throw ordersError;
+        }
+        
+        if (!orders || orders.length === 0) {
+          console.log("No orders found for the selected time period");
+          // Return empty dataset with proper structure
+          return {
+            grossMarginByProduct: [],
+            agingData: [
+              { name: 'Current', count: 0, value: 0 },
+              { name: '1-30 Days', count: 0, value: 0 },
+              { name: '31-60 Days', count: 0, value: 0 },
+              { name: '61-90 Days', count: 0, value: 0 },
+              { name: 'Over 90 Days', count: 0, value: 0 }
+            ],
+            wipTotal: 0,
+            totalOrders: 0,
+            totalRevenue: 0,
+            invoicesPaid: 0,
+            invoicesUnpaid: 0
+          };
         }
         
         console.log(`Fetched ${orders?.length || 0} orders`);
@@ -102,6 +123,7 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
         
         if (invoicesError) {
           console.error("Error fetching invoices:", invoicesError);
+          toast.error(`Failed to fetch invoices: ${invoicesError.message}`);
           throw invoicesError;
         }
         
@@ -115,14 +137,16 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
         
         if (recipesError) {
           console.error("Error fetching recipes:", recipesError);
+          toast.error(`Failed to fetch recipe cost data: ${recipesError.message}`);
           throw recipesError;
         }
         
         console.log(`Fetched ${recipes?.length || 0} recipes`);
         
+        // Validate data
         if (!orders) {
           console.log("No orders found in the specified date range");
-          return null;
+          throw new Error("No orders data available for the specified time range");
         }
         
         console.log("Processing product margins data...");
@@ -132,6 +156,11 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
         
         console.log("Order processing details:");
         orders.forEach((order, orderIndex) => {
+          if (!order) {
+            console.warn("Encountered undefined order, skipping");
+            return;
+          }
+          
           console.log(`Processing order ${orderIndex + 1}/${orders.length}:`, {
             orderId: order.id,
             orderNumber: order.order_number,
@@ -141,6 +170,11 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
           
           if (order.order_products && order.order_products.length > 0) {
             order.order_products.forEach((product) => {
+              if (!product || !product.product_id) {
+                console.warn("Skipping invalid product entry in order");
+                return;
+              }
+              
               const productId = product.product_id;
               const recipeId = product.recipe_id;
               
@@ -150,8 +184,8 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
               });
               
               // Find matching recipe for cost data
-              const recipe = recipes?.find(r => r.id === recipeId);
-              const productCost = recipe ? recipe.totalCost : 0;
+              const recipe = recipes?.find(r => r?.id === recipeId);
+              const productCost = recipe ? Number(recipe.totalCost) || 0 : 0;
               
               console.log("Product cost details:", {
                 recipeFound: !!recipe,
@@ -159,7 +193,10 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
               });
               
               // Calculate revenue (using order total as approximation)
-              const revenue = order.total ? (order.total / (order.order_products?.length || 1)) : 0;
+              const orderProductsCount = order.order_products?.length || 1;
+              const revenue = order.total && orderProductsCount > 0 
+                ? (Number(order.total) / orderProductsCount) 
+                : 0;
               const costOfSales = productCost || 0;
               const grossMargin = revenue - costOfSales;
               const grossMarginPercentage = revenue > 0 ? (grossMargin / revenue) * 100 : 0;
@@ -251,7 +288,7 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
               }
               
               agingBuckets[bucket].count++;
-              agingBuckets[bucket].value += invoice.amount || 0;
+              agingBuckets[bucket].value += Number(invoice.amount) || 0;
               
               console.log(`Invoice ${invoice.invoice_number} added to ${bucket} bucket`);
             }
@@ -265,28 +302,38 @@ export const useFinancialData = (dateRange: 'week' | 'month' | 'quarter' | 'year
         console.log("Calculating WIP total...");
         const wipTotal = orders
           .filter(order => ['in_progress', 'processing'].includes(order.status))
-          .reduce((sum, order) => sum + (order.total || 0), 0);
+          .reduce((sum, order) => sum + (Number(order.total) || 0), 0);
         
         console.log("WIP total:", wipTotal);
         
         // Prepare final data object
-        const result = {
+        const result: FinancialData = {
           grossMarginByProduct,
           agingData,
           wipTotal,
           totalOrders: orders.length,
-          totalRevenue: orders.reduce((sum, order) => sum + (order.total || 0), 0),
+          totalRevenue: orders.reduce((sum, order) => sum + (Number(order.total) || 0), 0),
           invoicesPaid: invoices?.filter(inv => inv.paid).length || 0,
           invoicesUnpaid: invoices?.filter(inv => !inv.paid).length || 0
-        } as FinancialData;
+        };
         
-        console.log("Financial data processing complete");
+        console.log("Financial data processing complete", {
+          productsCount: result.grossMarginByProduct.length,
+          agingBucketsCount: result.agingData.length,
+          totalRevenue: result.totalRevenue,
+          wipTotal: result.wipTotal
+        });
         return result;
       } catch (error) {
         console.error("Error in financial data processing:", error);
         toast.error("Failed to load financial data");
         throw error;
       }
-    }
+    },
+    // Add staleTime to control how often data is refetched
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    // Add retry behavior for resilience
+    retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
