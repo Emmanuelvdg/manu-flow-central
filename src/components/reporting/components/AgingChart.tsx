@@ -32,7 +32,7 @@ export const AgingChart: React.FC<AgingChartProps> = ({ data }) => {
   };
 
   return (
-    <Card className="col-span-1">
+    <Card className="col-span-1 h-full">
       <CardHeader>
         <div className="flex items-center">
           <BarChart3 className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -40,38 +40,47 @@ export const AgingChart: React.FC<AgingChartProps> = ({ data }) => {
         </div>
         <CardDescription>Unpaid invoices by age</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-1 sm:p-6">
         {!hasData ? (
-          <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
+          <div className="h-[250px] sm:h-[300px] flex flex-col items-center justify-center text-muted-foreground">
             <AlertCircle className="h-16 w-16 mb-2 text-muted-foreground/50" />
             <p>No invoice aging data available</p>
           </div>
         ) : (
-          <div className="h-[300px]">
+          <div className="h-[250px] sm:h-[300px]">
             <ChartContainer config={chartConfig}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                  <XAxis 
-                    dataKey="name" 
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis 
-                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                    width={50}
-                  />
-                  <Tooltip 
-                    content={<ChartTooltipContent />}
-                    formatter={(value: number) => [formatCurrency(value), 'Amount']}
-                  />
-                  <Legend />
-                  <Bar 
-                    dataKey="value" 
-                    name="Amount" 
-                    fill="#f59e0b" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 10 }}
+                  tickMargin={5}
+                  height={40}
+                  interval="preserveStartEnd"
+                  className="text-xs sm:text-sm"
+                />
+                <YAxis 
+                  tickFormatter={(value) => {
+                    // Responsive formatter based on screen size
+                    if (window.innerWidth < 640) {
+                      return `$${(value / 1000)}k`;
+                    }
+                    return `$${(value / 1000).toFixed(0)}k`;
+                  }}
+                  width={45}
+                  className="text-xs sm:text-sm"
+                />
+                <Tooltip 
+                  content={<ChartTooltipContent />}
+                  formatter={(value: number) => [formatCurrency(value), 'Amount']}
+                />
+                <Legend wrapperStyle={{ fontSize: '10px', marginTop: '10px' }} />
+                <Bar 
+                  dataKey="value" 
+                  name="Amount" 
+                  fill="#f59e0b" 
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
             </ChartContainer>
           </div>
         )}

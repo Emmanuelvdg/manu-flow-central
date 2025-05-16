@@ -46,20 +46,24 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ dateRange }) =
   const { grossMarginByProduct, agingData } = data;
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold">Financial Performance</h2>
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-0 overflow-x-hidden">
+      <h2 className="text-xl font-bold px-2 sm:px-0">Financial Performance</h2>
       
       {/* Financial KPIs */}
-      <FinancialKPICards data={data} />
+      <div className="px-2 sm:px-0">
+        <FinancialKPICards data={data} />
+      </div>
       
       {/* Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         <GrossMarginChart data={grossMarginByProduct} />
         <AgingChart data={agingData} />
       </div>
       
       {/* Detailed margin table with pagination */}
-      <ProductMarginTable data={grossMarginByProduct} />
+      <div className="px-2 sm:px-0 overflow-x-auto">
+        <ProductMarginTable data={grossMarginByProduct} />
+      </div>
     </div>
   );
 };

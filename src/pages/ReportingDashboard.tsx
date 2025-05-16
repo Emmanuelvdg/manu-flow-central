@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +9,23 @@ import { FinancialReport } from "@/components/reporting/FinancialReport";
 
 const ReportingDashboard = () => {
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
+  // Track window resize for responsive adjustments
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   return (
     <MainLayout title="Reporting Dashboard">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-0">
         <div>
-          <h1 className="text-3xl font-bold">Business Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Business Analytics</h1>
           <p className="text-muted-foreground">
             Monitor key metrics and performance indicators
           </p>
@@ -34,25 +45,33 @@ const ReportingDashboard = () => {
         </div>
       </div>
       
-      <Tabs defaultValue="sales" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="sales">RFQ to Order Analytics</TabsTrigger>
-          <TabsTrigger value="inventory">Inventory Analysis</TabsTrigger>
-          <TabsTrigger value="financial">Financial Performance</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="sales" className="mt-4 space-y-4">
-          <RFQConversionReport dateRange={dateRange} />
-        </TabsContent>
-        
-        <TabsContent value="inventory" className="mt-4 space-y-4">
-          <InventoryReport dateRange={dateRange} />
-        </TabsContent>
-        
-        <TabsContent value="financial" className="mt-4 space-y-4">
-          <FinancialReport dateRange={dateRange} />
-        </TabsContent>
-      </Tabs>
+      <div className="overflow-x-hidden">
+        <Tabs defaultValue="sales" className="w-full">
+          <TabsList className={`grid w-full ${windowWidth < 640 ? 'grid-cols-1 gap-2' : 'grid-cols-3'}`}>
+            <TabsTrigger value="sales">RFQ to Order Analytics</TabsTrigger>
+            <TabsTrigger value="inventory">Inventory Analysis</TabsTrigger>
+            <TabsTrigger value="financial">Financial Performance</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="sales" className="mt-4 space-y-4">
+            <div className="overflow-x-auto">
+              <RFQConversionReport dateRange={dateRange} />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="inventory" className="mt-4 space-y-4">
+            <div className="overflow-x-auto">
+              <InventoryReport dateRange={dateRange} />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="financial" className="mt-4 space-y-4">
+            <div className="overflow-x-auto">
+              <FinancialReport dateRange={dateRange} />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </MainLayout>
   );
 };

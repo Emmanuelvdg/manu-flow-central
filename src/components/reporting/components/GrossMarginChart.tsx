@@ -20,6 +20,27 @@ export const GrossMarginChart: React.FC<GrossMarginChartProps> = ({ data }) => {
     cost: { theme: { light: "#ef4444", dark: "#ef4444" } },
     margin: { theme: { light: "#3b82f6", dark: "#3b82f6" } }
   };
+  
+  // Handle responsive data display - show fewer items on smaller screens
+  const getResponsiveData = () => {
+    // Determine number of items to show based on available width
+    const screenWidth = window.innerWidth;
+    let itemCount = 5;
+    
+    if (screenWidth < 640) {
+      itemCount = 3;
+    } else if (screenWidth < 768) {
+      itemCount = 4;
+    }
+    
+    return data.slice(0, itemCount).map(item => ({
+      ...item,
+      // Truncate long product names for better display
+      productName: item.productName.length > 12 
+        ? `${item.productName.substring(0, 10)}...` 
+        : item.productName
+    }));
+  };
 
   // Format currency for tooltip
   const formatCurrency = (value: number) => {
@@ -30,17 +51,8 @@ export const GrossMarginChart: React.FC<GrossMarginChartProps> = ({ data }) => {
     }).format(value);
   };
 
-  // Check if we have any data to display
-  const chartData = data.slice(0, 5).map(item => ({
-    ...item,
-    // Truncate long product names for better display
-    productName: item.productName.length > 15 
-      ? `${item.productName.substring(0, 12)}...` 
-      : item.productName
-  }));
-
   return (
-    <Card className="col-span-1">
+    <Card className="col-span-1 h-full">
       <CardHeader>
         <div className="flex items-center">
           <BarChartHorizontal className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -48,54 +60,62 @@ export const GrossMarginChart: React.FC<GrossMarginChartProps> = ({ data }) => {
         </div>
         <CardDescription>Revenue and margin by product line</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-1 sm:p-6">
         {data.length === 0 ? (
-          <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
+          <div className="h-[250px] sm:h-[300px] flex flex-col items-center justify-center text-muted-foreground">
             <AlertCircle className="h-16 w-16 mb-2 text-muted-foreground/50" />
             <p>No product margin data available</p>
           </div>
         ) : (
-          <div className="h-[300px]">
+          <div className="h-[250px] sm:h-[300px]">
             <ChartContainer config={chartConfig}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart 
-                  data={chartData}
-                  margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-                >
-                  <XAxis 
-                    dataKey="productName" 
-                    tick={{ fontSize: 11 }}
-                    interval={0}
-                  />
-                  <YAxis 
-                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                    width={50}
-                  />
-                  <Tooltip 
-                    content={<ChartTooltipContent />}
-                    formatter={(value: number) => [formatCurrency(value), '']}
-                  />
-                  <Legend />
-                  <Bar 
-                    dataKey="totalRevenue" 
-                    name="Revenue" 
-                    fill="#22c55e" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="totalCost" 
-                    name="Cost" 
-                    fill="#ef4444" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="totalGrossMargin" 
-                    name="Margin" 
-                    fill="#3b82f6" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <BarChart 
+                data={getResponsiveData()}
+                margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+              >
+                <XAxis 
+                  dataKey="productName" 
+                  tick={{ fontSize: 10 }}
+                  height={50}
+                  interval={0}
+                  angle={-15}
+                  textAnchor="end"
+                  className="text-xs sm:text-sm"
+                />
+                <YAxis 
+                  tickFormatter={(value) => {
+                    if (window.innerWidth < 640) {
+                      return `$${(value / 1000)}k`;
+                    }
+                    return `$${(value / 1000).toFixed(0)}k`;
+                  }}
+                  width={45}
+                  className="text-xs sm:text-sm"
+                />
+                <Tooltip 
+                  content={<ChartTooltipContent />}
+                  formatter={(value: number) => [formatCurrency(value), '']}
+                />
+                <Legend wrapperStyle={{ fontSize: '10px', marginTop: '10px' }} />
+                <Bar 
+                  dataKey="totalRevenue" 
+                  name="Revenue" 
+                  fill="#22c55e" 
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar 
+                  dataKey="totalCost" 
+                  name="Cost" 
+                  fill="#ef4444" 
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar 
+                  dataKey="totalGrossMargin" 
+                  name="Margin" 
+                  fill="#3b82f6" 
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
             </ChartContainer>
           </div>
         )}

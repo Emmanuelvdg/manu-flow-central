@@ -103,12 +103,32 @@ export const PriceComparisonChart: React.FC<PriceComparisonChartProps> = ({ quot
 
   if (!data.hasOrderData) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center h-full py-8">
         <p className="text-muted-foreground">No order data available for comparison</p>
         <p className="text-sm text-muted-foreground">Quote Total: {data.quoteTotal}</p>
       </div>
     );
   }
+  
+  // Process data for responsive display
+  const prepareChartData = () => {
+    // For very small screens, limit to fewer products
+    const screenWidth = window.innerWidth;
+    let maxProducts = data.productsComparison.length;
+    
+    if (screenWidth < 640) {
+      maxProducts = Math.min(3, data.productsComparison.length);
+    } else if (screenWidth < 768) {
+      maxProducts = Math.min(5, data.productsComparison.length);
+    }
+    
+    return data.productsComparison.slice(0, maxProducts).map(product => ({
+      ...product,
+      name: product.name.length > 15 
+        ? `${product.name.substring(0, 13)}...` 
+        : product.name
+    }));
+  };
 
   const chartConfig = {
     quote: { theme: { light: "#22c55e", dark: "#22c55e" } },
@@ -116,17 +136,26 @@ export const PriceComparisonChart: React.FC<PriceComparisonChartProps> = ({ quot
   };
 
   return (
-    <ChartContainer config={chartConfig}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data.productsComparison}>
-          <XAxis dataKey="name" />
+    <div className="h-[250px] sm:h-[300px] w-full">
+      <ChartContainer config={chartConfig}>
+        <BarChart 
+          data={prepareChartData()}
+          margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+        >
+          <XAxis 
+            dataKey="name" 
+            tick={{ fontSize: 10 }}
+            height={50}
+            angle={-15}
+            textAnchor="end"
+          />
           <YAxis />
           <Tooltip content={<ChartTooltipContent />} />
-          <Legend />
+          <Legend wrapperStyle={{ fontSize: '10px', marginTop: '10px' }} />
           <Bar dataKey="quotePrice" name="Quote Price" fill="#22c55e" />
           <Bar dataKey="orderPrice" name="Order Price" fill="#3b82f6" />
         </BarChart>
-      </ResponsiveContainer>
-    </ChartContainer>
+      </ChartContainer>
+    </div>
   );
 };

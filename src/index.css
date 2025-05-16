@@ -90,6 +90,31 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Add responsive font size scaling */
+  html {
+    font-size: 14px;
+  }
+  
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
+  }
+}
+
+/* Make charts responsive to window resizing */
+.recharts-wrapper {
+  max-width: 100%;
+}
+
+.recharts-surface {
+  overflow: visible;
+}
+
+/* Make tooltips responsive */
+.recharts-tooltip-wrapper {
+  max-width: 90vw;
 }
 
 .status-badge {

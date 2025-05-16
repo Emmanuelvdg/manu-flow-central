@@ -85,15 +85,30 @@ export const SalesFunnelChart: React.FC<SalesFunnelChartProps> = ({ quoteId }) =
   };
 
   return (
-    <ChartContainer config={chartConfig}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData}>
-          <XAxis dataKey="name" />
-          <YAxis label={{ value: 'Days', angle: -90, position: 'insideLeft' }} />
+    <div className="h-[250px] sm:h-[300px] w-full">
+      <ChartContainer config={chartConfig}>
+        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+          <XAxis 
+            dataKey="name" 
+            tick={{ fontSize: 12 }} 
+            height={40}
+          />
+          <YAxis 
+            label={{ 
+              value: 'Days', 
+              angle: -90, 
+              position: 'insideLeft',
+              style: {
+                fontSize: '12px',
+                textAnchor: 'middle'
+              } 
+            }} 
+            width={40}
+          />
           <Tooltip content={<ChartTooltipContent />} />
           <Bar dataKey="days" name="Days" />
         </BarChart>
-      </ResponsiveContainer>
-    </ChartContainer>
+      </ChartContainer>
+    </div>
   );
 };
