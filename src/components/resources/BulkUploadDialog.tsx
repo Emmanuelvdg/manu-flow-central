@@ -11,7 +11,13 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { Download, Upload, AlertCircle } from "lucide-react";
-import { parseFile, generateMaterialsTemplate, downloadFile } from "@/utils/fileUtils";
+import { 
+  parseFile, 
+  generateMaterialsTemplate, 
+  downloadFile, 
+  generateRecipeMaterialsTemplate,
+  generateRecipeMappingsTemplate
+} from "@/utils/fileUtils";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Material } from "@/types/material";
@@ -19,8 +25,8 @@ import { Material } from "@/types/material";
 interface BulkUploadDialogProps {
   open: boolean;
   onClose: () => void;
-  onUploadComplete: (materials: Material[]) => void;
-  templateType: 'materials' | 'recipe-materials';
+  onUploadComplete: (materials: Material[] | any[]) => void;
+  templateType: 'materials' | 'recipe-materials' | 'recipe-mappings';
   existingMaterials: Material[];
 }
 
@@ -84,9 +90,19 @@ export function BulkUploadDialog({
   };
 
   const validateData = (data: any[]) => {
-    const requiredFields = templateType === 'materials' 
-      ? ['name', 'unit'] 
-      : ['name', 'quantity', 'unit'];
+    let requiredFields: string[] = [];
+    
+    switch (templateType) {
+      case 'materials':
+        requiredFields = ['name', 'unit'];
+        break;
+      case 'recipe-materials':
+        requiredFields = ['name', 'quantity', 'unit'];
+        break;
+      case 'recipe-mappings':
+        requiredFields = ['product_id', 'name'];
+        break;
+    }
     
     // Check that all required fields are present in each row
     const missingFields = data.findIndex(row => {
@@ -98,37 +114,63 @@ export function BulkUploadDialog({
     }
   };
 
-  const processData = (data: any[]): Material[] => {
-    // Map CSV data to Material interface
-    return data.map((row, index) => {
-      const processedRow: Partial<Material> = {
-        id: `temp-${Date.now()}-${index}`,
-        name: row.name,
-        category: row.category || '',
-        unit: row.unit,
-        vendor: row.vendor || '',
-        status: 'Active',
-        costPerUnit: row.costPerUnit || 0,
-        stock: row.quantity || 0
-      };
+  const processData = (data: any[]): any[] => {
+    // Map CSV data based on template type
+    switch (templateType) {
+      case 'materials':
+        return data.map((row, index) => ({
+          id: `temp-${Date.now()}-${index}`,
+          name: row.name,
+          category: row.category || '',
+          unit: row.unit,
+          vendor: row.vendor || '',
+          status: 'Active',
+          costPerUnit: row.costPerUnit || 0,
+          stock: row.quantity || 0
+        }));
 
-      if (templateType === 'recipe-materials') {
-        // For recipe materials we only need basic properties
-        return {
-          id: processedRow.id!,
-          name: processedRow.name!,
+      case 'recipe-materials':
+        return data.map((row, index) => ({
+          id: `temp-${Date.now()}-${index}`,
+          name: row.name,
           quantity: row.quantity || 1,
-          unit: processedRow.unit!
-        } as any;
-      }
+          unit: row.unit
+        }));
 
-      return processedRow as Material;
-    });
+      case 'recipe-mappings':
+        return data.map((row) => ({
+          product_id: row.product_id,
+          product_name: row.product_name || row.product_id,
+          name: row.name,
+          description: row.description || '',
+          materials: row.materials || [],
+          routing_stages: row.routing_stages || []
+        }));
+
+      default:
+        return data;
+    }
   };
 
   const handleDownloadTemplate = () => {
-    const template = generateMaterialsTemplate();
-    const filename = templateType === 'materials' ? 'materials_template.csv' : 'recipe_materials_template.csv';
+    let template = '';
+    let filename = '';
+    
+    switch (templateType) {
+      case 'materials':
+        template = generateMaterialsTemplate();
+        filename = 'materials_template.csv';
+        break;
+      case 'recipe-materials':
+        template = generateRecipeMaterialsTemplate();
+        filename = 'recipe_materials_template.csv';
+        break;
+      case 'recipe-mappings':
+        template = generateRecipeMappingsTemplate();
+        filename = 'recipe_mappings_template.csv';
+        break;
+    }
+    
     downloadFile(template, filename, 'text/csv');
   };
 
@@ -152,14 +194,25 @@ export function BulkUploadDialog({
       });
     }
   };
+  
+  // Get dialog title based on template type
+  const getDialogTitle = () => {
+    switch (templateType) {
+      case 'materials': return 'Bulk Upload Materials';
+      case 'recipe-materials': return 'Bulk Upload Recipe Materials';
+      case 'recipe-mappings': return 'Bulk Upload BOMs/Recipe Mappings';
+      default: return 'Bulk Upload';
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Bulk Upload {templateType === 'materials' ? 'Materials' : 'Recipe Materials'}</DialogTitle>
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
           <DialogDescription>
-            Upload a CSV or Excel file with materials data
+            Upload a CSV or Excel file with {templateType === 'materials' ? 'materials data' : 
+              templateType === 'recipe-materials' ? 'recipe materials data' : 'BOM mapping data'}
           </DialogDescription>
         </DialogHeader>
         

@@ -1,58 +1,67 @@
 
-import React from "react";
-import { MaterialsTable } from "./MaterialsTable";
-import { MaterialDialogs } from "./MaterialDialogs";
-import { useMaterialsManager } from "./materials/hooks/useMaterialsManager";
+import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { MaterialsMainView } from "@/components/resources/materials/MaterialsMainView";
+import { useMaterials } from "@/components/resources/hooks/useMaterials";
+import { MaterialEditDialog } from "./MaterialEditDialog";
+import { MaterialsHeader } from "./MaterialsHeader";
+import { useMaterialSave } from "./materials/hooks/useMaterialSave";
+import { Material } from "@/types/material";
+import { useBulkUpload } from "./materials/hooks/useBulkUpload";
 
-export const MaterialsSection: React.FC = () => {
-  const {
-    materials,
-    selectedMaterial,
-    isLoading,
-    error,
-    isEditDialogOpen,
-    isPurchaseDialogOpen,
-    formatCurrency,
-    handleEditMaterial,
-    handleCreateOrder,
-    handleSaveMaterial,
-    handleProcessPurchaseOrder,
-    onCloseEditDialog,
-    onClosePurchaseDialog
-  } = useMaterialsManager();
+export const MaterialsSection = () => {
+  const { materials, isLoading, error } = useMaterials();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+  const { handleSaveMaterial } = useMaterialSave();
+  const { handleBulkUpload } = useBulkUpload();
   
-  // If data is loading, show loading state
-  if (isLoading) {
-    return <div className="p-8 text-center">Loading materials data...</div>;
-  }
-  
-  // If there's an error, show error message
-  if (error) {
-    return (
-      <div className="p-8 text-center text-red-500">
-        Error loading materials: {error instanceof Error ? error.message : "Unknown error"}
-      </div>
-    );
-  }
-  
+  const handleEditMaterial = (material: Material) => {
+    setSelectedMaterial(material);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleNewMaterial = () => {
+    setSelectedMaterial({
+      id: `temp-${Date.now()}`,
+      name: "",
+      category: "",
+      unit: "",
+      status: "Active",
+      vendor: "",
+      stock: 0,
+      costPerUnit: 0
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const onCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setSelectedMaterial(null);
+  };
+
+  const onSaveMaterial = async (updatedMaterial: Material) => {
+    await handleSaveMaterial(updatedMaterial);
+    onCloseEditDialog();
+  };
+
   return (
-    <div className="space-y-4">
-      <MaterialsTable 
-        materials={materials}
-        onEditMaterial={handleEditMaterial}
-        onCreateOrder={handleCreateOrder}
-        formatCurrency={formatCurrency}
+    <Card>
+      <MaterialsHeader 
+        onNewMaterial={handleNewMaterial} 
+        onBulkUpload={handleBulkUpload}
+        existingMaterials={materials}
       />
-      
-      <MaterialDialogs
-        selectedMaterial={selectedMaterial}
-        isEditDialogOpen={isEditDialogOpen}
-        isPurchaseDialogOpen={isPurchaseDialogOpen}
-        onCloseEditDialog={onCloseEditDialog}
-        onClosePurchaseDialog={onClosePurchaseDialog}
-        onSaveMaterial={handleSaveMaterial}
-        onCreateOrder={handleProcessPurchaseOrder}
-      />
-    </div>
+      <MaterialsMainView />
+
+      {isEditDialogOpen && selectedMaterial && (
+        <MaterialEditDialog
+          material={selectedMaterial}
+          isOpen={isEditDialogOpen}
+          onClose={onCloseEditDialog}
+          onSave={onSaveMaterial}
+        />
+      )}
+    </Card>
   );
 };

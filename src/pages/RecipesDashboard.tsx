@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { DataTable } from '@/components/ui/DataTable';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Upload } from 'lucide-react';
 import RecipeMappingModal from '@/components/recipe/RecipeMappingModal';
-import { fetchRecipes, deleteRecipe, Recipe } from '@/components/recipe/recipeUtils';
+import { fetchRecipes, deleteRecipe, Recipe, bulkImportRecipes } from '@/components/recipe/recipeUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { BulkUploadDialog } from '@/components/resources/BulkUploadDialog';
 
 const RecipesDashboard = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -18,6 +19,7 @@ const RecipesDashboard = () => {
   const [minCost, setMinCost] = useState('');
   const [maxCost, setMaxCost] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,6 +51,38 @@ const RecipesDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to delete recipe",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBulkUpload = async (uploadedRecipes: any[]) => {
+    try {
+      // Map uploaded data to the Recipe format
+      const formattedRecipes = uploadedRecipes.map(recipe => ({
+        product_id: recipe.product_id,
+        product_name: recipe.product_name,
+        name: recipe.name,
+        description: recipe.description || '',
+        materials: recipe.materials || [],
+        routing_stages: recipe.routing_stages || []
+      }));
+      
+      await bulkImportRecipes(formattedRecipes);
+      
+      // Refresh recipes list
+      const updatedRecipes = await fetchRecipes();
+      setRecipes(updatedRecipes);
+      
+      toast({
+        title: "Bulk Import Successful",
+        description: `Successfully imported ${formattedRecipes.length} recipe mappings.`
+      });
+    } catch (error) {
+      console.error("Error in bulk upload:", error);
+      toast({
+        title: "Bulk Import Failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive"
       });
     }
@@ -132,10 +166,25 @@ const RecipesDashboard = () => {
         onSuccess={() => { setModalOpen(false); setEditRecipe(null); }}
         initialRecipe={editRecipe}
       />
+      
+      {isBulkUploadOpen && (
+        <BulkUploadDialog
+          open={isBulkUploadOpen}
+          onClose={() => setIsBulkUploadOpen(false)}
+          onUploadComplete={handleBulkUpload}
+          templateType="recipe-mappings"
+          existingMaterials={[]}
+        />
+      )}
+      
       <div className="space-y-5">
         <div className="flex justify-between items-center">
           <div className="text-2xl font-bold">BOM/Product Mapping</div>
-          <div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Bulk Import
+            </Button>
             <Button variant="default" onClick={() => { setEditRecipe(null); setModalOpen(true); }}>
               <Plus className="mr-2 h-4 w-4" />
               New Mapping

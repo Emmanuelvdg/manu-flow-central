@@ -88,6 +88,24 @@ export const generateMaterialsTemplate = (): string => {
 };
 
 /**
+ * Generate a CSV template for recipe materials
+ */
+export const generateRecipeMaterialsTemplate = (): string => {
+  const headers = ['name', 'quantity', 'unit'];
+  const csvContent = [headers.join(',')].join('\n');
+  return csvContent;
+};
+
+/**
+ * Generate a CSV template for recipe mappings
+ */
+export const generateRecipeMappingsTemplate = (): string => {
+  const headers = ['product_id', 'product_name', 'name', 'description'];
+  const csvContent = [headers.join(',')].join('\n');
+  return csvContent;
+};
+
+/**
  * Download content as a file
  */
 export const downloadFile = (content: string, filename: string, mimeType: string): void => {
