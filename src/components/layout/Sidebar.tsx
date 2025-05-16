@@ -1,216 +1,69 @@
-import React, { useState } from "react";
+
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
-  Package2Icon,
-  DollarSignIcon,
-  Factory,
-  PackageIcon,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
+  LayoutDashboard,
+  Package,
   ClipboardList,
+  Factory,
+  ShoppingCart,
+  FileText,
+  TruckIcon,
+  BarChart2,
   Receipt,
-  Truck,
-  Layers,
   Users,
-  Cog,
-  BarChart3,
-} from "lucide-react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-
-interface SidebarItemProps {
-  icon: React.ReactNode;
-  label: string;
-  to: string;
-  expanded: boolean;
-}
-
-const SidebarItem: React.FC<SidebarItemProps> = ({
-  icon,
-  label,
-  to,
-  expanded,
-}) => {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-
-  return (
-    <li>
-      <NavLink
-        to={to}
-        className={({ isActive }) =>
-          cn(
-            "flex items-center gap-3 py-2 px-3 rounded-md transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            isActive
-              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "text-sidebar-foreground"
-          )
-        }
-      >
-        {icon}
-        {expanded && <span>{label}</span>}
-      </NavLink>
-    </li>
-  );
-};
-
-interface SidebarCategoryProps {
-  title: string;
-  expanded: boolean;
-  children: React.ReactNode;
-}
-
-const SidebarCategory: React.FC<SidebarCategoryProps> = ({ title, expanded, children }) => {
-  return (
-    <div className="mb-4">
-      {expanded && (
-        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-1">
-          {title}
-        </div>
-      )}
-      <ul className="space-y-1">{children}</ul>
-    </div>
-  );
-};
+  Settings,
+  Globe
+} from 'lucide-react';
 
 export const Sidebar = () => {
-  const [expanded, setExpanded] = useState(true);
+  const location = useLocation();
+  const currentPath = location.pathname;
 
-  const toggleSidebar = () => {
-    setExpanded(!expanded);
+  const isActive = (path: string) => {
+    return currentPath === path || currentPath.startsWith(`${path}/`);
   };
 
+  const navItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    { name: 'Products', path: '/products', icon: <Package size={18} /> },
+    { name: 'Orders', path: '/orders', icon: <ShoppingCart size={18} /> },
+    { name: 'Quotes', path: '/quotes', icon: <FileText size={18} /> },
+    { name: 'RFQs', path: '/rfqs', icon: <ClipboardList size={18} /> },
+    { name: 'Resources', path: '/resources', icon: <Factory size={18} /> },
+    { name: 'Recipes', path: '/recipes', icon: <ClipboardList size={18} /> },
+    { name: 'Shipments', path: '/shipments', icon: <TruckIcon size={18} /> },
+    { name: 'Reporting', path: '/reporting', icon: <BarChart2 size={18} /> },
+    { name: 'Invoices', path: '/invoices', icon: <Receipt size={18} /> },
+    { name: 'User Management', path: '/user-management', icon: <Users size={18} /> },
+    { name: 'Public Site Config', path: '/public-site-config', icon: <Settings size={18} /> },
+    { name: 'Public Storefront', path: '/public', icon: <Globe size={18} /> },
+  ];
+
   return (
-    <aside
-      className={`${expanded ? "w-64" : "w-[70px]"} bg-sidebar border-r border-border h-screen transition-all duration-300 ease-in-out relative`}
-    >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between py-3 px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <img
-              src="/lovable-uploads/bca2590c-b286-4921-9c95-52a4a7306fcd.png"
-              alt="Labamu Manufacturing"
-              className="h-8 w-auto"
-            />
-            {expanded && (
-              <span className="text-lg font-bold text-sidebar-foreground">
-                Labamu
-              </span>
-            )}
-          </Link>
-          <button
-            onClick={toggleSidebar}
-            className="p-1.5 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            {expanded ? <ChevronLeft /> : <ChevronRight />}
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto py-4 px-2">
-          {/* Products Category */}
-          <SidebarCategory title="Products" expanded={expanded}>
-            <SidebarItem 
-              icon={<Package2Icon className="h-5 w-5" />} 
-              label="Products" 
-              to="/products" 
-              expanded={expanded} 
-            />
-          </SidebarCategory>
-
-          {/* Sales Category */}
-          <SidebarCategory title="Sales" expanded={expanded}>
-            <SidebarItem 
-              icon={<FileText className="h-5 w-5" />} 
-              label="Quotes" 
-              to="/quotes" 
-              expanded={expanded} 
-            />
-            <SidebarItem 
-              icon={<ClipboardList className="h-5 w-5" />} 
-              label="RFQs" 
-              to="/rfqs" 
-              expanded={expanded} 
-            />
-            <SidebarItem 
-              icon={<Receipt className="h-5 w-5" />} 
-              label="Invoices" 
-              to="/invoices" 
-              expanded={expanded} 
-            />
-          </SidebarCategory>
-
-          {/* Manufacturing Category */}
-          <SidebarCategory title="Manufacturing" expanded={expanded}>
-            <SidebarItem 
-              icon={<PackageIcon className="h-5 w-5" />} 
-              label="Orders" 
-              to="/orders" 
-              expanded={expanded} 
-            />
-            <SidebarItem 
-              icon={<Layers className="h-5 w-5" />} 
-              label="Bill of Materials" 
-              to="/recipes" 
-              expanded={expanded} 
-            />
-            <SidebarItem 
-              icon={<Truck className="h-5 w-5" />} 
-              label="Shipments" 
-              to="/shipments" 
-              expanded={expanded} 
-            />
-          </SidebarCategory>
-
-          {/* Inventory Category */}
-          <SidebarCategory title="Inventory" expanded={expanded}>
-            <SidebarItem 
-              icon={<PackageIcon className="h-5 w-5" />} 
-              label="Resources" 
-              to="/resources" 
-              expanded={expanded} 
-            />
-          </SidebarCategory>
-
-          {/* Analytics Category - New! */}
-          <SidebarCategory title="Analytics" expanded={expanded}>
-            <SidebarItem 
-              icon={<BarChart3 className="h-5 w-5" />} 
-              label="Reports & Analytics" 
-              to="/reporting" 
-              expanded={expanded} 
-            />
-          </SidebarCategory>
-
-          {/* Administration Category */}
-          <SidebarCategory title="Administration" expanded={expanded}>
-            <SidebarItem 
-              icon={<Users className="h-5 w-5" />} 
-              label="User Management" 
-              to="/user-management" 
-              expanded={expanded} 
-            />
-            <SidebarItem 
-              icon={<Cog className="h-5 w-5" />} 
-              label="Public Site Config" 
-              to="/site-config" 
-              expanded={expanded} 
-            />
-          </SidebarCategory>
-        </div>
-
-        <div className="py-3 px-4 mt-auto border-t border-border">
-          <p className="text-sm text-sidebar-foreground">
-            Logged in as: <span className="font-semibold">Admin</span>
-          </p>
-          <Link
-            to="/logout"
-            className="text-sm text-primary hover:underline block mt-1"
-          >
-            Logout
-          </Link>
-        </div>
+    <aside className="flex flex-col h-full bg-white border-r w-64 shadow-sm">
+      <div className="p-4 border-b">
+        <h2 className="text-xl font-semibold">Labamu MRP</h2>
       </div>
+      <nav className="flex-1 overflow-y-auto p-2">
+        <ul className="space-y-1">
+          {navItems.map((item) => (
+            <li key={item.path}>
+              <Link
+                to={item.path}
+                className={`flex items-center px-3 py-2 rounded-md text-sm ${
+                  isActive(item.path)
+                    ? 'bg-gray-100 text-gray-900 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <span className="mr-3">{item.icon}</span>
+                <span>{item.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </aside>
   );
 };
