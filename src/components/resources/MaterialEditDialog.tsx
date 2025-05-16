@@ -31,6 +31,7 @@ export function MaterialEditDialog({
     handleDeleteBatch,
   } = useBatchManagement(material);
 
+  // Reset form data when material changes
   React.useEffect(() => {
     setFormData({ ...material });
   }, [material]);

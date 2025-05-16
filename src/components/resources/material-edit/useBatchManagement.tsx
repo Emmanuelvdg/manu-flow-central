@@ -2,9 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Material, MaterialBatch } from "@/types/material";
+import { useMaterialBatches } from "../hooks/useMaterialBatches";
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useBatchManagement = (material: Material) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: allBatches = [] } = useMaterialBatches();
+  
   const [batches, setBatches] = useState<MaterialBatch[]>([]);
   const [showEmptyBatches, setShowEmptyBatches] = useState(false);
   const [pendingBatch, setPendingBatch] = useState<MaterialBatch>({
@@ -21,28 +26,40 @@ export const useBatchManagement = (material: Material) => {
   });
 
   useEffect(() => {
-    if (material && material.batches) {
-      console.log("Loading material batches:", material.batches);
-      setBatches(material.batches);
-    } else {
-      console.log("No batches found for material:", material.id);
-      setBatches([]);
+    if (material && material.id) {
+      // Filter batches for this specific material from all batches
+      const materialBatches = allBatches.filter(batch => batch.materialId === material.id);
+      
+      if (materialBatches.length > 0) {
+        console.log(`Loading ${materialBatches.length} batches for material:`, material.id);
+        setBatches(materialBatches);
+      } else {
+        console.log("No batches found for material:", material.id);
+        
+        // If material has batches in its object but they aren't in allBatches
+        if (material.batches && material.batches.length > 0) {
+          console.log("Using batches from material object:", material.batches);
+          setBatches(material.batches);
+        } else {
+          setBatches([]);
+        }
+      }
+      
+      // Reset the pending batch when material changes
+      setPendingBatch({
+        id: '',
+        materialId: material.id,
+        batchNumber: '',
+        initialStock: 0,
+        remainingStock: 0,
+        costPerUnit: 0,
+        purchaseDate: new Date().toISOString().split('T')[0],
+        expiryDate: null,
+        deliveredDate: null,
+        status: 'received'
+      });
     }
-    
-    // Reset the pending batch when material changes
-    setPendingBatch({
-      id: '',
-      materialId: material.id,
-      batchNumber: '',
-      initialStock: 0,
-      remainingStock: 0,
-      costPerUnit: 0,
-      purchaseDate: new Date().toISOString().split('T')[0],
-      expiryDate: null,
-      deliveredDate: null,
-      status: 'received'
-    });
-  }, [material]);
+  }, [material, allBatches]);
 
   const handleBatchChange = (id: string, field: keyof MaterialBatch, value: any) => {
     if (!id) {

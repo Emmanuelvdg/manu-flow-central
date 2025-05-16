@@ -34,6 +34,7 @@ export const useMaterialBatches = () => {
         deliveredDate: null,
         status: batch.status
       })) as MaterialBatch[];
-    }
+    },
+    staleTime: 10000, // Reduce stale time to refresh data more often
   });
 };
