@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { MaterialsMainView } from "@/components/resources/materials/MaterialsMainView";
 import { useMaterials } from "@/components/resources/hooks/useMaterials";
 import { MaterialEditDialog } from "./MaterialEditDialog";
-import { MaterialsHeader } from "./MaterialsHeader";
 import { useMaterialSave } from "./materials/hooks/useMaterialSave";
 import { Material } from "@/types/material";
 import { useBulkUpload } from "./materials/hooks/useBulkUpload";
@@ -47,11 +46,6 @@ export const MaterialsSection = () => {
 
   return (
     <Card>
-      <MaterialsHeader 
-        onNewMaterial={handleNewMaterial} 
-        onBulkUpload={handleBulkUpload}
-        existingMaterials={materials}
-      />
       <MaterialsMainView />
 
       {isEditDialogOpen && selectedMaterial && (

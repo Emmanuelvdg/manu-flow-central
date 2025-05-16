@@ -45,6 +45,7 @@ export const MaterialsMainView: React.FC = () => {
       <MaterialsHeader 
         onNewMaterial={handleNewMaterial}
         onBulkUpload={handleBulkUpload}
+        existingMaterials={materials}
       />
       
       <Tabs defaultValue="inventory">
