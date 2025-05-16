@@ -50,7 +50,7 @@ export function MaterialEditDialog({
     console.log("Submit button clicked. Current batches:", batches);
     
     // Collect all valid batches, including the pending batch if it has data
-    const allBatches = [...batches];
+    let allBatches = [...batches];
     
     // Add pending batch if it has valid data
     if (pendingBatch.initialStock > 0 && pendingBatch.costPerUnit > 0) {

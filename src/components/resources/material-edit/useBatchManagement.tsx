@@ -59,7 +59,7 @@ export const useBatchManagement = (material: Material) => {
       });
     } else {
       // This is an existing batch
-      setBatches(batches.map(batch => {
+      setBatches(prevBatches => prevBatches.map(batch => {
         if (batch.id === id) {
           const updatedBatch = { ...batch, [field]: value };
           
@@ -104,11 +104,12 @@ export const useBatchManagement = (material: Material) => {
     }
 
     const batchCount = batches.length + 1;
-    const batchNumber = `B${batchCount.toString().padStart(3, '0')}`;
+    const batchNumber = pendingBatch.batchNumber || 
+      `B${batchCount.toString().padStart(3, '0')}`;
     
     const newBatch: MaterialBatch = {
       ...pendingBatch,
-      id: `batch-${Date.now()}`,
+      id: `pending-${Date.now()}`,
       batchNumber
     };
     
@@ -136,7 +137,7 @@ export const useBatchManagement = (material: Material) => {
   };
 
   const handleDeleteBatch = (id: string) => {
-    setBatches(batches.filter(batch => batch.id !== id));
+    setBatches(prevBatches => prevBatches.filter(batch => batch.id !== id));
   };
 
   return {
