@@ -99,10 +99,22 @@ export const saveRecipe = async (recipe: Partial<Recipe>): Promise<string | null
       if (error) throw error;
       result = data;
     } else {
-      // Create new recipe
+      // Create new recipe - ensure required fields are present
+      const insertData = {
+        product_id: recipe.product_id!,
+        product_name: recipe.product_name!,
+        name: recipe.name!,
+        description: recipe.description || '',
+        materials: recipeData.materials,
+        personnel: recipeData.personnel,
+        machines: recipeData.machines,
+        routing_stages: recipeData.routing_stages,
+        totalCost: recipe.totalCost
+      };
+      
       const { data, error } = await supabase
         .from('recipes')
-        .insert(recipeData)
+        .insert(insertData)
         .select()
         .single();
         
@@ -142,7 +154,7 @@ export const bulkImportRecipes = async (recipes: Partial<Recipe>[]): Promise<voi
       // Prepare recipe data for database
       const recipeData = {
         product_id: recipe.product_id,
-        product_name: recipe.product_name,
+        product_name: recipe.product_name || '', // Provide fallback for required field
         name: recipe.name,
         description: recipe.description || '',
         // Convert arrays to JSON-compatible format
