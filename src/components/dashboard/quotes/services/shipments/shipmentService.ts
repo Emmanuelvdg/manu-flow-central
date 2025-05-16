@@ -57,9 +57,22 @@ export const createShipmentIfNeeded = async (quoteId: string, orderId: string) =
     if (!existingShipments || existingShipments.length === 0) {
       console.log("No shipments found for quote, creating a new shipment");
       
+      // First, try to get the RFQ ID from the quote to establish the full chain
+      let rfqId = null;
+      const { data: quote, error: quoteError } = await supabase
+        .from('quotes')
+        .select('rfq_id')
+        .eq('id', quoteId)
+        .single();
+        
+      if (!quoteError && quote) {
+        rfqId = quote.rfq_id;
+      }
+      
       const shipmentPayload = {
         quote_id: quoteId,
         order_id: orderId,
+        rfq_id: rfqId,
         status: 'pending'
       };
       
@@ -73,6 +86,19 @@ export const createShipmentIfNeeded = async (quoteId: string, orderId: string) =
         console.error("Error creating shipment:", createError);
       } else if (newShipment) {
         console.log("Successfully created new shipment:", newShipment);
+      }
+    } else {
+      // Make sure all existing shipments have the order_id
+      for (const shipment of existingShipments) {
+        const { error: updateError } = await supabase
+          .from('shipments')
+          .update({ order_id: orderId })
+          .eq('id', shipment.id)
+          .is('order_id', null);
+          
+        if (!updateError) {
+          console.log(`Updated existing shipment ${shipment.id} with order ID ${orderId}`);
+        }
       }
     }
   } catch (error) {

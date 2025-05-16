@@ -37,22 +37,7 @@ export async function fetchShipmentsWithLinks() {
   let rfqs: any[] = [];
   let invoices: any[] = [];
 
-  // Fetch orders if there are any
-  if (orderIds.length > 0) {
-    const { data: dbOrders, error: orderErr } = await supabase
-      .from("orders")
-      .select("*")
-      .in("id", orderIds);
-
-    if (orderErr) {
-      console.error("Error fetching orders:", orderErr);
-      throw new Error(orderErr.message);
-    }
-    orders = dbOrders ?? [];
-    console.log("Fetched orders for shipments:", orders);
-  }
-
-  // Fetch quotes directly from shipments quote_ids
+  // First, fetch quotes since we need them to look up related orders
   if (quoteIds.length > 0) {
     const { data: dbQuotes, error: quoteErr } = await supabase
       .from("quotes")
@@ -65,34 +50,57 @@ export async function fetchShipmentsWithLinks() {
     }
     quotes = dbQuotes ?? [];
     console.log("Fetched quotes:", quotes);
-  }
 
-  // Also fetch quotes from orders if they exist
-  if (orders.length > 0) {
-    const orderQuoteIds = orders
-      .map((o) => o.quote_id)
-      .filter(Boolean)
-      .filter((id) => !quoteIds.includes(id));
+    // Look for orders that are associated with these quotes
+    // This is important because shipments might have quote_id but not order_id yet
+    const quoteOrderIds = quotes
+      .map(q => q.id)
+      .filter(Boolean);
 
-    if (orderQuoteIds.length > 0) {
-      const { data: dbQuotesFromOrders, error: quotesFromOrdersErr } = await supabase
-        .from("quotes")
+    if (quoteOrderIds.length > 0) {
+      const { data: ordersFromQuotes, error: ordersFromQuotesErr } = await supabase
+        .from("orders")
         .select("*")
-        .in("id", orderQuoteIds);
+        .in("quote_id", quoteOrderIds);
 
-      if (quotesFromOrdersErr) {
-        console.error("Error fetching quotes from orders:", quotesFromOrdersErr);
-        throw new Error(quotesFromOrdersErr.message);
+      if (ordersFromQuotesErr) {
+        console.error("Error fetching orders from quotes:", ordersFromQuotesErr);
+        throw new Error(ordersFromQuotesErr.message);
       }
       
-      // Add these quotes to our quotes collection
-      if (dbQuotesFromOrders) {
-        quotes = [...quotes, ...dbQuotesFromOrders];
+      if (ordersFromQuotes && ordersFromQuotes.length > 0) {
+        console.log("Fetched orders from quotes:", ordersFromQuotes);
+        orders = ordersFromQuotes;
       }
     }
   }
 
-  // Fetch RFQs directly from shipments rfq_ids
+  // Then fetch orders directly linked to shipments (if not already fetched)
+  if (orderIds.length > 0) {
+    const existingOrderIds = orders.map(o => o.id);
+    const newOrderIds = orderIds.filter(id => !existingOrderIds.includes(id));
+    
+    if (newOrderIds.length > 0) {
+      const { data: directOrders, error: directOrdersErr } = await supabase
+        .from("orders")
+        .select("*")
+        .in("id", newOrderIds);
+
+      if (directOrdersErr) {
+        console.error("Error fetching direct orders:", directOrdersErr);
+        throw new Error(directOrdersErr.message);
+      }
+      
+      if (directOrders && directOrders.length > 0) {
+        console.log("Fetched direct orders:", directOrders);
+        orders = [...orders, ...directOrders];
+      }
+    }
+  }
+
+  console.log("All fetched orders:", orders);
+
+  // Fetch rfqs directly from shipments rfq_ids
   if (rfqIds.length > 0) {
     const { data: dbRFQs, error: rfqErr } = await supabase
       .from("rfqs")
@@ -158,15 +166,21 @@ export async function fetchShipmentsWithLinks() {
     invoices = dbInvoicesFromOrders ?? [];
   }
 
-  // Build dashboard rows with links
+  // Build dashboard rows with links, mapping orders to quotes if available
   const dashboardData = shipments.map((shipment) => {
-    // Find related documents
-    const order = orders.find((o) => o.id === shipment.order_id) ?? null;
+    // Find quote
+    const quote = quotes.find((q) => q.id === shipment.quote_id) ?? null;
     
-    // Find quote either directly from shipment or via order
-    const quote = shipment.quote_id 
-      ? quotes.find((q) => q.id === shipment.quote_id) 
-      : (order?.quote_id ? quotes.find((q) => q.id === order.quote_id) : null);
+    // Find order - first look for direct link, then through quote
+    let order = null;
+    if (shipment.order_id) {
+      order = orders.find((o) => o.id === shipment.order_id);
+    }
+    
+    // If no direct order link but we have a quote, try to find an order linked to the quote
+    if (!order && quote) {
+      order = orders.find((o) => o.quote_id === quote.id);
+    }
     
     // Find RFQ either directly from shipment or via quote
     const rfq = shipment.rfq_id 
@@ -177,6 +191,12 @@ export async function fetchShipmentsWithLinks() {
     const invoice = shipment.invoice_id 
       ? invoices.find((i) => i.id === shipment.invoice_id) 
       : (order ? invoices.find((i) => i.order_id === order.id) : null);
+
+    // Update shipment with order info if we found a related order through the quote
+    if (!shipment.order_id && order) {
+      // This shipment doesn't have a direct order link, but we found one via the quote
+      console.log(`Found order ${order.id} for shipment ${shipment.id} through quote ${quote?.id}`);
+    }
 
     return {
       ...shipment,
