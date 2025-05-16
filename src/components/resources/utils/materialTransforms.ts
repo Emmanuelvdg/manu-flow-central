@@ -5,21 +5,21 @@ import { RawMaterialFromDB } from "../types/materialTypes";
 // Helper function to transform a raw material from DB to the format used in the app
 export const transformMaterialWithBatches = (
   rawMaterial: RawMaterialFromDB,
-  materialBatches: any[]
+  materialBatches: MaterialBatch[]
 ): Material => {
   // Filter batches for this material
   const batches = materialBatches
-    .filter(batch => batch.material_id === rawMaterial.id)
+    .filter(batch => batch.materialId === rawMaterial.id)
     .map(batch => ({
       id: batch.id,
-      materialId: batch.material_id,
-      batchNumber: batch.batch_number,
-      initialStock: Number(batch.initial_stock),
-      remainingStock: Number(batch.remaining_stock),
-      costPerUnit: Number(batch.cost_per_unit),
-      purchaseDate: batch.purchase_date,
-      expiryDate: batch.expiry_date,
-      deliveredDate: null, // This would need to be added to the DB schema if needed
+      materialId: batch.materialId,
+      batchNumber: batch.batchNumber,
+      initialStock: Number(batch.initialStock),
+      remainingStock: Number(batch.remainingStock),
+      costPerUnit: Number(batch.costPerUnit),
+      purchaseDate: batch.purchaseDate,
+      expiryDate: batch.expiryDate,
+      deliveredDate: null,
       status: batch.status
     })) as MaterialBatch[];
   
@@ -27,11 +27,11 @@ export const transformMaterialWithBatches = (
   
   // Calculate total stock and average cost per unit
   const totalRemainingStock = batches.reduce(
-    (sum, batch) => sum + batch.remainingStock, 0
+    (sum, batch) => sum + Number(batch.remainingStock), 0
   );
   
   const totalCost = batches.reduce(
-    (sum, batch) => sum + (batch.remainingStock * batch.costPerUnit), 0
+    (sum, batch) => sum + (Number(batch.remainingStock) * Number(batch.costPerUnit)), 0
   );
   
   const avgCostPerUnit = totalRemainingStock > 0 ? totalCost / totalRemainingStock : 0;

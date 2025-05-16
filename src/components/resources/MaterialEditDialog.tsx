@@ -5,6 +5,7 @@ import { Material } from "@/types/material";
 import { MaterialEditForm } from './material-edit/MaterialEditForm';
 import { BatchManager } from './material-edit/BatchManager';
 import { useBatchManagement } from './material-edit/useBatchManagement';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface MaterialEditDialogProps {
   material: Material;
@@ -20,6 +21,7 @@ export function MaterialEditDialog({
   onSave 
 }: MaterialEditDialogProps) {
   const [formData, setFormData] = React.useState<Material>({ ...material });
+  const queryClient = useQueryClient();
   
   const {
     batches,
@@ -94,6 +96,11 @@ export function MaterialEditDialog({
     console.log("Submitting material with batches:", JSON.stringify(updatedMaterial, null, 2));
     
     await onSave(updatedMaterial);
+    
+    // Force a refresh of the material data
+    queryClient.invalidateQueries({ queryKey: ["material-batches"] });
+    queryClient.invalidateQueries({ queryKey: ["materials"] });
+    
     onClose();
   };
 

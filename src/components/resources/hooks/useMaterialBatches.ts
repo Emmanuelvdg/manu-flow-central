@@ -29,12 +29,10 @@ export const useMaterialBatches = () => {
         costPerUnit: Number(batch.cost_per_unit),
         purchaseDate: batch.purchase_date,
         expiryDate: batch.expiry_date,
-        // Since 'delivered_date' doesn't exist in the database schema,
-        // we'll always set deliveredDate to null
-        deliveredDate: null,
+        deliveredDate: null, // This would need to be added to the DB schema if needed
         status: batch.status
       })) as MaterialBatch[];
     },
-    staleTime: 5000, // Reduce stale time for more frequent refreshes
+    staleTime: 1000, // Very short stale time to ensure fresh data
   });
 };

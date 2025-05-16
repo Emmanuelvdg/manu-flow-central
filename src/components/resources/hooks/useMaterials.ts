@@ -12,11 +12,11 @@ export const useMaterials = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   
   const { data: dbMaterials = [], isLoading, error } = useRawMaterialData();
-  const { data: batches = [] } = useMaterialBatches();
+  const { data: batches = [], isLoading: batchesLoading } = useMaterialBatches();
   const { saveMaterialBatches } = useBatchOperations();
 
   useEffect(() => {
-    if (!dbMaterials || dbMaterials.length === 0) {
+    if (!dbMaterials || dbMaterials.length === 0 || batchesLoading) {
       return;
     }
     
@@ -31,14 +31,18 @@ export const useMaterials = () => {
     
     console.log("Formatted materials with categories, vendors, and calculated totals:", formattedMaterials);
     setMaterials(formattedMaterials);
-  }, [dbMaterials, batches]);
+  }, [dbMaterials, batches, batchesLoading]);
 
   return {
     materials,
     setMaterials,
-    isLoading,
+    isLoading: isLoading || batchesLoading,
     error,
     queryClient,
-    saveMaterialBatches
+    saveMaterialBatches,
+    refreshMaterials: () => {
+      queryClient.invalidateQueries({ queryKey: ["materials"] });
+      queryClient.invalidateQueries({ queryKey: ["material-batches"] });
+    }
   };
 };
