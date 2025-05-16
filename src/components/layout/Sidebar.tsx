@@ -85,7 +85,7 @@ export const Sidebar = () => {
         {menuCategories.map((category, index) => (
           <div key={index} className="mb-4">
             {category.name && (
-              <h3 className="px-3 py-1 text-xs font-medium text-gray-500">{category.name}</h3>
+              <h3 className="text-xs font-medium text-gray-500">{category.name}</h3>
             )}
             <ul className="space-y-1 mt-1">
               {category.items.map((item) => (
