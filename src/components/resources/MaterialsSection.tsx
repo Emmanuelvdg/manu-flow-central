@@ -2,7 +2,6 @@
 import React from "react";
 import { MaterialsTable } from "./MaterialsTable";
 import { MaterialDialogs } from "./MaterialDialogs";
-import { PurchaseOrder, MaterialBatch, Material } from "@/types/material";
 import { useMaterialsManager } from "./materials/hooks/useMaterialsManager";
 
 export const MaterialsSection: React.FC = () => {

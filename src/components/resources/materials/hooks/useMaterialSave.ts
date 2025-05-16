@@ -8,7 +8,7 @@ export const useMaterialSave = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleSaveMaterial = async (updatedMaterial: Material) => {
+  const handleSaveMaterial = async (updatedMaterial: Material): Promise<void> => {
     try {
       console.log("Saving material:", updatedMaterial);
       const materials = await queryClient.getQueryData<Material[]>(["materials"]) || [];
@@ -36,8 +36,6 @@ export const useMaterialSave = () => {
       
       console.log("Material saved successfully, now saving batches...");
       
-      // This is where we'd save batches - now this is handled by the imported saveMaterialBatches function
-      
       await queryClient.invalidateQueries({ queryKey: ["materials"] });
       await queryClient.invalidateQueries({ queryKey: ["material-batches"] });
       
@@ -45,8 +43,6 @@ export const useMaterialSave = () => {
         title: `Material ${isNewMaterial ? "Added" : "Updated"}`,
         description: `${updatedMaterial.name} has been ${isNewMaterial ? "added" : "updated"} successfully.`,
       });
-
-      return true;
     } catch (error) {
       console.error("Error saving material:", error);
       toast({
@@ -54,7 +50,6 @@ export const useMaterialSave = () => {
         description: `Failed to save material: ${error instanceof Error ? error.message : "Unknown error"}`,
         variant: "destructive",
       });
-      return false;
     }
   };
 

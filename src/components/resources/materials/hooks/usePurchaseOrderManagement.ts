@@ -9,7 +9,7 @@ export const usePurchaseOrderManagement = () => {
   const { handleCreatePurchaseOrder, purchaseOrders } = usePurchaseOrders();
   const { handleSaveMaterial } = useMaterialSave();
 
-  const handleProcessPurchaseOrder = async (order: PurchaseOrder, newBatch: MaterialBatch) => {
+  const handleProcessPurchaseOrder = async (order: PurchaseOrder, newBatch: MaterialBatch): Promise<void> => {
     try {
       // Find the material that matches the order
       if (!order.materialId) {

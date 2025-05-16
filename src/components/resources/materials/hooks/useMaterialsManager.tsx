@@ -5,6 +5,7 @@ import { useMaterialSave } from "./useMaterialSave";
 import { usePurchaseOrderManagement } from "./usePurchaseOrderManagement";
 import { useBulkUpload } from "./useBulkUpload";
 import { formatCurrency, formatDate } from "../utils/formatUtils";
+import { Material } from "@/types/material";
 
 export const useMaterialsManager = () => {
   // Import hooks we've extracted
@@ -26,14 +27,12 @@ export const useMaterialsManager = () => {
   const { handleBulkUpload } = useBulkUpload();
 
   // Combine the handleSaveMaterial to use the saveMaterialBatches from useMaterials
-  const combinedSaveMaterial = async (updatedMaterial) => {
+  const combinedSaveMaterial = async (updatedMaterial: Material): Promise<void> => {
     try {
       await handleSaveMaterial(updatedMaterial);
       await saveMaterialBatches(updatedMaterial);
-      return true;
     } catch (error) {
       console.error("Error in combined save:", error);
-      return false;
     }
   };
 
