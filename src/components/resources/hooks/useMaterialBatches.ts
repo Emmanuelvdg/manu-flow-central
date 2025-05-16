@@ -29,8 +29,9 @@ export const useMaterialBatches = () => {
         costPerUnit: batch.cost_per_unit,
         purchaseDate: batch.purchase_date,
         expiryDate: batch.expiry_date,
-        // Make sure deliveredDate is properly handled, set to null if it doesn't exist
-        deliveredDate: batch.delivered_date || null,
+        // Since 'delivered_date' doesn't exist in the database schema,
+        // we'll always set deliveredDate to null
+        deliveredDate: null,
         status: batch.status
       })) as MaterialBatch[];
     }
