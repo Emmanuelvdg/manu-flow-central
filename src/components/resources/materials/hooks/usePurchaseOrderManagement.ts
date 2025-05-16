@@ -34,7 +34,7 @@ export const usePurchaseOrderManagement = () => {
       await handleSaveMaterial(updatedMaterial);
       
       // Create the purchase order
-      handleCreatePurchaseOrder(order);
+      await handleCreatePurchaseOrder(order);
       
     } catch (error) {
       console.error("Error creating purchase order and batch:", error);

@@ -37,7 +37,7 @@ export const MaterialsMainView: React.FC = () => {
   }
 
   if (error) {
-    return <div>Error loading materials: {error.message}</div>;
+    return <div>Error loading materials: {error instanceof Error ? error.message : "Unknown error"}</div>;
   }
 
   return (
