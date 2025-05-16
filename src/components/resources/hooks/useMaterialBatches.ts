@@ -18,15 +18,15 @@ export const useMaterialBatches = () => {
         throw error;
       }
       
-      console.log("Raw batch data from database:", data);
+      console.log(`Raw batch data from database: ${data.length} batches found`);
       
       return data.map(batch => ({
         id: batch.id,
         materialId: batch.material_id,
         batchNumber: batch.batch_number,
-        initialStock: batch.initial_stock,
-        remainingStock: batch.remaining_stock,
-        costPerUnit: batch.cost_per_unit,
+        initialStock: Number(batch.initial_stock),
+        remainingStock: Number(batch.remaining_stock),
+        costPerUnit: Number(batch.cost_per_unit),
         purchaseDate: batch.purchase_date,
         expiryDate: batch.expiry_date,
         // Since 'delivered_date' doesn't exist in the database schema,
@@ -35,6 +35,6 @@ export const useMaterialBatches = () => {
         status: batch.status
       })) as MaterialBatch[];
     },
-    staleTime: 10000, // Reduce stale time to refresh data more often
+    staleTime: 5000, // Reduce stale time for more frequent refreshes
   });
 };

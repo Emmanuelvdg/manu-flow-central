@@ -21,14 +21,15 @@ export const useMaterials = () => {
     }
     
     console.log("Processing materials with their original properties:", dbMaterials);
+    console.log("With batches:", batches);
     
     const formattedMaterials: Material[] = dbMaterials.map((m) => {
       const material = transformMaterialWithBatches(m, batches);
-      console.log(`Material ${m.name} - Category: "${m.category}", Vendor: "${m.vendor}"`);
+      console.log(`Material ${m.name} - Category: "${m.category}", Vendor: "${m.vendor}", Stock: ${material.stock}, Cost: ${material.costPerUnit}`);
       return material;
     });
     
-    console.log("Formatted materials with categories and vendors:", formattedMaterials);
+    console.log("Formatted materials with categories, vendors, and calculated totals:", formattedMaterials);
     setMaterials(formattedMaterials);
   }, [dbMaterials, batches]);
 

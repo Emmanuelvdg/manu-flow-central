@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DataTable, Column, ColumnCellProps } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/button";
@@ -77,17 +76,17 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
         return (
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span>{availableStock} {material.unit}</span>
+              <span className="font-medium">{material.stock.toFixed(2)} {material.unit}</span>
               <Badge variant="outline" className="text-xs">
-                Available
+                Total
               </Badge>
             </div>
             {allocatedStock > 0 && (
               <div className="text-sm text-muted-foreground">
-                <div>Total: {totalStock} {material.unit}</div>
-                <div>Allocated: {allocatedStock} {material.unit}</div>
+                <div>Available: {availableStock.toFixed(2)} {material.unit}</div>
+                <div>Allocated: {allocatedStock.toFixed(2)} {material.unit}</div>
                 {bookedStock > 0 && (
-                  <div className="font-medium">Booked: {bookedStock} {material.unit}</div>
+                  <div className="font-medium">Booked: {bookedStock.toFixed(2)} {material.unit}</div>
                 )}
               </div>
             )}
@@ -100,7 +99,16 @@ export const MaterialsTable: React.FC<MaterialsTableProps> = ({
       accessorKey: "costPerUnit",
       cell: (props: ColumnCellProps<Material>) => {
         const material = props.row.original;
-        return formatCurrency(material.costPerUnit);
+        return (
+          <div className="font-medium">
+            {formatCurrency(material.costPerUnit)}
+            {material.batches && material.batches.length > 1 && (
+              <div className="text-xs text-muted-foreground mt-1">
+                (weighted avg. of {material.batches.length} batches)
+              </div>
+            )}
+          </div>
+        );
       },
     },
     {

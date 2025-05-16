@@ -23,6 +23,8 @@ export const transformMaterialWithBatches = (
       status: batch.status
     })) as MaterialBatch[];
   
+  console.log(`Calculating totals for ${rawMaterial.name} with ${batches.length} batches`);
+  
   // Calculate total stock and average cost per unit
   const totalRemainingStock = batches.reduce(
     (sum, batch) => sum + batch.remainingStock, 0
@@ -33,6 +35,8 @@ export const transformMaterialWithBatches = (
   );
   
   const avgCostPerUnit = totalRemainingStock > 0 ? totalCost / totalRemainingStock : 0;
+  
+  console.log(`Material ${rawMaterial.name}: Total stock: ${totalRemainingStock}, Avg cost: ${avgCostPerUnit}`);
   
   return {
     id: rawMaterial.id,
