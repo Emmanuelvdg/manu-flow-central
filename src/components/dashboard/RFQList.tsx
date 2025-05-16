@@ -29,11 +29,38 @@ export const RFQList = () => {
   };
 
   const handleAcceptAndCreateQuote = async (rfq: any) => {
-    // Process products to ensure they're in the correct format for the quote
-    const processedProducts = rfq.products.map((product: any) => ({
-      name: product.name || product.toString(),
-      quantity: product.quantity || 1
-    }));
+    console.log("Creating quote from RFQ:", rfq);
+    
+    // Ensure products is properly formatted for the quote
+    let processedProducts = [];
+    if (rfq.products) {
+      if (Array.isArray(rfq.products)) {
+        processedProducts = rfq.products.map((product: any) => {
+          // Handle different product formats
+          if (typeof product === 'object' && product !== null) {
+            return {
+              name: product.name || '',
+              quantity: product.quantity || 1,
+              // Add any other fields needed
+            };
+          } else {
+            // If it's just a string or other primitive
+            return {
+              name: String(product),
+              quantity: 1
+            };
+          }
+        });
+      } else if (typeof rfq.products === 'object') {
+        // Handle case where products might be an object instead of array
+        processedProducts = Object.values(rfq.products).map((product: any) => ({
+          name: product.name || String(product),
+          quantity: product.quantity || 1
+        }));
+      }
+    }
+    
+    console.log("Processed products for quote:", processedProducts);
 
     // Navigate to the quote creation page with RFQ data
     navigate('/quotes/create', {

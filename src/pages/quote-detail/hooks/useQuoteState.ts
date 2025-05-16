@@ -91,16 +91,35 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
       setForceMajeureTerms(initialData.force_majeure_terms || "");
       setShowForceMajeureTerms(!!initialData.force_majeure_terms);
     } else if (rfqData) {
+      console.log("Initializing quote form from RFQ data:", rfqData);
       setCustomerName(rfqData.customerName || "");
       setCustomerEmail(rfqData.customerEmail || "");
       setCompanyName(rfqData.companyName || "");
       setRfqId(rfqData.rfqId);
       
       if (rfqData.products && Array.isArray(rfqData.products)) {
+        console.log("Setting products from RFQ:", rfqData.products);
         setProducts(rfqData.products.map((p: any) => ({
-          name: typeof p === 'object' ? p.name : String(p),
-          quantity: typeof p === 'object' ? (p.quantity || 1) : 1
+          name: typeof p === 'object' && p !== null ? p.name : String(p),
+          quantity: typeof p === 'object' && p !== null && p.quantity ? p.quantity : 1,
+          id: typeof p === 'object' && p !== null && p.id ? p.id : undefined
         })));
+      } else if (rfqData.products) {
+        console.log("RFQ products in unexpected format:", rfqData.products);
+        // Handle non-array product data (could be object or other format)
+        try {
+          const productArray = typeof rfqData.products === 'object' 
+            ? Object.values(rfqData.products)
+            : [rfqData.products];
+            
+          setProducts(productArray.map((p: any) => ({
+            name: typeof p === 'object' && p !== null ? (p.name || String(p)) : String(p),
+            quantity: typeof p === 'object' && p !== null && p.quantity ? p.quantity : 1
+          })));
+        } catch (error) {
+          console.error("Failed to process RFQ products:", error);
+          setProducts([]);
+        }
       }
       
       // Initialize custom products as empty for new quotes from RFQs

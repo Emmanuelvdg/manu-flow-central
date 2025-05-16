@@ -15,6 +15,15 @@ export const useQuoteForm = ({ initialData, id, rfqData, rfqIdForShipment, isNew
   // If isNew was not explicitly passed, determine it from the id
   const isNewQuote = isNew !== undefined ? isNew : (!id || id === "create");
   
+  // Log to debug RFQ data
+  if (rfqData) {
+    console.log("useQuoteForm received RFQ data:", { 
+      id: rfqData.rfqId,
+      customer: rfqData.customerName,
+      products: rfqData.products 
+    });
+  }
+  
   const [formState, setters] = useQuoteState({ 
     initialData, 
     rfqData, 

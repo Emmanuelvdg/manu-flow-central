@@ -1,15 +1,18 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const RFQDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -63,6 +66,54 @@ const RFQDetail = () => {
     e.preventDefault();
     // Handle form submission
     console.log("Saving RFQ:", formData);
+  };
+  
+  const handleCreateQuote = () => {
+    if (!rfq) return;
+    
+    // Process products to ensure they're in the correct format for the quote
+    let processedProducts = [];
+    if (rfq.products) {
+      if (Array.isArray(rfq.products)) {
+        processedProducts = rfq.products.map((product: any) => {
+          if (typeof product === 'object' && product !== null) {
+            return {
+              name: product.name || '',
+              quantity: product.quantity || 1,
+            };
+          } else {
+            return {
+              name: String(product),
+              quantity: 1
+            };
+          }
+        });
+      } else if (typeof rfq.products === 'object') {
+        processedProducts = Object.values(rfq.products).map((product: any) => ({
+          name: typeof product === 'object' && product !== null ? product.name || String(product) : String(product),
+          quantity: typeof product === 'object' && product !== null && product.quantity ? product.quantity : 1
+        }));
+      }
+    }
+    
+    console.log("Creating quote with products:", processedProducts);
+    
+    // Navigate to quote creation with RFQ data
+    navigate('/quotes/create', {
+      state: {
+        fromRFQ: {
+          rfqId: rfq.id,
+          customerName: rfq.customer_name,
+          customerEmail: rfq.customer_email,
+          companyName: rfq.company_name,
+          products: processedProducts,
+          location: rfq.location,
+          customerPhone: rfq.customer_phone,
+          notes: rfq.notes
+        },
+        rfqIdForShipment: rfq.id
+      }
+    });
   };
 
   return (
@@ -147,8 +198,25 @@ const RFQDetail = () => {
               </form>
             )}
           </CardContent>
-          <CardFooter>
-            <Button type="submit" className="ml-auto">Save RFQ</Button>
+          <CardFooter className="flex justify-between">
+            <Button type="submit" onClick={(e) => {
+              e.preventDefault();
+              handleSubmit(e);
+            }}>
+              Save RFQ
+            </Button>
+            
+            {rfq && (rfq.status === 'new' || rfq.status === 'reviewing') && (
+              <Button 
+                type="button" 
+                variant="default"
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleCreateQuote}
+              >
+                <FileCheck className="h-4 w-4 mr-2" />
+                Accept & Create Quote
+              </Button>
+            )}
           </CardFooter>
         </Card>
       </div>
