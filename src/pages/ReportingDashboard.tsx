@@ -2,31 +2,22 @@
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { RFQConversionReport } from "@/components/reporting/RFQConversionReport";
 import { InventoryReport } from "@/components/reporting/InventoryReport";
 import { FinancialReport } from "@/components/reporting/FinancialReport";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ReportingDashboard = () => {
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  
-  // Track window resize for responsive adjustments
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isMobile = useIsMobile();
   
   return (
     <MainLayout title="Reporting Dashboard">
-      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-0">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-2 sm:px-4 lg:px-0">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Business Analytics</h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Monitor key metrics and performance indicators
           </p>
         </div>
@@ -45,28 +36,28 @@ const ReportingDashboard = () => {
         </div>
       </div>
       
-      <div className="overflow-x-hidden">
+      <div className="overflow-x-hidden w-full">
         <Tabs defaultValue="sales" className="w-full">
-          <TabsList className={`grid w-full ${windowWidth < 640 ? 'grid-cols-1 gap-2' : 'grid-cols-3'}`}>
-            <TabsTrigger value="sales">RFQ to Order Analytics</TabsTrigger>
-            <TabsTrigger value="inventory">Inventory Analysis</TabsTrigger>
-            <TabsTrigger value="financial">Financial Performance</TabsTrigger>
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-3'}`}>
+            <TabsTrigger value="sales" className="text-xs sm:text-sm">RFQ to Order Analytics</TabsTrigger>
+            <TabsTrigger value="inventory" className="text-xs sm:text-sm">Inventory Analysis</TabsTrigger>
+            <TabsTrigger value="financial" className="text-xs sm:text-sm">Financial Performance</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="sales" className="mt-4 space-y-4">
-            <div className="overflow-x-auto">
+          <TabsContent value="sales" className="mt-4">
+            <div className="w-full">
               <RFQConversionReport dateRange={dateRange} />
             </div>
           </TabsContent>
           
-          <TabsContent value="inventory" className="mt-4 space-y-4">
-            <div className="overflow-x-auto">
+          <TabsContent value="inventory" className="mt-4">
+            <div className="w-full">
               <InventoryReport dateRange={dateRange} />
             </div>
           </TabsContent>
           
-          <TabsContent value="financial" className="mt-4 space-y-4">
-            <div className="overflow-x-auto">
+          <TabsContent value="financial" className="mt-4">
+            <div className="w-full">
               <FinancialReport dateRange={dateRange} />
             </div>
           </TabsContent>

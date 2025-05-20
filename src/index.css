@@ -89,14 +89,36 @@
 
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+    width: 100%;
   }
   
-  /* Add responsive font size scaling */
   html {
-    font-size: 14px;
+    height: -webkit-fill-available;
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Improved responsive font size scaling */
+  html {
+    font-size: 13px;
+  }
+  
+  @media (min-width: 480px) {
+    html {
+      font-size: 14px;
+    }
   }
   
   @media (min-width: 640px) {
+    html {
+      font-size: 15px;
+    }
+  }
+  
+  @media (min-width: 768px) {
     html {
       font-size: 16px;
     }
@@ -106,17 +128,40 @@
 /* Make charts responsive to window resizing */
 .recharts-wrapper {
   max-width: 100%;
+  height: auto !important;
+  min-height: 200px;
 }
 
 .recharts-surface {
   overflow: visible;
 }
 
+.recharts-responsive-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 250px;
+}
+
 /* Make tooltips responsive */
 .recharts-tooltip-wrapper {
   max-width: 90vw;
+  z-index: 20;
 }
 
+/* Ensure charts don't overflow containers */
+.recharts-wrapper,
+.recharts-surface {
+  width: 100% !important;
+}
+
+/* Responsive card styling */
+.card-container {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Status badges with consistent styling */
 .status-badge {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }

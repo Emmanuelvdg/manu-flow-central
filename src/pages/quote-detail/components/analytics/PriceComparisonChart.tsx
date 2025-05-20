@@ -2,13 +2,11 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { LoadingState } from "../LoadingState";
+import { useChartDimensions } from "@/hooks/use-chart-dimensions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PriceComparisonChartProps {
   quoteId: string;
@@ -21,6 +19,9 @@ interface ProductPrice {
 }
 
 export const PriceComparisonChart: React.FC<PriceComparisonChartProps> = ({ quoteId }) => {
+  const [containerRef, dimensions] = useChartDimensions();
+  const isMobile = useIsMobile();
+  
   const { data, isLoading } = useQuery({
     queryKey: ['price-comparison', quoteId],
     queryFn: async () => {
@@ -98,34 +99,35 @@ export const PriceComparisonChart: React.FC<PriceComparisonChartProps> = ({ quot
   }
 
   if (!data) {
-    return <div className="text-center p-4">No price comparison data available</div>;
+    return <div className="text-center p-4 text-sm">No price comparison data available</div>;
   }
 
   if (!data.hasOrderData) {
     return (
       <div className="flex flex-col items-center justify-center h-full py-8">
-        <p className="text-muted-foreground">No order data available for comparison</p>
-        <p className="text-sm text-muted-foreground">Quote Total: {data.quoteTotal}</p>
+        <p className="text-muted-foreground text-sm">No order data available for comparison</p>
+        <p className="text-xs text-muted-foreground">Quote Total: {data.quoteTotal}</p>
       </div>
     );
   }
   
   // Process data for responsive display
   const prepareChartData = () => {
-    // For very small screens, limit to fewer products
-    const screenWidth = window.innerWidth;
+    // Calculate how many products we can display based on container width
     let maxProducts = data.productsComparison.length;
     
-    if (screenWidth < 640) {
+    if (dimensions.width < 350) {
+      maxProducts = Math.min(2, data.productsComparison.length);
+    } else if (dimensions.width < 450) {
       maxProducts = Math.min(3, data.productsComparison.length);
-    } else if (screenWidth < 768) {
-      maxProducts = Math.min(5, data.productsComparison.length);
+    } else if (dimensions.width < 768) {
+      maxProducts = Math.min(4, data.productsComparison.length);
     }
     
     return data.productsComparison.slice(0, maxProducts).map(product => ({
       ...product,
-      name: product.name.length > 15 
-        ? `${product.name.substring(0, 13)}...` 
+      name: product.name.length > (isMobile ? 8 : 15)
+        ? `${product.name.substring(0, isMobile ? 6 : 13)}...` 
         : product.name
     }));
   };
@@ -136,25 +138,48 @@ export const PriceComparisonChart: React.FC<PriceComparisonChartProps> = ({ quot
   };
 
   return (
-    <div className="h-[250px] sm:h-[300px] w-full">
+    <div ref={containerRef} className="w-full h-full min-h-[200px] sm:min-h-[250px]">
       <ChartContainer config={chartConfig}>
-        <BarChart 
-          data={prepareChartData()}
-          margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
-        >
-          <XAxis 
-            dataKey="name" 
-            tick={{ fontSize: 10 }}
-            height={50}
-            angle={-15}
-            textAnchor="end"
-          />
-          <YAxis />
-          <Tooltip content={<ChartTooltipContent />} />
-          <Legend wrapperStyle={{ fontSize: '10px', marginTop: '10px' }} />
-          <Bar dataKey="quotePrice" name="Quote Price" fill="#22c55e" />
-          <Bar dataKey="orderPrice" name="Order Price" fill="#3b82f6" />
-        </BarChart>
+        <ResponsiveContainer width="100%" height={dimensions.height || 250}>
+          <BarChart 
+            data={prepareChartData()}
+            margin={{ 
+              top: 5, 
+              right: isMobile ? 5 : 10, 
+              left: isMobile ? -15 : 0, 
+              bottom: isMobile ? 15 : 5 
+            }}
+          >
+            <XAxis 
+              dataKey="name" 
+              tick={{ fontSize: isMobile ? 8 : 10 }}
+              height={isMobile ? 40 : 50}
+              angle={isMobile ? -30 : -15}
+              textAnchor="end"
+              interval={0}
+            />
+            <YAxis 
+              tick={{ fontSize: isMobile ? 8 : 10 }}
+              width={isMobile ? 35 : 45}
+              tickFormatter={(value) => {
+                if (dimensions.width < 350) {
+                  return `$${Math.round(value / 1000)}k`;
+                }
+                return `$${(value / 1000).toFixed(0)}k`;
+              }}
+            />
+            <Tooltip 
+              content={<ChartTooltipContent />} 
+              wrapperStyle={{ zIndex: 1000 }}
+            />
+            <Legend 
+              wrapperStyle={{ fontSize: isMobile ? '8px' : '10px', marginTop: '5px' }} 
+              iconSize={isMobile ? 8 : 10}
+            />
+            <Bar dataKey="quotePrice" name="Quote Price" fill="#22c55e" />
+            <Bar dataKey="orderPrice" name="Order Price" fill="#3b82f6" />
+          </BarChart>
+        </ResponsiveContainer>
       </ChartContainer>
     </div>
   );

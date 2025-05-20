@@ -2,19 +2,20 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { LoadingState } from "../LoadingState";
+import { useChartDimensions } from "@/hooks/use-chart-dimensions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SalesFunnelChartProps {
   quoteId: string;
 }
 
 export const SalesFunnelChart: React.FC<SalesFunnelChartProps> = ({ quoteId }) => {
+  const [containerRef, dimensions] = useChartDimensions();
+  const isMobile = useIsMobile();
+  
   const { data, isLoading } = useQuery({
     queryKey: ['sales-funnel-timeline', quoteId],
     queryFn: async () => {
@@ -59,13 +60,13 @@ export const SalesFunnelChart: React.FC<SalesFunnelChartProps> = ({ quoteId }) =
   }
 
   if (!data) {
-    return <div className="text-center p-4">No timeline data available</div>;
+    return <div className="text-center p-4 text-sm">No timeline data available</div>;
   }
 
   // Prepare chart data
   const chartData = [
     {
-      name: "RFQ to Quote",
+      name: isMobile ? "RFQ-Quote" : "RFQ to Quote",
       days: data.rfqToQuoteDays,
       fill: "#22c55e" // Green
     }
@@ -73,7 +74,7 @@ export const SalesFunnelChart: React.FC<SalesFunnelChartProps> = ({ quoteId }) =
   
   if (data.orderDate) {
     chartData.push({
-      name: "Quote to Order",
+      name: isMobile ? "Quote-Order" : "Quote to Order",
       days: data.quoteToOrderDays,
       fill: "#3b82f6" // Blue
     });
@@ -85,29 +86,43 @@ export const SalesFunnelChart: React.FC<SalesFunnelChartProps> = ({ quoteId }) =
   };
 
   return (
-    <div className="h-[250px] sm:h-[300px] w-full">
+    <div ref={containerRef} className="w-full h-full min-h-[200px] sm:min-h-[250px]">
       <ChartContainer config={chartConfig}>
-        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-          <XAxis 
-            dataKey="name" 
-            tick={{ fontSize: 12 }} 
-            height={40}
-          />
-          <YAxis 
-            label={{ 
-              value: 'Days', 
-              angle: -90, 
-              position: 'insideLeft',
-              style: {
-                fontSize: '12px',
-                textAnchor: 'middle'
-              } 
-            }} 
-            width={40}
-          />
-          <Tooltip content={<ChartTooltipContent />} />
-          <Bar dataKey="days" name="Days" />
-        </BarChart>
+        <ResponsiveContainer width="100%" height={dimensions.height || 250}>
+          <BarChart 
+            data={chartData} 
+            margin={{ 
+              top: 5, 
+              right: isMobile ? 5 : 20, 
+              left: isMobile ? -15 : 0, 
+              bottom: 5 
+            }}
+          >
+            <XAxis 
+              dataKey="name" 
+              tick={{ fontSize: isMobile ? 10 : 12 }} 
+              height={40}
+            />
+            <YAxis 
+              label={{ 
+                value: isMobile ? 'Days' : 'Days Elapsed', 
+                angle: -90, 
+                position: 'insideLeft',
+                style: {
+                  fontSize: isMobile ? '10px' : '12px',
+                  textAnchor: 'middle'
+                } 
+              }} 
+              width={isMobile ? 30 : 40}
+              tick={{ fontSize: isMobile ? 10 : 12 }}
+            />
+            <Tooltip 
+              content={<ChartTooltipContent />} 
+              wrapperStyle={{ zIndex: 1000 }}
+            />
+            <Bar dataKey="days" name="Days" />
+          </BarChart>
+        </ResponsiveContainer>
       </ChartContainer>
     </div>
   );

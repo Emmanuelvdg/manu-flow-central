@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { useToast } from "@/components/ui/use-toast";
 import { Menu, X } from "lucide-react";
@@ -10,16 +10,40 @@ interface MainLayoutProps {
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 1024);
   const { toast } = useToast();
+
+  // Handle responsive sidebar display
+  useEffect(() => {
+    // Set initial sidebar state based on screen size
+    setSidebarOpen(!isMobileView);
+    
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobileView(mobile);
+      
+      // Auto-open sidebar on desktop view
+      if (!mobile) {
+        setSidebarOpen(true);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      {/* Mobile sidebar */}
-      <div className={`lg:hidden fixed inset-0 z-40 ${sidebarOpen ? "block" : "hidden"}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
-        <div className="fixed inset-y-0 left-0 flex flex-col z-40 w-64 bg-white">
-          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+      {/* Mobile sidebar overlay */}
+      {isMobileView && sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
+      )}
+      
+      {/* Sidebar - responsive positioning */}
+      <div className={`${sidebarOpen ? 'block' : 'hidden'} ${isMobileView ? 'fixed inset-y-0 left-0 z-50' : 'relative'} lg:block flex-shrink-0`}>
+        <div className={`flex flex-col h-full ${isMobileView ? 'w-64' : 'w-64'}`}>
+          <div className={`${isMobileView ? 'flex' : 'hidden'} items-center justify-between h-16 px-4 border-b border-gray-200 bg-white`}>
             <div className="flex items-center">
               <img 
                 src="/lovable-uploads/bca2590c-b286-4921-9c95-52a4a7306fcd.png" 
@@ -31,27 +55,18 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
               <X className="h-6 w-6" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <Sidebar />
-          </div>
-        </div>
-      </div>
-      
-      {/* Static sidebar for desktop */}
-      <div className={`hidden lg:flex lg:flex-shrink-0`}>
-        <div className="w-64 flex flex-col">
           <Sidebar />
         </div>
       </div>
       
-      {/* Main content area */}
-      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+      {/* Main content area - responsive layout */}
+      <div className="flex flex-col flex-1 w-0 overflow-hidden">
         <header className="bg-white shadow-sm z-10 border-b">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="text-gray-500 focus:outline-none lg:hidden"
+                className="text-gray-500 focus:outline-none"
               >
                 <Menu className="h-6 w-6" />
               </button>
@@ -60,7 +75,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
                 alt="Labamu Manufacturing" 
                 className="h-8 w-auto"
               />
-              <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+              <h1 className="text-xl font-semibold text-gray-900 truncate max-w-[150px] sm:max-w-full">{title}</h1>
             </div>
             
             <div className="flex items-center">
