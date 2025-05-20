@@ -48,20 +48,20 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
             onClick={() => handleOrderClick(order.number)}
             className="hover:bg-gray-50 border-b cursor-pointer"
           >
-            <td className="px-4 py-3 text-sm font-medium text-primary">
+            <td className="px-4 py-3 text-sm font-medium text-primary truncate max-w-[140px]">
               {order.number}
             </td>
-            <td className="px-4 py-3 text-sm text-gray-600">{order.groupName}</td>
-            <td className="px-4 py-3 text-sm text-gray-600">{order.partNo}</td>
-            <td className="px-4 py-3 text-sm text-gray-600">{order.partDescription}</td>
+            <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-[140px]">{order.groupName}</td>
+            <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-[100px]">{order.partNo}</td>
+            <td className="px-4 py-3 text-sm text-gray-600 truncate max-w-[180px]">{order.partDescription}</td>
             <td className="px-4 py-3 text-sm text-gray-600">{order.quantity}</td>
             <td className="px-4 py-3">
-              <span className={`inline-block rounded-full px-2 py-1 text-xs ${order.statusColor}`}>
+              <span className={`inline-block rounded-full px-2 py-1 text-xs ${order.statusColor} whitespace-nowrap`}>
                 {order.status}
               </span>
             </td>
             <td className="px-4 py-3">
-              <span className={`inline-block rounded-full px-2 py-1 text-xs ${order.partsStatusColor}`}>
+              <span className={`inline-block rounded-full px-2 py-1 text-xs ${order.partsStatusColor} whitespace-nowrap`}>
                 {order.partsStatus}
               </span>
             </td>

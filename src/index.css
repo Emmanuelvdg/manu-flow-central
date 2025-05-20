@@ -123,6 +123,24 @@
       font-size: 16px;
     }
   }
+  
+  /* Add support for different zoom levels */
+  @media screen and (min-resolution: 120dpi) {
+    html {
+      font-size: 14px;
+    }
+  }
+  
+  @media screen and (min-resolution: 144dpi) {
+    html {
+      font-size: 15px;
+    }
+  }
+  
+  /* Ensure no horizontal scrollbar on main layout */
+  .overflow-x-hidden {
+    overflow-x: hidden;
+  }
 }
 
 /* Make charts responsive to window resizing */
@@ -159,6 +177,19 @@
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Enhanced table responsiveness */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure tables have proper horizontal scrolling */
+.table-scroll {
+  min-width: min-content;
+  width: 100%;
 }
 
 /* Status badges with consistent styling */

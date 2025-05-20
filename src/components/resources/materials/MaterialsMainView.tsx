@@ -10,6 +10,7 @@ import { PurchaseOrderDialog } from '../PurchaseOrderDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BatchAllocationManager } from './BatchAllocationManager';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export const MaterialsMainView: React.FC = () => {
   const {
@@ -56,20 +57,28 @@ export const MaterialsMainView: React.FC = () => {
         
         <TabsContent value="inventory" className="space-y-4">
           <Card>
-            <CardContent className="pt-6">
-              <MaterialsTable
-                materials={materials}
-                onEditMaterial={handleEditMaterial}
-                onCreateOrder={handleCreateOrder}
-                formatCurrency={formatCurrency}
-              />
+            <CardContent className="pt-6 p-0 sm:p-6">
+              <ScrollArea className="h-[calc(100vh-280px)] w-full">
+                <div className="min-w-[900px] px-6 pb-6">
+                  <MaterialsTable
+                    materials={materials}
+                    onEditMaterial={handleEditMaterial}
+                    onCreateOrder={handleCreateOrder}
+                    formatCurrency={formatCurrency}
+                  />
+                </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
         
         <TabsContent value="allocations" className="space-y-4">
-          <BatchAllocationManager />
-          <MaterialStockReport />
+          <ScrollArea className="w-full">
+            <div className="min-w-[900px]">
+              <BatchAllocationManager />
+              <MaterialStockReport />
+            </div>
+          </ScrollArea>
         </TabsContent>
       </Tabs>
 
