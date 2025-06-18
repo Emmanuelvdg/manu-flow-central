@@ -22,6 +22,13 @@ const RFQDetail = () => {
     products: "",
     status: "Draft",
   });
+
+  // Handle redirect for create mode in useEffect to avoid infinite loop
+  useEffect(() => {
+    if (isCreateMode) {
+      navigate('/rfqs/create', { replace: true });
+    }
+  }, [isCreateMode, navigate]);
   
   const { data: rfq, isLoading, error } = useQuery({
     queryKey: ['rfq', id],
@@ -66,12 +73,6 @@ const RFQDetail = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isCreateMode) {
-      // Redirect to the actual RFQ create page
-      navigate('/rfqs/create');
-      return;
-    }
     
     // Handle form submission for existing RFQ
     console.log("Saving RFQ:", formData);
@@ -125,9 +126,8 @@ const RFQDetail = () => {
     });
   };
 
-  // If we're in create mode, redirect to the proper create page
+  // Show loading state while redirecting for create mode
   if (isCreateMode) {
-    navigate('/rfqs/create', { replace: true });
     return null;
   }
 
