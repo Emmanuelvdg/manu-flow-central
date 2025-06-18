@@ -54,7 +54,7 @@ function App() {
             <Route path="/quotes/:id" element={<QuoteDetail />} />
             <Route path="/rfqs" element={<RFQs />} />
             <Route path="/rfqs/:id" element={<RFQDetail />} />
-            <Route path="/rfq/create" element={<RFQCreate />} />
+            <Route path="/rfqs/create" element={<RFQCreate />} />
             <Route path="/resources" element={<Resource />} />
             <Route path="/recipes" element={<RecipesDashboard />} />
             <Route path="/recipes/create" element={<RecipeCreate />} />
