@@ -13,6 +13,8 @@ const RFQDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isCreateMode = id === "create";
+  
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -24,7 +26,7 @@ const RFQDetail = () => {
   const { data: rfq, isLoading, error } = useQuery({
     queryKey: ['rfq', id],
     queryFn: async () => {
-      if (!id) return null;
+      if (!id || isCreateMode) return null;
       
       const { data, error } = await supabase
         .from('rfqs')
@@ -39,7 +41,7 @@ const RFQDetail = () => {
       
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !isCreateMode,
   });
 
   // Update form when RFQ data is loaded
@@ -64,7 +66,14 @@ const RFQDetail = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
+    
+    if (isCreateMode) {
+      // Redirect to the actual RFQ create page
+      navigate('/rfqs/create');
+      return;
+    }
+    
+    // Handle form submission for existing RFQ
     console.log("Saving RFQ:", formData);
   };
   
@@ -115,6 +124,12 @@ const RFQDetail = () => {
       }
     });
   };
+
+  // If we're in create mode, redirect to the proper create page
+  if (isCreateMode) {
+    navigate('/rfqs/create', { replace: true });
+    return null;
+  }
 
   return (
     <MainLayout title={`RFQ Detail - ${id}`}>
