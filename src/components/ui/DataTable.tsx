@@ -21,28 +21,35 @@ export interface Column<T> {
   header: string;
   accessorKey: keyof T | string;
   cell?: (props: ColumnCellProps<T>) => React.ReactNode;
+  width?: string;
 }
 
 interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   onRowClick?: (row: T) => void;
+  maxHeight?: string;
 }
 
 export function DataTable<T>({ 
   columns, 
   data, 
-  onRowClick 
+  onRowClick,
+  maxHeight = "calc(100vh - 200px)"
 }: DataTableProps<T>) {
   return (
-    <div className="rounded-md border">
-      <ScrollArea className="h-full max-h-[calc(100vh-200px)]">
-        <div className="min-w-[750px]">
+    <div className="rounded-md border w-full h-full flex flex-col">
+      <ScrollArea className="flex-1" style={{ maxHeight }}>
+        <div className="table-container">
           <Table>
             <TableHeader>
               <TableRow>
                 {columns.map((column, index) => (
-                  <TableHead key={column.header || index} className="font-semibold whitespace-nowrap">
+                  <TableHead 
+                    key={column.header || index} 
+                    className="font-semibold whitespace-nowrap"
+                    style={{ width: column.width || 'auto' }}
+                  >
                     {column.header}
                   </TableHead>
                 ))}
@@ -65,7 +72,6 @@ export function DataTable<T>({
                     {columns.map((column, colIndex) => {
                       const accessorKey = column.accessorKey.toString();
                       
-                      // Check if the row object is defined before accessing its properties
                       if (!row) {
                         return <TableCell key={`${rowIndex}-${column.header || colIndex}`}>-</TableCell>;
                       }
@@ -73,7 +79,8 @@ export function DataTable<T>({
                       return (
                         <TableCell 
                           key={`${rowIndex}-${column.header || colIndex}`} 
-                          className="max-w-[150px] truncate"
+                          className="table-cell-responsive"
+                          style={{ width: column.width || 'auto' }}
                         >
                           {column.cell
                             ? column.cell({
