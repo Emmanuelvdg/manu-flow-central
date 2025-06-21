@@ -41,7 +41,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
   }, []);
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden">
+    <div className="h-screen w-screen flex">
       {/* Mobile sidebar overlay */}
       {isMobileView && sidebarOpen && (
         <div 
@@ -69,11 +69,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
         </div>
       </div>
       
-      {/* Main content area - responsive layout */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      {/* Main content area - full width utilization */}
+      <div className="flex flex-col flex-1 min-w-0">
         <header className="bg-white shadow-sm z-10 border-b flex-shrink-0">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6">
-            <div className="flex items-center gap-4 min-w-0">
+          <div className="flex items-center justify-between h-16 px-3 lg:px-4">
+            <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="text-gray-500 focus:outline-none flex-shrink-0"
@@ -85,10 +85,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
                 alt="Labamu Manufacturing" 
                 className="h-8 w-auto flex-shrink-0"
               />
-              <h1 className="text-xl font-semibold text-gray-900 truncate min-w-0">{title}</h1>
+              <h1 className="text-lg lg:text-xl font-semibold text-gray-900 truncate min-w-0">{title}</h1>
             </div>
             
-            <div className="flex items-center flex-shrink-0">
+            <div className="flex items-center flex-shrink-0 gap-2">
               <div className="relative">
                 <button
                   onClick={() => 
@@ -106,7 +106,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
                 </button>
               </div>
 
-              <div className="ml-3 relative">
+              <div className="relative">
                 <div>
                   <button
                     className="flex items-center max-w-xs bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -128,7 +128,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
           </div>
         </header>
         
-        <main className="flex-1 overflow-auto p-4 sm:p-6 w-full min-w-0">
+        <main className="flex-1 overflow-auto w-full min-w-0 p-3 lg:p-4">
           <div className="w-full min-w-0">
             {children}
           </div>

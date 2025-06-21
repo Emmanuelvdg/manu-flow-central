@@ -37,7 +37,7 @@ export const ProductCatalog = () => {
   const categories = Array.from(new Set(products.map(p => p.category)));
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-4">
       <ProductFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -57,19 +57,35 @@ export const ProductCatalog = () => {
       </Dialog>
 
       {loading ? (
-        <div className="text-center py-12">Loading products...</div>
+        <div className="text-center py-12">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+          <p className="mt-4 text-gray-500">Loading products...</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={addToCart}
-              quantity={cartItems
-                .filter(item => item.product.id === product.id)
-                .reduce((sum, item) => sum + item.quantity, 0)}
-            />
-          ))}
+        <div className="w-full">
+          <div className="responsive-grid responsive-grid-cols w-full">
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={addToCart}
+                  quantity={cartItems
+                    .filter(item => item.product.id === product.id)
+                    .reduce((sum, item) => sum + item.quantity, 0)}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500">No products found matching your criteria.</p>
+                {searchTerm && (
+                  <p className="text-sm text-gray-400 mt-2">
+                    Try adjusting your search term or category filter.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
