@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { DashboardCard } from '@/components/ui/DashboardCard';
@@ -78,8 +79,8 @@ const Dashboard = () => {
 
   return (
     <MainLayout title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Dashboard`}>
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="w-full min-w-0 space-y-6">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 w-full">
           <DashboardCard
             title="Products"
             description="Total available products"
@@ -132,7 +133,7 @@ const Dashboard = () => {
           />
         </div>
         
-        <Tabs value={activeTab} defaultValue={activeTab}>
+        <Tabs value={activeTab} defaultValue={activeTab} className="w-full">
           <TabsList className="w-full justify-start border-b pb-px">
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="rfqs">RFQs</TabsTrigger>
@@ -140,19 +141,19 @@ const Dashboard = () => {
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
           </TabsList>
-          <TabsContent value="products" className="mt-6">
+          <TabsContent value="products" className="mt-6 w-full">
             <ProductCatalog />
           </TabsContent>
-          <TabsContent value="rfqs" className="mt-6">
+          <TabsContent value="rfqs" className="mt-6 w-full">
             <RFQList />
           </TabsContent>
-          <TabsContent value="quotes" className="mt-6">
+          <TabsContent value="quotes" className="mt-6 w-full">
             <QuotesList />
           </TabsContent>
-          <TabsContent value="orders" className="mt-6">
+          <TabsContent value="orders" className="mt-6 w-full">
             <OrdersList />
           </TabsContent>
-          <TabsContent value="invoices" className="mt-6">
+          <TabsContent value="invoices" className="mt-6 w-full">
             <InvoiceList />
           </TabsContent>
         </Tabs>
