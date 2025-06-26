@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { usePublicSiteConfig } from '@/contexts/PublicSiteConfigContext';
@@ -15,11 +14,6 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
   const headerStyle = {
     backgroundColor: colorScheme?.background || 'hsl(var(--background))',
     color: colorScheme?.text || 'hsl(var(--foreground))',
-  };
-
-  const primaryButtonStyle = {
-    backgroundColor: colorScheme?.primary || 'hsl(var(--primary))',
-    color: colorScheme?.primary === 'hsl(var(--primary))' ? 'hsl(var(--primary-foreground))' : '#ffffff',
   };
 
   return (
@@ -57,9 +51,6 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
                   {navLink.label}
                 </Link>
               ))}
-              <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium text-white" style={primaryButtonStyle}>
-                Login
-              </Link>
             </nav>
           </div>
         </div>
