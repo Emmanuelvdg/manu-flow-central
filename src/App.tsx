@@ -24,6 +24,7 @@ import InvoiceDetail from "./pages/InvoiceDetail";
 import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 import PublicSiteConfig from "./pages/PublicSiteConfig";
+import FXManagement from "./pages/FXManagement";
 
 // Public pages
 import PublicProducts from "./pages/PublicProducts";
@@ -64,6 +65,7 @@ function App() {
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/invoices/:id" element={<InvoiceDetail />} />
             <Route path="/user-management" element={<UserManagement />} />
+            <Route path="/fx-management" element={<FXManagement />} />
             <Route path="/public-site-config" element={<PublicSiteConfig />} />
             
             {/* Public Routes */}

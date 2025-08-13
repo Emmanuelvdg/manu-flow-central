@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import type { QuoteFormState } from '../types/quoteTypes';
 
 interface UseQuoteActionsProps {
@@ -20,6 +21,7 @@ export const useQuoteActions = ({
 }: UseQuoteActionsProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getConversionData } = useCurrencyConversion();
 
   const saveCustomProducts = async (quoteId: string, customProducts: QuoteFormState['customProducts']) => {
     // First, fetch existing custom products for this quote
@@ -82,6 +84,9 @@ export const useQuoteActions = ({
     setIsSubmitting(true);
     
     try {
+      // Get currency conversion data
+      const conversionData = getConversionData(formState.total, formState.currency);
+      
       // Prepare the quote data
       const quoteData = {
         customer_name: formState.customerName,
@@ -108,6 +113,10 @@ export const useQuoteActions = ({
         total: formState.total,
         status: formState.status,
         currency: formState.currency,
+        // Add currency conversion fields
+        base_total: conversionData.baseAmount,
+        exchange_rate: conversionData.exchangeRate,
+        conversion_date: conversionData.conversionDate,
         payment_terms: formState.paymentTerms,
         incoterms: formState.incoterms,
         shipping_method: formState.shippingMethod,

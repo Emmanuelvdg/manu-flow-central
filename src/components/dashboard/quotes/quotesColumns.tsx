@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Quote, formatCurrency, formatDate } from './quoteUtils';
 import { QuoteActions } from './QuoteActions';
 import { RiskLevelBadge } from './RiskLevelBadge';
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 
 export const createQuotesColumns = (refetch: () => void): Column<Quote>[] => [
   {
@@ -23,7 +24,16 @@ export const createQuotesColumns = (refetch: () => void): Column<Quote>[] => [
   {
     header: 'Total',
     accessorKey: 'total',
-    cell: (props: ColumnCellProps<Quote>) => formatCurrency(props.getValue())
+    cell: (props: ColumnCellProps<Quote>) => {
+      const row = props.row.original;
+      return (
+        <CurrencyDisplay 
+          amount={props.getValue()} 
+          currency={row.currency || 'USD'} 
+          className="text-sm"
+        />
+      );
+    }
   },
   {
     header: 'Est. Delivery',

@@ -70,6 +70,7 @@ export const Sidebar = () => {
       name: 'ADMINISTRATION',
       items: [
         { name: 'User Management', path: '/user-management', icon: <Users size={18} /> },
+        { name: 'FX Management', path: '/fx-management', icon: <Settings size={18} /> },
         { name: 'Public Site Config', path: '/public-site-config', icon: <Settings size={18} /> },
         { name: 'Public Storefront', path: '/public', icon: <Globe size={18} /> }
       ]

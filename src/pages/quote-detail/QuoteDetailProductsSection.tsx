@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { CustomProductInput, CustomProduct } from "./components/CustomProductInput";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 
 interface Product {
   id: string;
@@ -236,16 +237,21 @@ export const QuoteDetailProductsSection: React.FC<QuoteDetailProductsSectionProp
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-8">
               <span className="font-medium">Total:</span>
-              <div className="flex items-center gap-1">
-                <span>{currency === "USD" ? "$" : currency === "EUR" ? "€" : "£"}</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className="w-32 rounded border p-2 text-right"
-                  value={total}
-                  onChange={(e) => setTotal(Number(e.target.value) || 0)}
-                />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <span>{currency === "USD" ? "$" : currency === "EUR" ? "€" : "£"}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-32 rounded border p-2 text-right"
+                    value={total}
+                    onChange={(e) => setTotal(Number(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="text-right">
+                  <CurrencyDisplay amount={total} currency={currency} />
+                </div>
               </div>
             </div>
           </div>

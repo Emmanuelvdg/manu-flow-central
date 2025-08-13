@@ -36,7 +36,7 @@ export const createInvoiceFromOrder = async (orderId: string) => {
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + paymentTermsDays);
 
-    // Create the invoice record
+    // Create the invoice record with currency information
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .insert({
@@ -44,7 +44,12 @@ export const createInvoiceFromOrder = async (orderId: string) => {
         amount: order.total,
         invoice_number: invoiceNumber,
         due_date: dueDate.toISOString(),
-        status: 'pending'
+        status: 'pending',
+        // Copy currency data from order if available, otherwise assume USD
+        currency: (order as any).currency || 'USD',
+        base_amount: (order as any).base_total || order.total,
+        exchange_rate: (order as any).exchange_rate || 1,
+        conversion_date: (order as any).conversion_date || new Date().toISOString()
       })
       .select()
       .single();
