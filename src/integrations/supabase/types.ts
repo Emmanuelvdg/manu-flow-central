@@ -131,6 +131,57 @@ export type Database = {
         }
         Relationships: []
       }
+      fx_rates: {
+        Row: {
+          created_at: string
+          effective_date: string
+          from_currency: string
+          id: string
+          rate: number
+          to_currency: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          effective_date: string
+          from_currency: string
+          id?: string
+          rate: number
+          to_currency: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          effective_date?: string
+          from_currency?: string
+          id?: string
+          rate?: number
+          to_currency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fx_settings: {
+        Row: {
+          base_currency: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          base_currency: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
