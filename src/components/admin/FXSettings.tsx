@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 
 export const FXSettings = () => {
   const { settings, rates, loading, updateBaseCurrency, addRate } = useFXSettings();
-  const [newBaseCurrency, setNewBaseCurrency] = useState(settings?.base_currency || 'USD');
+  const [newBaseCurrency, setNewBaseCurrency] = useState('USD');
   const [newRate, setNewRate] = useState({
     fromCurrency: '',
     toCurrency: '',
@@ -20,6 +20,13 @@ export const FXSettings = () => {
   });
 
   const currencies = ['USD', 'EUR', 'IDR'];
+
+  // Sync newBaseCurrency with loaded settings
+  useEffect(() => {
+    if (settings?.base_currency) {
+      setNewBaseCurrency(settings.base_currency);
+    }
+  }, [settings]);
 
   const handleBaseCurrencyUpdate = async () => {
     await updateBaseCurrency(newBaseCurrency);
