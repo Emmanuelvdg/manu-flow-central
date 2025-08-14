@@ -65,19 +65,45 @@ export const useFXSettings = () => {
 
   const updateBaseCurrency = async (baseCurrency: string) => {
     try {
+      // Debug logging for authentication
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('=== FX Settings Debug Info ===');
+      console.log('User:', user);
+      console.log('Session:', session);
+      console.log('User Error:', userError);
+      console.log('Session Error:', sessionError);
+      console.log('Auth UID available:', !!user?.id);
+      console.log('Session valid:', !!session?.access_token);
+      console.log('Current settings:', settings);
+      console.log('Attempting to update base currency to:', baseCurrency);
+      
+      if (!user) {
+        throw new Error('User not authenticated. Please log in to manage FX settings.');
+      }
+
       if (settings) {
+        console.log('Updating existing settings with ID:', settings.id);
         const { error } = await supabase
           .from('fx_settings' as any)
           .update({ base_currency: baseCurrency, updated_at: new Date().toISOString() })
           .eq('id', settings.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
       } else {
+        console.log('Creating new FX settings record');
         const { error } = await supabase
           .from('fx_settings' as any)
           .insert({ base_currency: baseCurrency });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
       }
 
       await fetchSettings();
@@ -89,7 +115,7 @@ export const useFXSettings = () => {
       console.error('Error updating base currency:', error);
       toast({
         title: "Error",
-        description: "Failed to update base currency",
+        description: error instanceof Error ? error.message : "Failed to update base currency",
         variant: "destructive",
       });
     }
@@ -97,6 +123,17 @@ export const useFXSettings = () => {
 
   const addRate = async (fromCurrency: string, toCurrency: string, rate: number, effectiveDate: string) => {
     try {
+      // Debug logging for authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('=== Adding FX Rate Debug Info ===');
+      console.log('User authenticated:', !!user);
+      console.log('User ID:', user?.id);
+      console.log('Adding rate:', { fromCurrency, toCurrency, rate, effectiveDate });
+      
+      if (!user) {
+        throw new Error('User not authenticated. Please log in to manage exchange rates.');
+      }
+
       const { error } = await supabase
         .from('fx_rates' as any)
         .insert({
@@ -106,7 +143,10 @@ export const useFXSettings = () => {
           effective_date: effectiveDate
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Add rate error:', error);
+        throw error;
+      }
 
       await fetchRates();
       toast({
@@ -117,7 +157,7 @@ export const useFXSettings = () => {
       console.error('Error adding FX rate:', error);
       toast({
         title: "Error",
-        description: "Failed to add exchange rate",
+        description: error instanceof Error ? error.message : "Failed to add exchange rate",
         variant: "destructive",
       });
     }
