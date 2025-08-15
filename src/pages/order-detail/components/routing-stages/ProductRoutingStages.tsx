@@ -2,11 +2,13 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Clock, Users, Factory, RefreshCcw } from "lucide-react";
+import { Clock, Users, Factory, RefreshCcw, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRoutingStages } from "./useRoutingStages";
+import { useUnitProgress } from "./hooks/useUnitProgress";
 import { LoadingState } from "./LoadingState";
-import { StageCollapsible } from "./StageCollapsible";
+import { StageProgressTable } from "./StageProgressTable";
+import { UnitProgressInput } from "./UnitProgressInput";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ProductRoutingStagesProps {
@@ -25,17 +27,23 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
   // Use the custom hook for routing stages logic with a single recipe ID
   const {
     expandedStages,
-    isUpdating,
     tabValue,
     setTabValue,
     routingStages,
-    stageProgress,
     loading,
     loadingErrorMessage,
-    handleToggleStage,
-    handleProgressChange,
-    handleUpdateProgress
+    handleToggleStage
   } = useRoutingStages([orderProduct], [recipeId]);
+
+  // Use unit-based progress tracking
+  const {
+    stageProgressData,
+    isLoading: progressLoading,
+    isUpdating,
+    updateStageProgress,
+    getStageProgress,
+    getOrderProductProgress
+  } = useUnitProgress([orderProduct], refetch);
 
   // Function to refresh data
   const handleRefresh = async () => {
@@ -50,17 +58,16 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
     });
   };
 
-  // Check if all stages are at 100% progress
+  // Check if all stages are at 100% progress based on unit completion
   const checkAndUpdateProductStatus = async () => {
-    const stages = routingStages[recipeId] || [];
+    const productProgress = stageProgressData.filter(p => p.order_product_id === orderProduct.id);
     
-    if (stages.length === 0) return;
+    if (productProgress.length === 0) return;
     
-    // Check if all stages have 100% progress
-    const allStagesComplete = stages.every(stage => {
-      const materialsProgress = stageProgress[recipeId]?.[stage.id] || 0;
-      return materialsProgress === 100;
-    });
+    // Check if all stages have all units completed
+    const allStagesComplete = productProgress.every(stage => 
+      stage.completed_units === stage.total_units
+    );
     
     // If all stages are complete and product is not already marked as completed, update it
     if (allStagesComplete && orderProduct.status !== 'completed') {
@@ -98,10 +105,10 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
   
   // Check status after any progress update
   React.useEffect(() => {
-    if (Object.keys(stageProgress).length > 0 && !loading) {
+    if (stageProgressData.length > 0 && !loading && !progressLoading) {
       checkAndUpdateProductStatus();
     }
-  }, [stageProgress, loading]);
+  }, [stageProgressData, loading, progressLoading]);
 
   // If there are no products with recipes, show a message
   if (!recipeId && !loading) {
@@ -118,72 +125,78 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
     <div className="mt-4 border-t pt-4">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-md font-medium">Production Stages</h3>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRefresh} 
-          disabled={loading}
-        >
-          <RefreshCcw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          {getOrderProductProgress(orderProduct.id).total > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {getOrderProductProgress(orderProduct.id).completed}/{getOrderProductProgress(orderProduct.id).total} units completed
+            </span>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh} 
+            disabled={loading || progressLoading}
+          >
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
       
       <LoadingState 
-        isLoading={loading}
+        isLoading={loading || progressLoading}
         errorMessage={loadingErrorMessage}
         handleRefresh={handleRefresh}
       />
       
-      {!loading && !loadingErrorMessage && Object.keys(routingStages).length === 0 ? (
+      {!loading && !progressLoading && !loadingErrorMessage && Object.keys(routingStages).length === 0 ? (
         <p className="text-center text-muted-foreground py-2">
           No production stages found for this product.
         </p>
       ) : (
-        !loading && !loadingErrorMessage && (
+        !loading && !progressLoading && !loadingErrorMessage && (
           <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
-            <TabsList className="mb-4 grid grid-cols-4 w-full">
-              <TabsTrigger value="stages">
+            <TabsList className="mb-4 grid grid-cols-2 w-full">
+              <TabsTrigger value="overview">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Progress Overview
+              </TabsTrigger>
+              <TabsTrigger value="details">
                 <Clock className="h-4 w-4 mr-2" />
-                Stages
-              </TabsTrigger>
-              <TabsTrigger value="materials">
-                Materials
-              </TabsTrigger>
-              <TabsTrigger value="personnel">
-                <Users className="h-4 w-4 mr-2" />
-                Personnel
-              </TabsTrigger>
-              <TabsTrigger value="machines">
-                <Factory className="h-4 w-4 mr-2" />
-                Machines
+                Stage Details
               </TabsTrigger>
             </TabsList>
             
-            {/* Display stages for this specific recipe */}
-            {Object.keys(routingStages).length > 0 && routingStages[recipeId] && (
-              <div>
-                {routingStages[recipeId].map(stage => (
-                  <StageCollapsible
-                    key={stage.id}
-                    stage={stage}
-                    recipeId={recipeId}
-                    orderProduct={orderProduct}
-                    expandedStages={expandedStages}
-                    isUpdating={isUpdating}
-                    stageProgress={stageProgress}
-                    tabValue={tabValue}
-                    handleToggleStage={handleToggleStage}
-                    handleProgressChange={handleProgressChange}
-                    handleUpdateProgress={async (recipeId, stageId, orderProductId) => {
-                      await handleUpdateProgress(recipeId, stageId, orderProductId);
-                      await checkAndUpdateProductStatus();
-                      await refetch();
-                    }}
-                  />
-                ))}
+            <TabsContent value="overview">
+              <StageProgressTable 
+                stageProgressData={stageProgressData.filter(p => p.order_product_id === orderProduct.id)}
+                orderProducts={[orderProduct]}
+              />
+            </TabsContent>
+
+            <TabsContent value="details">
+              <div className="space-y-4">
+                {/* Display stages for this specific recipe */}
+                {Object.keys(routingStages).length > 0 && routingStages[recipeId] && 
+                  routingStages[recipeId].map(stage => {
+                    const stageProgress = getStageProgress(orderProduct.id, stage.id);
+                    if (!stageProgress) return null;
+
+                    return (
+                      <UnitProgressInput
+                        key={stageProgress.id}
+                        stageProgress={stageProgress}
+                        isUpdating={isUpdating[stageProgress.id] || false}
+                        onUpdateProgress={async (stageProgressId, updates) => {
+                          await updateStageProgress(stageProgressId, updates);
+                          await checkAndUpdateProductStatus();
+                        }}
+                      />
+                    );
+                  })
+                }
               </div>
-            )}
+            </TabsContent>
           </Tabs>
         )
       )}

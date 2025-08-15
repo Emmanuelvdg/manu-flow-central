@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -584,6 +584,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      order_stage_progress: {
+        Row: {
+          completed_units: number
+          created_at: string
+          id: string
+          in_progress_units: number
+          order_product_id: string
+          stage_id: string
+          stage_name: string
+          total_units: number
+          updated_at: string
+          yet_to_start_units: number
+        }
+        Insert: {
+          completed_units?: number
+          created_at?: string
+          id?: string
+          in_progress_units?: number
+          order_product_id: string
+          stage_id: string
+          stage_name: string
+          total_units?: number
+          updated_at?: string
+          yet_to_start_units?: number
+        }
+        Update: {
+          completed_units?: number
+          created_at?: string
+          id?: string
+          in_progress_units?: number
+          order_product_id?: string
+          stage_id?: string
+          stage_name?: string
+          total_units?: number
+          updated_at?: string
+          yet_to_start_units?: number
+        }
+        Relationships: []
       }
       orders: {
         Row: {
@@ -1324,7 +1363,7 @@ export type Database = {
     }
     Functions: {
       has_permission: {
-        Args: { resource_name: string; permission_name: string }
+        Args: { permission_name: string; resource_name: string }
         Returns: boolean
       }
       is_admin: {
