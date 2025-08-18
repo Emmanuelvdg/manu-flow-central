@@ -18,9 +18,6 @@ type OrderProductRow = {
   unit: string;
   status: string;
   materials_status: string;
-  materials_progress: number | null;
-  personnel_progress: number | null;
-  machines_progress: number | null;
   notes: string | null;
   recipe_id: string | null;
   product_name: string | null;

@@ -75,10 +75,7 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
         const { error } = await supabase
           .from('order_products')
           .update({ 
-            status: 'completed',
-            materials_progress: 100,
-            personnel_progress: 100,
-            machines_progress: 100
+            status: 'completed'
           })
           .eq('id', orderProduct.id);
           

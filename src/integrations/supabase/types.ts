@@ -516,12 +516,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          machines_progress: number | null
-          materials_progress: number | null
           materials_status: string
           notes: string | null
           order_id: string
-          personnel_progress: number | null
           product_id: string
           quantity: number
           recipe_id: string | null
@@ -532,12 +529,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          machines_progress?: number | null
-          materials_progress?: number | null
           materials_status?: string
           notes?: string | null
           order_id: string
-          personnel_progress?: number | null
           product_id: string
           quantity?: number
           recipe_id?: string | null
@@ -548,12 +542,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          machines_progress?: number | null
-          materials_progress?: number | null
           materials_status?: string
           notes?: string | null
           order_id?: string
-          personnel_progress?: number | null
           product_id?: string
           quantity?: number
           recipe_id?: string | null
