@@ -43,7 +43,7 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
     updateStageProgress,
     getStageProgress,
     getOrderProductProgress
-  } = useUnitProgress([orderProduct], refetch);
+  } = useUnitProgress([orderProduct], routingStages, refetch);
 
   // Function to refresh data
   const handleRefresh = async () => {
@@ -176,7 +176,9 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
                 {/* Display stages for this specific recipe */}
                 {Object.keys(routingStages).length > 0 && routingStages[recipeId] && 
                   routingStages[recipeId].map(stage => {
-                    const stageProgress = getStageProgress(orderProduct.id, stage.id);
+                    // Use consistent stage key - prefer stage_id if available, fallback to id
+                    const stageKey = stage.stage_id || stage.id;
+                    const stageProgress = getStageProgress(orderProduct.id, stageKey);
                     if (!stageProgress) return null;
 
                     return (

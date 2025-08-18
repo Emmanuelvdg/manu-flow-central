@@ -16,7 +16,7 @@ export interface StageProgressData {
 /**
  * Hook for managing unit-based progress tracking for routing stages
  */
-export const useUnitProgress = (orderProducts: any[], refetch?: () => Promise<void>) => {
+export const useUnitProgress = (orderProducts: any[], routingStages: Record<string, any[]>, refetch?: () => Promise<void>) => {
   const { toast } = useToast();
   const [stageProgressData, setStageProgressData] = useState<StageProgressData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,22 +57,24 @@ export const useUnitProgress = (orderProducts: any[], refetch?: () => Promise<vo
   // Initialize progress records for order products that don't have them
   const initializeStageProgress = async () => {
     for (const orderProduct of orderProducts) {
-      if (!orderProduct.recipe_id || !orderProduct.recipes?.routing_stages) continue;
+      if (!orderProduct.recipe_id || !routingStages[orderProduct.recipe_id]) continue;
 
       const existingStages = stageProgressData.filter(
         p => p.order_product_id === orderProduct.id
       );
 
-      const routingStages = orderProduct.recipes.routing_stages || [];
+      const productRoutingStages = routingStages[orderProduct.recipe_id] || [];
       
-      for (const stage of routingStages) {
-        const existingStage = existingStages.find(p => p.stage_id === stage.id);
+      for (const stage of productRoutingStages) {
+        // Use consistent stage key - prefer stage_id if available, fallback to id
+        const stageKey = stage.stage_id || stage.id;
+        const existingStage = existingStages.find(p => p.stage_id === stageKey);
         
         if (!existingStage) {
           // Create new progress record
           const newProgressRecord = {
             order_product_id: orderProduct.id,
-            stage_id: stage.id,
+            stage_id: stageKey,
             stage_name: stage.stage_name,
             yet_to_start_units: orderProduct.quantity,
             in_progress_units: 0,
@@ -173,10 +175,10 @@ export const useUnitProgress = (orderProducts: any[], refetch?: () => Promise<vo
   }, [orderProducts]);
 
   useEffect(() => {
-    if (stageProgressData.length >= 0 && orderProducts.length > 0) {
+    if (stageProgressData.length >= 0 && orderProducts.length > 0 && Object.keys(routingStages).length > 0) {
       initializeStageProgress();
     }
-  }, [orderProducts, stageProgressData.length]);
+  }, [orderProducts, stageProgressData.length, routingStages]);
 
   return {
     stageProgressData,
