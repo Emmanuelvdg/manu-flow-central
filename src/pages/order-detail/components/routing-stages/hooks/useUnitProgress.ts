@@ -34,6 +34,16 @@ export const useUnitProgress = (orderProducts: any[], routingStages: Record<stri
     return [...new Set(orderProducts.map(p => p.recipe_id).filter(Boolean))];
   }, [orderProducts]);
 
+  // Stable keys to avoid effect thrashing from new array/object references
+  const orderProductIdsKey = useMemo(() => orderProducts.map(p => p.id).sort().join('|'), [orderProducts]);
+  const routingStagesKey = useMemo(() => {
+    const entries = Object.entries(routingStages || {});
+    return entries
+      .map(([rid, stages]) => `${rid}:${Array.isArray(stages) ? stages.length : 0}`)
+      .sort()
+      .join('|');
+  }, [routingStages]);
+
   // Fetch existing progress data
   const fetchStageProgress = async () => {
     if (orderProducts.length === 0) return;
@@ -198,24 +208,24 @@ export const useUnitProgress = (orderProducts: any[], routingStages: Record<stri
 
   // Effects
   useEffect(() => {
-    console.log('📡 Effect: fetchStageProgress triggered', { orderProductsCount: orderProducts.length });
+    console.log('📡 Effect: fetchStageProgress triggered', { orderProductIdsKey });
     if (orderProducts.length > 0) {
       fetchStageProgress();
     }
-  }, [orderProducts]);
+  }, [orderProductIdsKey]);
 
   useEffect(() => {
     console.log('🔄 Effect: initializeStageProgress triggered', {
       stageProgressDataLength: stageProgressData.length,
-      orderProductsLength: orderProducts.length,
-      routingStagesLength: Object.keys(routingStages).length,
-      shouldInitialize: stageProgressData.length >= 0 && orderProducts.length > 0 && Object.keys(routingStages).length > 0
+      orderProductIdsKey,
+      routingStagesKey,
+      shouldInitialize: stageProgressData.length >= 0 && orderProducts.length > 0 && routingStagesKey.length > 0
     });
     
-    if (stageProgressData.length >= 0 && orderProducts.length > 0 && Object.keys(routingStages).length > 0) {
+    if (stageProgressData.length >= 0 && orderProducts.length > 0 && routingStagesKey.length > 0) {
       initializeStageProgress();
     }
-  }, [orderProducts, stageProgressData.length, routingStages]);
+  }, [orderProductIdsKey, stageProgressData.length, routingStagesKey]);
 
   return {
     stageProgressData,

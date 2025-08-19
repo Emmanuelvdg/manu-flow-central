@@ -35,6 +35,9 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
     handleToggleStage
   } = useRoutingStages([orderProduct], [recipeId]);
 
+  // Memoize the single-item array to avoid re-fetch loops in hooks
+  const orderProductsList = React.useMemo(() => [orderProduct], [orderProduct.id, orderProduct.recipe_id, orderProduct.quantity]);
+
   // Use unit-based progress tracking
   const {
     stageProgressData,
@@ -43,7 +46,15 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
     updateStageProgress,
     getStageProgress,
     getOrderProductProgress
-  } = useUnitProgress([orderProduct], routingStages, refetch);
+  } = useUnitProgress(orderProductsList, routingStages, refetch);
+
+  // Track first successful load to prevent skeleton flashing on minor re-renders
+  const hasLoadedOnceRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!loading && !progressLoading) {
+      hasLoadedOnceRef.current = true;
+    }
+  }, [loading, progressLoading]);
 
   // Function to refresh data
   const handleRefresh = async () => {
@@ -141,7 +152,7 @@ export const ProductRoutingStages: React.FC<ProductRoutingStagesProps> = ({
       </div>
       
       <LoadingState 
-        isLoading={loading || progressLoading}
+        isLoading={(loading || progressLoading) && !hasLoadedOnceRef.current}
         errorMessage={loadingErrorMessage}
         handleRefresh={handleRefresh}
       />
