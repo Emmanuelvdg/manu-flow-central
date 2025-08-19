@@ -20,6 +20,13 @@ export const useUnitProgress = (orderProducts: any[], routingStages: Record<stri
   const { toast } = useToast();
   const [stageProgressData, setStageProgressData] = useState<StageProgressData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  console.log('🔍 useUnitProgress - Input data:', {
+    orderProductsCount: orderProducts.length,
+    routingStagesKeys: Object.keys(routingStages),
+    routingStagesCount: Object.keys(routingStages).length,
+    stageProgressDataCount: stageProgressData.length
+  });
   const [isUpdating, setIsUpdating] = useState<Record<string, boolean>>({});
 
   // Extract unique recipe IDs and create progress records for new order products
@@ -56,8 +63,23 @@ export const useUnitProgress = (orderProducts: any[], routingStages: Record<stri
 
   // Initialize progress records for order products that don't have them
   const initializeStageProgress = async () => {
+    console.log('🚀 initializeStageProgress called:', {
+      orderProductsCount: orderProducts.length,
+      routingStagesAvailable: Object.keys(routingStages).length > 0,
+      stageProgressDataCount: stageProgressData.length
+    });
+
     for (const orderProduct of orderProducts) {
-      if (!orderProduct.recipe_id || !routingStages[orderProduct.recipe_id]) continue;
+      console.log('🔍 Processing order product:', {
+        productId: orderProduct.id,
+        recipeId: orderProduct.recipe_id,
+        hasRouting: !!routingStages[orderProduct.recipe_id]
+      });
+
+      if (!orderProduct.recipe_id || !routingStages[orderProduct.recipe_id]) {
+        console.log('⚠️ Skipping product - no recipe_id or routing stages');
+        continue;
+      }
 
       const existingStages = stageProgressData.filter(
         p => p.order_product_id === orderProduct.id
@@ -70,7 +92,14 @@ export const useUnitProgress = (orderProducts: any[], routingStages: Record<stri
         const stageKey = stage.stage_id || stage.id;
         const existingStage = existingStages.find(p => p.stage_id === stageKey);
         
+        console.log('🔍 Processing stage:', {
+          stageName: stage.stage_name,
+          stageKey,
+          hasExisting: !!existingStage
+        });
+        
         if (!existingStage) {
+          console.log('➕ Creating new stage progress record for:', stage.stage_name);
           // Create new progress record
           const newProgressRecord = {
             order_product_id: orderProduct.id,
@@ -169,12 +198,20 @@ export const useUnitProgress = (orderProducts: any[], routingStages: Record<stri
 
   // Effects
   useEffect(() => {
+    console.log('📡 Effect: fetchStageProgress triggered', { orderProductsCount: orderProducts.length });
     if (orderProducts.length > 0) {
       fetchStageProgress();
     }
   }, [orderProducts]);
 
   useEffect(() => {
+    console.log('🔄 Effect: initializeStageProgress triggered', {
+      stageProgressDataLength: stageProgressData.length,
+      orderProductsLength: orderProducts.length,
+      routingStagesLength: Object.keys(routingStages).length,
+      shouldInitialize: stageProgressData.length >= 0 && orderProducts.length > 0 && Object.keys(routingStages).length > 0
+    });
+    
     if (stageProgressData.length >= 0 && orderProducts.length > 0 && Object.keys(routingStages).length > 0) {
       initializeStageProgress();
     }

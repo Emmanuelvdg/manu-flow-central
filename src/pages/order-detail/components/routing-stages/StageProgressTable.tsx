@@ -13,11 +13,27 @@ export const StageProgressTable: React.FC<StageProgressTableProps> = ({
   stageProgressData,
   orderProducts
 }) => {
+  console.log('📊 StageProgressTable render:', {
+    stageProgressDataCount: stageProgressData.length,
+    orderProductsCount: orderProducts.length,
+    stageProgressData: stageProgressData.map(s => ({ 
+      id: s.id, 
+      order_product_id: s.order_product_id, 
+      stage_name: s.stage_name 
+    }))
+  });
+
   // Group progress data by order product
   const groupedData = orderProducts.map(orderProduct => {
     const productProgress = stageProgressData.filter(
       p => p.order_product_id === orderProduct.id
     );
+    
+    console.log(`📊 Product ${orderProduct.id} progress:`, {
+      productId: orderProduct.id,
+      progressCount: productProgress.length,
+      progressStages: productProgress.map(p => p.stage_name)
+    });
     
     return {
       orderProduct,
