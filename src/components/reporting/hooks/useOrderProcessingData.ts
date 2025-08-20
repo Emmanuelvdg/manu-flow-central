@@ -36,68 +36,95 @@ export const useOrderProcessingData = (orderId?: string) => {
     queryFn: async (): Promise<OrderProcessingData | null> => {
       if (!orderId) return null;
 
-      // Fetch order with products and stage progress
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          order_number,
-          customer_name,
-          created_at,
-          order_products (
+      try {
+        // First, fetch the order basic info
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select('id, order_number, customer_name, created_at')
+          .eq('id', orderId)
+          .maybeSingle();
+
+        if (orderError) throw orderError;
+        if (!orderData) return null;
+
+        // Then fetch order products with product names
+        const { data: orderProducts, error: productsError } = await supabase
+          .from('order_products')
+          .select(`
             id,
             product_id,
             quantity,
             products (
               name
-            ),
-            order_stage_progress (
-              stage_id,
-              stage_name,
-              yet_to_start_units,
-              in_progress_units,
-              completed_units,
-              total_units
             )
-          )
-        `)
-        .eq('id', orderId)
-        .single();
+          `)
+          .eq('order_id', orderId);
 
-      if (orderError) throw orderError;
-      if (!orderData) return null;
+        if (productsError) throw productsError;
+        if (!orderProducts?.length) {
+          return {
+            orderId: orderData.id,
+            orderNumber: orderData.order_number,
+            customerName: orderData.customer_name,
+            products: [],
+            totalItems: 0,
+            completedItems: 0,
+            createdAt: orderData.created_at,
+          };
+        }
 
-      const products = orderData.order_products.map((op: any) => ({
-        id: op.id,
-        productName: op.products?.name || op.product_id,
-        quantity: op.quantity,
-        stageProgress: op.order_stage_progress.map((sp: any) => ({
-          stageId: sp.stage_id,
-          stageName: sp.stage_name,
-          yetToStartUnits: sp.yet_to_start_units,
-          inProgressUnits: sp.in_progress_units,
-          completedUnits: sp.completed_units,
-          totalUnits: sp.total_units,
-        })),
-      }));
+        // Fetch stage progress for all order products
+        const orderProductIds = orderProducts.map(op => op.id);
+        const { data: stageProgressData, error: stageError } = await supabase
+          .from('order_stage_progress')
+          .select('*')
+          .in('order_product_id', orderProductIds);
 
-      const totalItems = products.reduce((sum, p) => sum + p.quantity, 0);
-      const completedItems = products.reduce(
-        (sum, p) => sum + p.stageProgress.reduce((stageSum, s) => stageSum + s.completedUnits, 0),
-        0
-      );
+        if (stageError) throw stageError;
 
-      return {
-        orderId: orderData.id,
-        orderNumber: orderData.order_number,
-        customerName: orderData.customer_name,
-        products,
-        totalItems,
-        completedItems,
-        createdAt: orderData.created_at,
-      };
+        // Map the data together
+        const products = orderProducts.map((op: any) => {
+          const stageProgress = (stageProgressData || [])
+            .filter((sp: any) => sp.order_product_id === op.id)
+            .map((sp: any) => ({
+              stageId: sp.stage_id,
+              stageName: sp.stage_name,
+              yetToStartUnits: sp.yet_to_start_units || 0,
+              inProgressUnits: sp.in_progress_units || 0,
+              completedUnits: sp.completed_units || 0,
+              totalUnits: sp.total_units || op.quantity,
+            }));
+
+          return {
+            id: op.id,
+            productName: op.products?.name || op.product_id,
+            quantity: op.quantity,
+            stageProgress,
+          };
+        });
+
+        const totalItems = products.reduce((sum, p) => sum + p.quantity, 0);
+        const completedItems = products.reduce(
+          (sum, p) => sum + p.stageProgress.reduce((stageSum, s) => stageSum + s.completedUnits, 0),
+          0
+        );
+
+        return {
+          orderId: orderData.id,
+          orderNumber: orderData.order_number,
+          customerName: orderData.customer_name,
+          products,
+          totalItems,
+          completedItems,
+          createdAt: orderData.created_at,
+        };
+      } catch (error) {
+        console.error('Error fetching order processing data:', error);
+        throw error;
+      }
     },
     enabled: !!orderId,
+    retry: 1,
   });
 };
 

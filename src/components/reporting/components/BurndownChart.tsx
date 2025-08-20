@@ -68,7 +68,7 @@ export const BurndownChart: React.FC<BurndownChartProps> = ({ data }) => {
     '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe', '#00c49f', '#ffbb28', '#ff8042'
   ];
 
-  if (!data || burndownData.length === 0) {
+  if (!data || !data.products.length || burndownData.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -76,7 +76,9 @@ export const BurndownChart: React.FC<BurndownChartProps> = ({ data }) => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-64 text-muted-foreground">
-            No data available for burndown chart
+            {!data ? "No order data available" : 
+             !data.products.length ? "No products found for this order" :
+             "No stage progress data available for burndown chart"}
           </div>
         </CardContent>
       </Card>

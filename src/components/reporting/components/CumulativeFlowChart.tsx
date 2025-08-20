@@ -93,7 +93,7 @@ export const CumulativeFlowChart: React.FC<CumulativeFlowChartProps> = ({ data }
     '#a4de6c', '#d084d0', '#ffab91', '#81c784'
   ];
 
-  if (!data || cfdData.length === 0) {
+  if (!data || !data.products.length || cfdData.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -101,7 +101,9 @@ export const CumulativeFlowChart: React.FC<CumulativeFlowChartProps> = ({ data }
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-64 text-muted-foreground">
-            No data available for cumulative flow diagram
+            {!data ? "No order data available" : 
+             !data.products.length ? "No products found for this order" :
+             "No stage progress data available for cumulative flow diagram"}
           </div>
         </CardContent>
       </Card>

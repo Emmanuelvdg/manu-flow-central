@@ -109,49 +109,65 @@ export const OrderProcessingReport: React.FC<OrderProcessingReportProps> = ({ da
               <CardTitle>Stage Progress Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {orderData.products.map((product) => (
-                  <div key={product.id} className="border rounded-lg p-4">
-                    <h4 className="font-medium mb-3">
-                      {product.productName} (Qty: {product.quantity})
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                      {product.stageProgress.map((stage) => (
-                        <div key={stage.stageId} className="bg-muted/50 rounded p-3">
-                          <div className="font-medium text-primary">{stage.stageName}</div>
-                          <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
-                            <div>
-                              <span className="text-gray-500">Not Started:</span>
-                              <div className="font-medium">{stage.yetToStartUnits}</div>
-                            </div>
-                            <div>
-                              <span className="text-orange-500">In Progress:</span>
-                              <div className="font-medium text-orange-600">{stage.inProgressUnits}</div>
-                            </div>
-                            <div>
-                              <span className="text-green-500">Completed:</span>
-                              <div className="font-medium text-green-600">{stage.completedUnits}</div>
-                            </div>
-                          </div>
-                          <div className="mt-2 text-xs">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-green-600 h-2 rounded-full transition-all duration-300" 
-                                style={{ 
-                                  width: `${stage.totalUnits > 0 ? (stage.completedUnits / stage.totalUnits) * 100 : 0}%` 
-                                }}
-                              />
-                            </div>
-                            <div className="text-center mt-1">
-                              {stage.totalUnits > 0 ? Math.round((stage.completedUnits / stage.totalUnits) * 100) : 0}% Complete
-                            </div>
-                          </div>
+              {!orderData.products.length ? (
+                <div className="text-center text-muted-foreground py-8">
+                  No products found for this order
+                </div>
+              ) : orderData.products.every(p => !p.stageProgress.length) ? (
+                <div className="text-center text-muted-foreground py-8">
+                  No stage progress data available for any products in this order
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orderData.products.map((product) => (
+                    <div key={product.id} className="border rounded-lg p-4">
+                      <h4 className="font-medium mb-3">
+                        {product.productName} (Qty: {product.quantity})
+                      </h4>
+                      {!product.stageProgress.length ? (
+                        <div className="text-muted-foreground text-sm py-2">
+                          No stage progress data for this product
                         </div>
-                      ))}
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                          {product.stageProgress.map((stage) => (
+                            <div key={stage.stageId} className="bg-muted/50 rounded p-3">
+                              <div className="font-medium text-primary">{stage.stageName}</div>
+                              <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
+                                <div>
+                                  <span className="text-gray-500">Not Started:</span>
+                                  <div className="font-medium">{stage.yetToStartUnits}</div>
+                                </div>
+                                <div>
+                                  <span className="text-orange-500">In Progress:</span>
+                                  <div className="font-medium text-orange-600">{stage.inProgressUnits}</div>
+                                </div>
+                                <div>
+                                  <span className="text-green-500">Completed:</span>
+                                  <div className="font-medium text-green-600">{stage.completedUnits}</div>
+                                </div>
+                              </div>
+                              <div className="mt-2 text-xs">
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    className="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                                    style={{ 
+                                      width: `${stage.totalUnits > 0 ? (stage.completedUnits / stage.totalUnits) * 100 : 0}%` 
+                                    }}
+                                  />
+                                </div>
+                                <div className="text-center mt-1">
+                                  {stage.totalUnits > 0 ? Math.round((stage.completedUnits / stage.totalUnits) * 100) : 0}% Complete
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </>
