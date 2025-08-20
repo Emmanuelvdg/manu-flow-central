@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RFQConversionReport } from "@/components/reporting/RFQConversionReport";
 import { InventoryReport } from "@/components/reporting/InventoryReport";
 import { FinancialReport } from "@/components/reporting/FinancialReport";
+import { OrderProcessingReport } from "@/components/reporting/OrderProcessingReport";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const ReportingDashboard = () => {
@@ -38,10 +39,11 @@ const ReportingDashboard = () => {
       
       <div className="overflow-x-hidden w-full">
         <Tabs defaultValue="sales" className="w-full">
-          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-3'}`}>
-            <TabsTrigger value="sales" className="text-xs sm:text-sm">RFQ to Order Analytics</TabsTrigger>
-            <TabsTrigger value="inventory" className="text-xs sm:text-sm">Inventory Analysis</TabsTrigger>
-            <TabsTrigger value="financial" className="text-xs sm:text-sm">Financial Performance</TabsTrigger>
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4'}`}>
+            <TabsTrigger value="sales" className="text-xs sm:text-sm">RFQ Analytics</TabsTrigger>
+            <TabsTrigger value="inventory" className="text-xs sm:text-sm">Inventory</TabsTrigger>
+            <TabsTrigger value="financial" className="text-xs sm:text-sm">Financial</TabsTrigger>
+            <TabsTrigger value="processing" className="text-xs sm:text-sm">Order Processing</TabsTrigger>
           </TabsList>
           
           <TabsContent value="sales" className="mt-4">
@@ -59,6 +61,12 @@ const ReportingDashboard = () => {
           <TabsContent value="financial" className="mt-4">
             <div className="w-full">
               <FinancialReport dateRange={dateRange} />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="processing" className="mt-4">
+            <div className="w-full">
+              <OrderProcessingReport dateRange={dateRange} />
             </div>
           </TabsContent>
         </Tabs>
