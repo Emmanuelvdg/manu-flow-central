@@ -38,7 +38,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
       {filteredOrders.length === 0 ? (
         <tr>
           <td colSpan={9} className="text-center text-sm py-10 text-gray-500">
-            No orders found. Try creating orders from accepted quotes with the "Sync Orders" button.
+            No work orders found. Try creating work orders from accepted quotes with the "Sync Work Orders" button.
           </td>
         </tr>
       ) : (

@@ -74,8 +74,8 @@ export const NewOrderForm = ({ onClose }: { onClose: () => void }) => {
       if (error) throw error;
       
       toast({
-        title: "Order created",
-        description: `Order ${orderNumber} has been created successfully.`,
+        title: "Work Order created",
+        description: `Work Order ${orderNumber} has been created successfully.`,
       });
       
       onClose();
@@ -85,10 +85,10 @@ export const NewOrderForm = ({ onClose }: { onClose: () => void }) => {
         navigate(`/orders/${orderNumber}`);
       }
     } catch (error: any) {
-      console.error("Error creating order:", error);
+      console.error("Error creating work order:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create order",
+        description: error.message || "Failed to create work order",
         variant: "destructive",
       });
     } finally {
@@ -177,7 +177,7 @@ export const NewOrderForm = ({ onClose }: { onClose: () => void }) => {
           Cancel
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Create Order"}
+          {loading ? "Creating..." : "Create Work Order"}
         </Button>
       </div>
     </form>

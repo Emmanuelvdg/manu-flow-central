@@ -49,7 +49,7 @@ export const Sidebar = () => {
     {
       name: 'MANUFACTURING',
       items: [
-        { name: 'Orders', path: '/orders', icon: <ShoppingCart size={18} /> },
+        { name: 'Work Orders', path: '/orders', icon: <ShoppingCart size={18} /> },
         { name: 'Bill of Materials', path: '/recipes', icon: <ClipboardList size={18} /> },
         { name: 'Shipments', path: '/shipments', icon: <TruckIcon size={18} /> }
       ]

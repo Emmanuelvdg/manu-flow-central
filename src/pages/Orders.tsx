@@ -5,7 +5,7 @@ import { OrdersList } from "@/components/dashboard/OrdersList";
 
 const Orders = () => {
   return (
-    <MainLayout title="Orders">
+    <MainLayout title="Work Orders">
       <OrdersList />
     </MainLayout>
   );

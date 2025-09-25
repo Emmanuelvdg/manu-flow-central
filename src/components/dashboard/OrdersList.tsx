@@ -75,7 +75,7 @@ export const OrdersList = () => {
                 <tbody>
                   <tr>
                     <td colSpan={9} className="text-center py-12 text-primary">
-                      Loading orders...
+                      Loading work orders...
                     </td>
                   </tr>
                 </tbody>
@@ -83,7 +83,7 @@ export const OrdersList = () => {
                 <tbody>
                   <tr>
                     <td colSpan={9} className="text-center py-12 text-destructive">
-                      Error loading orders: {error.toString()}
+                      Error loading work orders: {error.toString()}
                     </td>
                   </tr>
                 </tbody>
@@ -104,7 +104,7 @@ export const OrdersList = () => {
                 className="text-primary"
                 onClick={syncAcceptedQuotes}
               >
-                Sync Orders
+                Sync Work Orders
               </Button>
               <Button
                 variant="destructive"
@@ -112,7 +112,7 @@ export const OrdersList = () => {
                 onClick={resetAndRecreatAllOrders}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Reset & Recreate All Orders
+                Reset & Recreate All Work Orders
               </Button>
               <Button 
                 variant="outline" 

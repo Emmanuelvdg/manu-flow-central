@@ -112,8 +112,8 @@ const Dashboard = () => {
             onAdd={stats.quotes.onAdd}
           />
           <DashboardCard
-            title="Orders"
-            description="Current orders"
+            title="Work Orders"
+            description="Current work orders"
             count={stats.orders.count}
             icon={<ShoppingCart className="h-5 w-5 text-primary" />}
             linkTo="/orders"
@@ -138,7 +138,7 @@ const Dashboard = () => {
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="rfqs">RFQs</TabsTrigger>
             <TabsTrigger value="quotes">Quotes</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
+            <TabsTrigger value="orders">Work Orders</TabsTrigger>
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
           </TabsList>
           <TabsContent value="products" className="mt-6 w-full">

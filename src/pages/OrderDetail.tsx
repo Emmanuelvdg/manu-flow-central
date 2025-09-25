@@ -163,7 +163,7 @@ export const OrderDetail = () => {
   };
 
   return (
-    <MainLayout title="Order Details">
+    <MainLayout title="Work Order Details">
       {order && (
         <>
           <OrderDetailHeader 

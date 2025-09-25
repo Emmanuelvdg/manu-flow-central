@@ -18,7 +18,7 @@ export const OrdersHeader = () => {
   return (
     <CardHeader className="flex flex-row items-center justify-between border-b pb-4 pt-5">
       <div className="flex items-center gap-2">
-        <span className="text-xl font-semibold">Manufacturing orders</span>
+        <span className="text-xl font-semibold">Manufacturing work orders</span>
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
             <Button size="sm" className="ml-4 flex items-center">
@@ -28,7 +28,7 @@ export const OrdersHeader = () => {
           </SheetTrigger>
           <SheetContent className="w-[480px] sm:w-[540px]">
             <SheetHeader className="pb-4">
-              <SheetTitle>Create New Order</SheetTitle>
+              <SheetTitle>Create New Work Order</SheetTitle>
             </SheetHeader>
             <NewOrderForm onClose={() => setIsSheetOpen(false)} />
           </SheetContent>

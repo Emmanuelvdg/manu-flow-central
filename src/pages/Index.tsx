@@ -23,8 +23,8 @@ const Index = () => {
     },
     {
       icon: <ShoppingCart className="h-8 w-8" />,
-      title: "Orders",
-      description: "Track and manage customer orders",
+      title: "Work Orders",
+      description: "Track and manage customer work orders",
       path: "/orders"
     },
     {
