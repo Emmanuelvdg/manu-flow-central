@@ -27,21 +27,21 @@ const ShipmentsDashboard = () => {
   };
 
   return (
-    <MainLayout title="Shipments">
+    <MainLayout title="Orders">
       <div className="h-full w-full">
         <Card className="shadow-sm h-full flex flex-col">
           <CardHeader className="px-4 py-4 sm:px-6 flex-shrink-0">
-            <CardTitle>Shipments</CardTitle>
+            <CardTitle>Orders</CardTitle>
           </CardHeader>
           <CardContent className="p-0 flex-1 min-h-0">
-            {isLoading && <div className="py-6 text-center">Loading shipments...</div>}
-            {error && <div className="text-red-500 py-6 text-center">Error loading shipments</div>}
+            {isLoading && <div className="py-6 text-center">Loading orders...</div>}
+            {error && <div className="text-red-500 py-6 text-center">Error loading orders</div>}
             <ScrollArea className="h-full w-full">
               <div className="table-container">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[clamp(120px,15vw,160px)]">Shipment ID</TableHead>
+                      <TableHead className="w-[clamp(120px,15vw,160px)]">Order ID</TableHead>
                       <TableHead className="w-[clamp(80px,10vw,120px)]">RFQ</TableHead>
                       <TableHead className="w-[clamp(80px,10vw,120px)]">Quote</TableHead>
                       <TableHead className="w-[clamp(80px,10vw,120px)]">Order</TableHead>
@@ -54,7 +54,7 @@ const ShipmentsDashboard = () => {
                     {(shipments.length === 0 && !isLoading) ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center">
-                          No shipments found.
+                          No orders found.
                         </TableCell>
                       </TableRow>
                     ) : (

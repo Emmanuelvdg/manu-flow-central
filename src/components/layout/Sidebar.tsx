@@ -51,7 +51,7 @@ export const Sidebar = () => {
       items: [
         { name: 'Work Orders', path: '/orders', icon: <ShoppingCart size={18} /> },
         { name: 'Bill of Materials', path: '/recipes', icon: <ClipboardList size={18} /> },
-        { name: 'Shipments', path: '/shipments', icon: <TruckIcon size={18} /> }
+        { name: 'Orders', path: '/shipments', icon: <TruckIcon size={18} /> }
       ]
     },
     {
