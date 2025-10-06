@@ -26,6 +26,9 @@ import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 import PublicSiteConfig from "./pages/PublicSiteConfig";
 import FXManagement from "./pages/FXManagement";
+import InvoiceInsurance from "./pages/financing/InvoiceInsurance";
+import DomesticFinancing from "./pages/financing/DomesticFinancing";
+import InternationalFinancing from "./pages/financing/InternationalFinancing";
 
 // Public pages
 import PublicProducts from "./pages/PublicProducts";
@@ -69,6 +72,11 @@ function App() {
             <Route path="/user-management" element={<UserManagement />} />
             <Route path="/fx-management" element={<FXManagement />} />
             <Route path="/public-site-config" element={<PublicSiteConfig />} />
+            
+            {/* Financing Routes */}
+            <Route path="/financing/invoice-insurance" element={<InvoiceInsurance />} />
+            <Route path="/financing/domestic" element={<DomesticFinancing />} />
+            <Route path="/financing/international" element={<InternationalFinancing />} />
             
             {/* Public Routes */}
             <Route path="/public" element={<PublicProducts />} />

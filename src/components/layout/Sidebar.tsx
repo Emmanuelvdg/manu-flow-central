@@ -74,6 +74,14 @@ export const Sidebar = () => {
         { name: 'Public Site Config', path: '/public-site-config', icon: <Settings size={18} /> },
         { name: 'Public Storefront', path: '/public', icon: <Globe size={18} /> }
       ]
+    },
+    {
+      name: 'FINANCING',
+      items: [
+        { name: 'Invoice Insurance', path: '/financing/invoice-insurance', icon: <FileText size={18} /> },
+        { name: 'Domestic Financing', path: '/financing/domestic', icon: <FileText size={18} /> },
+        { name: 'International Financing', path: '/financing/international', icon: <FileText size={18} /> }
+      ]
     }
   ];
 
