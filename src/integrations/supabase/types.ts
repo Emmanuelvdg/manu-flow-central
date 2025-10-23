@@ -131,6 +131,69 @@ export type Database = {
         }
         Relationships: []
       }
+      financing_applications: {
+        Row: {
+          annual_revenue: number | null
+          bank_statements_sales_ledger: string | null
+          beneficial_owner_structure: string | null
+          certificate_of_incorporation: string | null
+          company_name: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string
+          created_at: string | null
+          financing_type: string
+          historical_transactional_data: string | null
+          id: string
+          identification_docs: string | null
+          notes: string | null
+          sample_transactional_doc: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          annual_revenue?: number | null
+          bank_statements_sales_ledger?: string | null
+          beneficial_owner_structure?: string | null
+          certificate_of_incorporation?: string | null
+          company_name: string
+          contact_email: string
+          contact_name: string
+          contact_phone: string
+          created_at?: string | null
+          financing_type: string
+          historical_transactional_data?: string | null
+          id?: string
+          identification_docs?: string | null
+          notes?: string | null
+          sample_transactional_doc?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          annual_revenue?: number | null
+          bank_statements_sales_ledger?: string | null
+          beneficial_owner_structure?: string | null
+          certificate_of_incorporation?: string | null
+          company_name?: string
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string
+          created_at?: string | null
+          financing_type?: string
+          historical_transactional_data?: string | null
+          id?: string
+          identification_docs?: string | null
+          notes?: string | null
+          sample_transactional_doc?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       fx_rates: {
         Row: {
           created_at: string
@@ -1357,10 +1420,7 @@ export type Database = {
         Args: { permission_name: string; resource_name: string }
         Returns: boolean
       }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

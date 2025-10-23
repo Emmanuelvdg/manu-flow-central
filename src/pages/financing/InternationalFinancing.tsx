@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Globe, CheckCircle, ArrowRight } from "lucide-react";
+import { InternationalFinancingApplicationDialog } from "./components/InternationalFinancingApplicationDialog";
 
 const InternationalFinancing = () => {
+  const [applicationDialogOpen, setApplicationDialogOpen] = useState(false);
+
   return (
     <MainLayout title="International Financing">
       <div className="space-y-6">
@@ -105,7 +108,7 @@ const InternationalFinancing = () => {
               Expand your global business with confidence. Our international financing solutions provide the capital and risk protection you need for cross-border trade.
             </p>
             <div className="flex gap-4">
-              <Button size="lg">
+              <Button size="lg" onClick={() => setApplicationDialogOpen(true)}>
                 Start Application
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -116,6 +119,11 @@ const InternationalFinancing = () => {
           </CardContent>
         </Card>
       </div>
+
+      <InternationalFinancingApplicationDialog
+        open={applicationDialogOpen}
+        onOpenChange={setApplicationDialogOpen}
+      />
     </MainLayout>
   );
 };
