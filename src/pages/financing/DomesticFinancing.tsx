@@ -20,7 +20,7 @@ const DomesticFinancing = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <ul className="list-disc list-inside space-y-2 text-right">
+            <ul className="list-disc list-inside space-y-2 text-left">
               <li>Registered business entity in the country</li>
               <li>Minimum 6 months of operational history</li>
               <li>Annual revenue of at least $50,000</li>

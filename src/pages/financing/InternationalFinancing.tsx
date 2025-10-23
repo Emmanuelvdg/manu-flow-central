@@ -20,7 +20,7 @@ const InternationalFinancing = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <ul className="list-disc list-inside space-y-2 text-right">
+            <ul className="list-disc list-inside space-y-2 text-left">
               <li>Established international trade history (minimum 12 months)</li>
               <li>Annual export/import revenue exceeding $200,000</li>
               <li>Valid international purchase orders or letters of credit</li>
