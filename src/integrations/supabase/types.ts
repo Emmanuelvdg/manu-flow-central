@@ -134,17 +134,22 @@ export type Database = {
       financing_applications: {
         Row: {
           annual_revenue: number | null
+          bank_statements: string | null
           bank_statements_sales_ledger: string | null
           beneficial_owner_structure: string | null
+          business_licenses: string | null
           certificate_of_incorporation: string | null
           company_name: string
           contact_email: string
           contact_name: string
           contact_phone: string
           created_at: string | null
+          deed_of_establishment: string | null
+          financial_statements: string | null
           financing_type: string
           historical_transactional_data: string | null
           id: string
+          id_cards_management: string | null
           identification_docs: string | null
           notes: string | null
           sample_transactional_doc: string | null
@@ -154,17 +159,22 @@ export type Database = {
         }
         Insert: {
           annual_revenue?: number | null
+          bank_statements?: string | null
           bank_statements_sales_ledger?: string | null
           beneficial_owner_structure?: string | null
+          business_licenses?: string | null
           certificate_of_incorporation?: string | null
           company_name: string
           contact_email: string
           contact_name: string
           contact_phone: string
           created_at?: string | null
+          deed_of_establishment?: string | null
+          financial_statements?: string | null
           financing_type: string
           historical_transactional_data?: string | null
           id?: string
+          id_cards_management?: string | null
           identification_docs?: string | null
           notes?: string | null
           sample_transactional_doc?: string | null
@@ -174,17 +184,22 @@ export type Database = {
         }
         Update: {
           annual_revenue?: number | null
+          bank_statements?: string | null
           bank_statements_sales_ledger?: string | null
           beneficial_owner_structure?: string | null
+          business_licenses?: string | null
           certificate_of_incorporation?: string | null
           company_name?: string
           contact_email?: string
           contact_name?: string
           contact_phone?: string
           created_at?: string | null
+          deed_of_establishment?: string | null
+          financial_statements?: string | null
           financing_type?: string
           historical_transactional_data?: string | null
           id?: string
+          id_cards_management?: string | null
           identification_docs?: string | null
           notes?: string | null
           sample_transactional_doc?: string | null

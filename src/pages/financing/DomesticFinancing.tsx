@@ -1,10 +1,13 @@
-import React from "react";
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, CheckCircle, ArrowRight } from "lucide-react";
+import { DomesticFinancingApplicationDialog } from "./components/DomesticFinancingApplicationDialog";
 
 const DomesticFinancing = () => {
+  const [applicationDialogOpen, setApplicationDialogOpen] = useState(false);
+
   return (
     <MainLayout title="Domestic Financing">
       <div className="space-y-6">
@@ -105,7 +108,7 @@ const DomesticFinancing = () => {
               Get the working capital you need to grow your business. Our domestic financing solutions offer competitive rates and fast approval.
             </p>
             <div className="flex gap-4">
-              <Button size="lg">
+              <Button size="lg" onClick={() => setApplicationDialogOpen(true)}>
                 Start Application
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -116,6 +119,11 @@ const DomesticFinancing = () => {
           </CardContent>
         </Card>
       </div>
+
+      <DomesticFinancingApplicationDialog 
+        open={applicationDialogOpen}
+        onOpenChange={setApplicationDialogOpen}
+      />
     </MainLayout>
   );
 };
