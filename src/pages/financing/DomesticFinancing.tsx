@@ -103,7 +103,7 @@ const DomesticFinancing = () => {
               Detailed information about our Domestic Financing product
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 text-left">
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-2">Loan Type:</h4>
