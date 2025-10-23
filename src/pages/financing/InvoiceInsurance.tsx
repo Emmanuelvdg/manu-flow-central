@@ -20,7 +20,7 @@ const InvoiceInsurance = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <ul className="list-disc list-inside space-y-2">
+            <ul className="list-disc list-inside space-y-2 text-right">
               <li>Business must be operational for at least 12 months</li>
               <li>Annual revenue exceeding $100,000</li>
               <li>Valid invoices for goods or services delivered</li>
