@@ -95,6 +95,51 @@ const DomesticFinancing = () => {
           </CardContent>
         </Card>
 
+        {/* Product Overview Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Product Overview</CardTitle>
+            <CardDescription>
+              Detailed information about our Domestic Financing product
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Loan Type:</h4>
+                <p className="text-sm text-muted-foreground ml-4">Working Capital</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Loan Ticket Size:</h4>
+                <p className="text-sm text-muted-foreground ml-4">IDR 250,000,000 to IDR 5,000,000,000</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Interest Rate:</h4>
+                <p className="text-sm text-muted-foreground ml-4">1.5% - 2% per month</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Loan Tenor:</h4>
+                <ul className="list-disc list-inside ml-4 space-y-1">
+                  <li className="text-sm text-muted-foreground">According to the invoice due date</li>
+                  <li className="text-sm text-muted-foreground">30-120 days</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Provision Fee:</h4>
+                <p className="text-sm text-muted-foreground ml-4">1-2%</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Administration Fee:</h4>
+                <p className="text-sm text-muted-foreground ml-4">NA</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Early Repayment Penalty:</h4>
+                <p className="text-sm text-muted-foreground ml-4">NA</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Apply Here Section */}
         <Card>
           <CardHeader>
