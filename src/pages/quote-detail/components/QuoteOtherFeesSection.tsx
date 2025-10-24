@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CurrencyDisplay } from "@/components/ui/CurrencyDisplay";
 import type { OtherFee } from "../types/quoteTypes";
 
 interface QuoteOtherFeesSectionProps {
@@ -136,10 +137,24 @@ export const QuoteOtherFeesSection: React.FC<QuoteOtherFeesSectionProps> = ({
 
           {otherFees.length > 0 && (
             <div className="flex justify-end pt-4 border-t">
-              <div className="text-right">
-                <div className="text-sm text-muted-foreground mb-1">Subtotal</div>
-                <div className="text-2xl font-semibold">
-                  {getCurrencySymbol(currency)}{subtotal.toFixed(2)}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-8">
+                  <span className="font-medium">Subtotal:</span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                      <span>{getCurrencySymbol(currency)}</span>
+                      <input
+                        type="number"
+                        className="w-32 rounded border p-2 text-right bg-gray-100"
+                        value={subtotal.toFixed(2)}
+                        readOnly
+                        disabled
+                      />
+                    </div>
+                    <div className="text-right">
+                      <CurrencyDisplay amount={subtotal} currency={currency} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

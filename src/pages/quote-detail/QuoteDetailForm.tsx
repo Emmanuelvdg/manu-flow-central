@@ -6,6 +6,7 @@ import { CardFooter } from "@/components/ui/card";
 import { QuoteDetailCustomerFields } from "./QuoteDetailCustomerFields";
 import { QuoteDetailProductsSection } from "./QuoteDetailProductsSection";
 import { QuoteOtherFeesSection } from "./components/QuoteOtherFeesSection";
+import { QuoteGrandTotal } from "./components/QuoteGrandTotal";
 import { QuoteShippingSection } from "./components/QuoteShippingSection";
 import { QuotePaymentSection } from "./components/QuotePaymentSection";
 import { QuoteLegalSection } from "./components/QuoteLegalSection";
@@ -66,6 +67,12 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData, i
       <QuoteOtherFeesSection
         otherFees={formState.otherFees}
         setOtherFees={setters.setOtherFees}
+        currency={formState.currency}
+      />
+
+      <QuoteGrandTotal
+        productsTotal={formState.total}
+        otherFeesTotal={formState.otherFees.reduce((sum, fee) => sum + (Number(fee.amount) || 0), 0)}
         currency={formState.currency}
       />
 

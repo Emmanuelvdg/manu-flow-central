@@ -236,7 +236,7 @@ export const QuoteDetailProductsSection: React.FC<QuoteDetailProductsSectionProp
         <div className="mt-4 flex justify-end">
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-8">
-              <span className="font-medium">Total:</span>
+              <span className="font-medium">Subtotal:</span>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   <span>{currency === "USD" ? "$" : currency === "EUR" ? "€" : "£"}</span>
