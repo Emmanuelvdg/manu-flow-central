@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -54,22 +53,19 @@ export const QuoteOtherFeesSection: React.FC<QuoteOtherFeesSectionProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Other Fees and Services</CardTitle>
-          <CardDescription>
-            Add additional service charges and fees
-          </CardDescription>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium">Other Fees and Services</h3>
+        <div className="flex items-center gap-2">
+          <label className="text-sm">Currency:</label>
+          <span className="text-sm">{currency} ({getCurrencySymbol(currency)})</span>
         </div>
-        <div className="text-sm text-muted-foreground">
-          Currency: {currency} ({getCurrencySymbol(currency)})
-        </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      <div className="border rounded p-4 bg-gray-50">
         <div className="space-y-4">
           {otherFees.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground border rounded-lg bg-muted/20">
+            <div className="text-center py-2">
               No fees or services added yet
             </div>
           ) : (
@@ -77,7 +73,7 @@ export const QuoteOtherFeesSection: React.FC<QuoteOtherFeesSectionProps> = ({
               {otherFees.map((fee) => (
                 <div
                   key={fee.id}
-                  className="border rounded-lg p-4 bg-background space-y-3"
+                  className="border rounded-lg p-4 bg-white space-y-3"
                 >
                   <div className="space-y-2">
                     <Label htmlFor={`description-${fee.id}`}>Description</Label>
@@ -142,7 +138,7 @@ export const QuoteOtherFeesSection: React.FC<QuoteOtherFeesSectionProps> = ({
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
