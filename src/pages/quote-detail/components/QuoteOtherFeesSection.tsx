@@ -1,9 +1,9 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { OtherFee } from "../types/quoteTypes";
 
 interface QuoteOtherFeesSectionProps {
@@ -62,61 +62,68 @@ export const QuoteOtherFeesSection: React.FC<QuoteOtherFeesSectionProps> = ({
         </div>
       </div>
 
-      <div className="border rounded p-4 bg-gray-50">
-        <div className="space-y-4">
-          {otherFees.length === 0 ? (
-            <div className="text-center py-2">
-              No fees or services added yet
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {otherFees.map((fee) => (
-                <div
-                  key={fee.id}
-                  className="border rounded-lg p-4 bg-white space-y-3"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor={`description-${fee.id}`}>Description</Label>
-                    <Textarea
-                      id={`description-${fee.id}`}
-                      placeholder="e.g., Research and Design, Consultation Fee"
-                      value={fee.description}
-                      onChange={(e) => handleUpdateFee(fee.id!, "description", e.target.value)}
-                      className="min-h-[60px]"
-                    />
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <div className="flex-1">
-                      <Label htmlFor={`amount-${fee.id}`}>Amount</Label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-medium">{getCurrencySymbol(currency)}</span>
-                        <Input
-                          id={`amount-${fee.id}`}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={fee.amount || ""}
-                          onChange={(e) => handleUpdateFee(fee.id!, "amount", parseFloat(e.target.value) || 0)}
-                          className="flex-1"
-                        />
+      <div className="border rounded">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[80%]">Description</TableHead>
+              <TableHead className="w-[20%]">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {otherFees.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
+                  No fees or services added yet
+                </TableCell>
+              </TableRow>
+            ) : (
+              <>
+                {otherFees.map((fee) => (
+                  <TableRow key={fee.id}>
+                    <TableCell className="align-top">
+                      <Textarea
+                        placeholder="e.g., Research and Design, Consultation Fee"
+                        value={fee.description}
+                        onChange={(e) => handleUpdateFee(fee.id!, "description", e.target.value)}
+                        className="min-h-[60px] w-full"
+                      />
+                    </TableCell>
+                    <TableCell className="align-top">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium">{getCurrencySymbol(currency)}</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={fee.amount || ""}
+                              onChange={(e) => handleUpdateFee(fee.id!, "amount", parseFloat(e.target.value) || 0)}
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveFee(fee.id!)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveFee(fee.id!)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
+          </TableBody>
+        </Table>
 
+        <div className="p-4 space-y-4 border-t">
           <Button
             type="button"
             variant="outline"
