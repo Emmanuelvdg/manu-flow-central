@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CardFooter } from "@/components/ui/card";
 import { QuoteDetailCustomerFields } from "./QuoteDetailCustomerFields";
 import { QuoteDetailProductsSection } from "./QuoteDetailProductsSection";
+import { QuoteOtherFeesSection } from "./components/QuoteOtherFeesSection";
 import { QuoteShippingSection } from "./components/QuoteShippingSection";
 import { QuotePaymentSection } from "./components/QuotePaymentSection";
 import { QuoteLegalSection } from "./components/QuoteLegalSection";
@@ -60,6 +61,12 @@ export const QuoteDetailForm: React.FC<QuoteDetailFormProps> = ({ initialData, i
         setTotal={setters.setTotal}
         currency={formState.currency}
         setCurrency={setters.setCurrency}
+      />
+
+      <QuoteOtherFeesSection
+        otherFees={formState.otherFees}
+        setOtherFees={setters.setOtherFees}
+        currency={formState.currency}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

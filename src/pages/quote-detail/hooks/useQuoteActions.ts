@@ -128,7 +128,8 @@ export const useQuoteActions = ({
         dispute_resolution_method: formState.disputeResolutionMethod,
         governing_law: formState.governingLaw,
         force_majeure_terms: formState.showForceMajeureTerms ? formState.forceMajeureTerms : null,
-        quote_number: formState.quoteNumber || `Q-${Date.now()}`
+        quote_number: formState.quoteNumber || `Q-${Date.now()}`,
+        other_fees: JSON.parse(JSON.stringify(formState.otherFees))
       };
 
       let quoteId = id;

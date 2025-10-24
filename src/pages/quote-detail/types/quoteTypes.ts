@@ -12,6 +12,12 @@ export interface CustomProduct {
   documents?: any[];
 }
 
+export interface OtherFee {
+  id?: string;
+  description: string;
+  amount: number;
+}
+
 export interface QuoteFormState {
   customerName: string;
   customerEmail: string;
@@ -19,6 +25,7 @@ export interface QuoteFormState {
   rfqId?: string;
   products: RFQProductItem[];
   customProducts: CustomProduct[];
+  otherFees: OtherFee[];
   status: string;
   total: number;
   paymentTerms: string;
@@ -49,6 +56,7 @@ export interface QuoteFormSetters {
   setRfqId: (value: string | undefined) => void;
   setProducts: (items: RFQProductItem[]) => void;
   setCustomProducts: (items: CustomProduct[]) => void;
+  setOtherFees: (fees: OtherFee[]) => void;
   setStatus: (value: string) => void;
   setTotal: (value: number) => void;
   setPaymentTerms: (value: string) => void;

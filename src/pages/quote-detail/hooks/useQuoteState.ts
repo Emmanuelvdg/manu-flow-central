@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import type { QuoteFormState, QuoteFormSetters, RFQProductItem, CustomProduct } from "../types/quoteTypes";
+import type { QuoteFormState, QuoteFormSetters, RFQProductItem, CustomProduct, OtherFee } from "../types/quoteTypes";
 import { migrateProducts } from "../quoteDetailUtils";
 
 interface UseQuoteStateProps {
@@ -16,6 +16,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
   const [rfqId, setRfqId] = useState<string | undefined>(undefined);
   const [products, setProducts] = useState<RFQProductItem[]>([]);
   const [customProducts, setCustomProducts] = useState<CustomProduct[]>([]);
+  const [otherFees, setOtherFees] = useState<OtherFee[]>([]);
   const [status, setStatus] = useState("draft");
   const [total, setTotal] = useState(0);
   const [paymentTerms, setPaymentTerms] = useState("open");
@@ -90,6 +91,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
       setGoverningLaw(initialData.governing_law || "");
       setForceMajeureTerms(initialData.force_majeure_terms || "");
       setShowForceMajeureTerms(!!initialData.force_majeure_terms);
+      setOtherFees(initialData.other_fees || []);
     } else if (rfqData) {
       console.log("Initializing quote form from RFQ data:", rfqData);
       setCustomerName(rfqData.customerName || "");
@@ -122,8 +124,9 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
         }
       }
       
-      // Initialize custom products as empty for new quotes from RFQs
+      // Initialize custom products and other fees as empty for new quotes from RFQs
       setCustomProducts([]);
+      setOtherFees([]);
     }
   }, [initialData, rfqData]);
 
@@ -142,6 +145,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
     rfqId,
     products,
     customProducts,
+    otherFees,
     status,
     total,
     paymentTerms,
@@ -172,6 +176,7 @@ export const useQuoteState = ({ initialData, rfqData, isNew }: UseQuoteStateProp
     setRfqId,
     setProducts,
     setCustomProducts,
+    setOtherFees,
     setStatus,
     setTotal,
     setPaymentTerms,

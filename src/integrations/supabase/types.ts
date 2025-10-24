@@ -936,6 +936,7 @@ export type Database = {
           id: string
           incoterms: string | null
           late_payment_penalties: string | null
+          other_fees: Json | null
           payment_terms: string | null
           performance_guarantees: string | null
           products: Json
@@ -961,6 +962,7 @@ export type Database = {
           id?: string
           incoterms?: string | null
           late_payment_penalties?: string | null
+          other_fees?: Json | null
           payment_terms?: string | null
           performance_guarantees?: string | null
           products: Json
@@ -986,6 +988,7 @@ export type Database = {
           id?: string
           incoterms?: string | null
           late_payment_penalties?: string | null
+          other_fees?: Json | null
           payment_terms?: string | null
           performance_guarantees?: string | null
           products?: Json
