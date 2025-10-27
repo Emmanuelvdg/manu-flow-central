@@ -539,6 +539,62 @@ export type Database = {
         }
         Relationships: []
       }
+      order_logistics: {
+        Row: {
+          consol: number | null
+          container_type: string | null
+          created_at: string
+          forecast_load_date: string | null
+          id: string
+          incoterms: string | null
+          notes: string | null
+          order_id: string
+          pic: string | null
+          port: string | null
+          qc: string | null
+          tgl_loading_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          consol?: number | null
+          container_type?: string | null
+          created_at?: string
+          forecast_load_date?: string | null
+          id?: string
+          incoterms?: string | null
+          notes?: string | null
+          order_id: string
+          pic?: string | null
+          port?: string | null
+          qc?: string | null
+          tgl_loading_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          consol?: number | null
+          container_type?: string | null
+          created_at?: string
+          forecast_load_date?: string | null
+          id?: string
+          incoterms?: string | null
+          notes?: string | null
+          order_id?: string
+          pic?: string | null
+          port?: string | null
+          qc?: string | null
+          tgl_loading_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_logistics_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_materials: {
         Row: {
           allocated: boolean | null
