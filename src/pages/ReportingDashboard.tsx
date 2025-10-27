@@ -7,6 +7,7 @@ import { RFQConversionReport } from "@/components/reporting/RFQConversionReport"
 import { InventoryReport } from "@/components/reporting/InventoryReport";
 import { FinancialReport } from "@/components/reporting/FinancialReport";
 import { OrderProcessingReport } from "@/components/reporting/OrderProcessingReport";
+import { OrdersOnHandReport } from "@/components/reporting/OrdersOnHandReport";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const ReportingDashboard = () => {
@@ -39,11 +40,12 @@ const ReportingDashboard = () => {
       
       <div className="overflow-x-hidden w-full">
         <Tabs defaultValue="sales" className="w-full">
-          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4'}`}>
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-3 gap-2' : 'grid-cols-5'}`}>
             <TabsTrigger value="sales" className="text-xs sm:text-sm">RFQ Analytics</TabsTrigger>
             <TabsTrigger value="inventory" className="text-xs sm:text-sm">Inventory</TabsTrigger>
             <TabsTrigger value="financial" className="text-xs sm:text-sm">Financial</TabsTrigger>
             <TabsTrigger value="processing" className="text-xs sm:text-sm">Order Processing</TabsTrigger>
+            <TabsTrigger value="ordersonhand" className="text-xs sm:text-sm">Orders on Hand</TabsTrigger>
           </TabsList>
           
           <TabsContent value="sales" className="mt-4">
@@ -67,6 +69,12 @@ const ReportingDashboard = () => {
           <TabsContent value="processing" className="mt-4">
             <div className="w-full">
               <OrderProcessingReport dateRange={dateRange} />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="ordersonhand" className="mt-4">
+            <div className="w-full">
+              <OrdersOnHandReport dateRange={dateRange} />
             </div>
           </TabsContent>
         </Tabs>
