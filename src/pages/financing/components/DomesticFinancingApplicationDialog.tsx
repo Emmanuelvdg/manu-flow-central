@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,7 +26,21 @@ import { Loader2 } from "lucide-react";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
-const formSchema = z.object({
+const draftFormSchema = z.object({
+  companyName: z.string().optional(),
+  contactName: z.string().optional(),
+  contactEmail: z.string().optional(),
+  contactPhone: z.string().optional(),
+  annualRevenue: z.string().optional(),
+  deedOfEstablishment: z.instanceof(FileList).optional(),
+  idCardsManagement: z.instanceof(FileList).optional(),
+  businessLicenses: z.instanceof(FileList).optional(),
+  financialStatements: z.instanceof(FileList).optional(),
+  bankStatements: z.instanceof(FileList).optional(),
+  notes: z.string().optional(),
+});
+
+const submitFormSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
   contactName: z.string().min(1, "Contact name is required"),
   contactEmail: z.string().email("Invalid email address"),
@@ -55,7 +69,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof draftFormSchema>;
 
 interface DomesticFinancingApplicationDialogProps {
   open: boolean;
@@ -67,10 +81,11 @@ export function DomesticFinancingApplicationDialog({
   onOpenChange,
 }: DomesticFinancingApplicationDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(draftFormSchema),
     defaultValues: {
       companyName: "",
       contactName: "",
@@ -80,6 +95,40 @@ export function DomesticFinancingApplicationDialog({
       notes: "",
     },
   });
+
+  // Load existing draft on open
+  useEffect(() => {
+    const loadDraft = async () => {
+      if (!open) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("financing_applications")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("financing_type", "domestic")
+        .eq("status", "draft")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data && !error) {
+        setDraftId(data.id);
+        form.reset({
+          companyName: data.company_name || "",
+          contactName: data.contact_name || "",
+          contactEmail: data.contact_email || "",
+          contactPhone: data.contact_phone || "",
+          annualRevenue: data.annual_revenue?.toString() || "",
+          notes: data.notes || "",
+        });
+      }
+    };
+
+    loadDraft();
+  }, [open, form]);
 
   const uploadFile = async (file: File, documentType: string): Promise<string> => {
     const {
@@ -94,12 +143,10 @@ export function DomesticFinancingApplicationDialog({
     return await uploadToStorage("financing-applications", fileName, file);
   };
 
-  const onSubmit = async (data: FormData) => {
+  const handleSave = async (data: FormData, isDraft: boolean) => {
     setIsSubmitting(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
         toast({
@@ -110,58 +157,89 @@ export function DomesticFinancingApplicationDialog({
         return;
       }
 
-      // Upload all files
-      const [
-        deedOfEstablishmentUrl,
-        idCardsManagementUrl,
-        businessLicensesUrl,
-        financialStatementsUrl,
-        bankStatementsUrl,
-      ] = await Promise.all([
-        uploadFile(data.deedOfEstablishment[0], "deed_of_establishment"),
-        uploadFile(data.idCardsManagement[0], "id_cards_management"),
-        uploadFile(data.businessLicenses[0], "business_licenses"),
-        uploadFile(data.financialStatements[0], "financial_statements"),
-        uploadFile(data.bankStatements[0], "bank_statements"),
-      ]);
+      // Upload files only if they exist
+      const uploadedUrls: Record<string, string> = {};
+      
+      if (data.deedOfEstablishment?.[0]) {
+        uploadedUrls.deed_of_establishment = await uploadFile(data.deedOfEstablishment[0], "deed_of_establishment");
+      }
+      if (data.idCardsManagement?.[0]) {
+        uploadedUrls.id_cards_management = await uploadFile(data.idCardsManagement[0], "id_cards_management");
+      }
+      if (data.businessLicenses?.[0]) {
+        uploadedUrls.business_licenses = await uploadFile(data.businessLicenses[0], "business_licenses");
+      }
+      if (data.financialStatements?.[0]) {
+        uploadedUrls.financial_statements = await uploadFile(data.financialStatements[0], "financial_statements");
+      }
+      if (data.bankStatements?.[0]) {
+        uploadedUrls.bank_statements = await uploadFile(data.bankStatements[0], "bank_statements");
+      }
 
-      // Insert application record
-      const { error } = await supabase.from("financing_applications").insert({
+      const applicationData = {
         user_id: user.id,
         financing_type: "domestic",
         company_name: data.companyName,
         contact_name: data.contactName,
         contact_email: data.contactEmail,
         contact_phone: data.contactPhone,
-        annual_revenue: parseFloat(data.annualRevenue),
-        deed_of_establishment: deedOfEstablishmentUrl,
-        id_cards_management: idCardsManagementUrl,
-        business_licenses: businessLicensesUrl,
-        financial_statements: financialStatementsUrl,
-        bank_statements: bankStatementsUrl,
+        annual_revenue: data.annualRevenue ? parseFloat(data.annualRevenue) : null,
         notes: data.notes,
-        status: "pending",
-      });
+        status: isDraft ? "draft" : "pending",
+        ...uploadedUrls,
+      };
+
+      let error;
+      if (draftId && isDraft) {
+        // Update existing draft
+        ({ error } = await supabase
+          .from("financing_applications")
+          .update(applicationData)
+          .eq("id", draftId));
+      } else {
+        // Insert new application
+        ({ error } = await supabase
+          .from("financing_applications")
+          .insert(applicationData));
+      }
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Your application has been submitted successfully",
+        description: isDraft ? "Draft saved successfully" : "Your application has been submitted successfully",
       });
 
       form.reset();
+      setDraftId(null);
       onOpenChange(false);
     } catch (error) {
       console.error("Error submitting application:", error);
       toast({
         title: "Error",
-        description: "Failed to submit application. Please try again.",
+        description: "Failed to save application. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const onSubmit = async (data: FormData) => {
+    // Validate with submit schema
+    const result = submitFormSchema.safeParse(data);
+    if (!result.success) {
+      result.error.errors.forEach((error) => {
+        form.setError(error.path[0] as any, { message: error.message });
+      });
+      return;
+    }
+    await handleSave(data, false);
+  };
+
+  const onSaveDraft = async () => {
+    const data = form.getValues();
+    await handleSave(data, true);
   };
 
   return (
@@ -365,6 +443,14 @@ export function DomesticFinancingApplicationDialog({
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit Application
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onSaveDraft}
+                disabled={isSubmitting}
+              >
+                Save Draft
               </Button>
               <Button
                 type="button"

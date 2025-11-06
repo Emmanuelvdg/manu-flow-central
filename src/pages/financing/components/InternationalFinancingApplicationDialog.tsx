@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,7 +23,21 @@ import { Upload, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const formSchema = z.object({
+const draftFormSchema = z.object({
+  company_name: z.string().optional(),
+  contact_name: z.string().optional(),
+  contact_email: z.string().optional(),
+  contact_phone: z.string().optional(),
+  annual_revenue: z.string().optional(),
+  sample_transactional_doc: z.instanceof(FileList).optional(),
+  historical_transactional_data: z.instanceof(FileList).optional(),
+  bank_statements_sales_ledger: z.instanceof(FileList).optional(),
+  identification_docs: z.instanceof(FileList).optional(),
+  certificate_of_incorporation: z.instanceof(FileList).optional(),
+  beneficial_owner_structure: z.instanceof(FileList).optional(),
+});
+
+const submitFormSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
   contact_name: z.string().min(1, "Contact name is required"),
   contact_email: z.string().email("Invalid email address"),
@@ -37,7 +51,7 @@ const formSchema = z.object({
   beneficial_owner_structure: z.instanceof(FileList).optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof draftFormSchema>;
 
 interface InternationalFinancingApplicationDialogProps {
   open: boolean;
@@ -49,9 +63,10 @@ export const InternationalFinancingApplicationDialog = ({
   onOpenChange,
 }: InternationalFinancingApplicationDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(draftFormSchema),
     defaultValues: {
       company_name: "",
       contact_name: "",
@@ -60,6 +75,39 @@ export const InternationalFinancingApplicationDialog = ({
       annual_revenue: "",
     },
   });
+
+  // Load existing draft on open
+  useEffect(() => {
+    const loadDraft = async () => {
+      if (!open) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("financing_applications")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("financing_type", "international")
+        .eq("status", "draft")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data && !error) {
+        setDraftId(data.id);
+        form.reset({
+          company_name: data.company_name || "",
+          contact_name: data.contact_name || "",
+          contact_email: data.contact_email || "",
+          contact_phone: data.contact_phone || "",
+          annual_revenue: data.annual_revenue?.toString() || "",
+        });
+      }
+    };
+
+    loadDraft();
+  }, [open, form]);
 
   const uploadFile = async (file: File, folder: string): Promise<string | null> => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -84,7 +132,7 @@ export const InternationalFinancingApplicationDialog = ({
     return fileName;
   };
 
-  const onSubmit = async (values: FormValues) => {
+  const handleSave = async (values: FormValues, isDraft: boolean) => {
     setIsSubmitting(true);
 
     try {
@@ -130,35 +178,65 @@ export const InternationalFinancingApplicationDialog = ({
         }
       }
 
-      // Insert application record
-      const { error } = await supabase
-        .from('financing_applications')
-        .insert({
-          user_id: user.id,
-          financing_type: 'international',
-          company_name: values.company_name,
-          contact_name: values.contact_name,
-          contact_email: values.contact_email,
-          contact_phone: values.contact_phone,
-          annual_revenue: values.annual_revenue ? parseFloat(values.annual_revenue) : null,
-          ...filePaths,
-        });
+      const applicationData = {
+        user_id: user.id,
+        financing_type: 'international',
+        company_name: values.company_name,
+        contact_name: values.contact_name,
+        contact_email: values.contact_email,
+        contact_phone: values.contact_phone,
+        annual_revenue: values.annual_revenue ? parseFloat(values.annual_revenue) : null,
+        status: isDraft ? 'draft' : 'pending',
+        ...filePaths,
+      };
+
+      let error;
+      if (draftId && isDraft) {
+        // Update existing draft
+        ({ error } = await supabase
+          .from('financing_applications')
+          .update(applicationData)
+          .eq('id', draftId));
+      } else {
+        // Insert new application
+        ({ error } = await supabase
+          .from('financing_applications')
+          .insert(applicationData));
+      }
 
       if (error) {
         console.error('Database error:', error);
-        toast.error("Failed to submit application");
+        toast.error("Failed to save application");
         return;
       }
 
-      toast.success("Application submitted successfully!");
+      toast.success(isDraft ? "Draft saved successfully!" : "Application submitted successfully!");
       form.reset();
+      setDraftId(null);
       onOpenChange(false);
     } catch (error) {
       console.error('Submission error:', error);
-      toast.error("An error occurred while submitting your application");
+      toast.error("An error occurred while saving your application");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    // Validate with submit schema
+    const result = submitFormSchema.safeParse(values);
+    if (!result.success) {
+      result.error.errors.forEach((error) => {
+        form.setError(error.path[0] as any, { message: error.message });
+      });
+      return;
+    }
+    await handleSave(values, false);
+  };
+
+  const onSaveDraft = async () => {
+    const values = form.getValues();
+    await handleSave(values, true);
   };
 
   return (
@@ -398,6 +476,14 @@ export const InternationalFinancingApplicationDialog = ({
                 disabled={isSubmitting}
               >
                 Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onSaveDraft}
+                disabled={isSubmitting}
+              >
+                Save Draft
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
