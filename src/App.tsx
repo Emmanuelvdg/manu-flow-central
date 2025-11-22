@@ -29,6 +29,7 @@ import FXManagement from "./pages/FXManagement";
 import InvoiceInsurance from "./pages/financing/InvoiceInsurance";
 import DomesticFinancing from "./pages/financing/DomesticFinancing";
 import InternationalFinancing from "./pages/financing/InternationalFinancing";
+import SalesBrochure from "./pages/SalesBrochure";
 
 // Public pages
 import PublicProducts from "./pages/PublicProducts";
@@ -77,6 +78,9 @@ function App() {
             <Route path="/financing/invoice-insurance" element={<InvoiceInsurance />} />
             <Route path="/financing/domestic" element={<DomesticFinancing />} />
             <Route path="/financing/international" element={<InternationalFinancing />} />
+            
+            {/* Marketing Materials */}
+            <Route path="/sales-brochure" element={<SalesBrochure />} />
             
             {/* Public Routes */}
             <Route path="/public" element={<PublicProducts />} />
